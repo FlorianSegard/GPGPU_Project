@@ -1,8 +1,8 @@
-#ifndef BACKGROUNDESTIMATION_HPP
-#define BACKGROUNDESTIMATION_HPP
+#ifndef LABCONVERTER_HPP
+#define LABCONVERTER_HPP
 
 #include <cmath>
-#include "labConverter.hpp"
+#include "../Image.hpp"
 
 struct lab
 {
