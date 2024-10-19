@@ -36,7 +36,7 @@ void check_background(ImageView<lab> in)
             float distance = labDistance(currentpixel, currentpixel_background);
             if (distance < 25)
                 continue;
-            else
+            else if 
 
         }
     }

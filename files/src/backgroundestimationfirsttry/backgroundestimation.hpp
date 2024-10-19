@@ -4,14 +4,10 @@
 #include <cmath>
 #include "labConverter.hpp"
 
-struct lab
-{
-    float L, a, b;
-};
 
-ImageView<lab> rgbtolab_converter(ImageView<rgb8> in);
-float* XYZ_color_space(float r_linear, float g_linear, float b_linear);
-float get_linear(float r_g_b);
-float f(float t);
+
+lab averageLAB(lab p1, lab p2);
+float labDistance(lab p1, lab p2);
+void check_background(ImageView<lab> in);
 
 #endif
