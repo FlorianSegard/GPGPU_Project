@@ -19,7 +19,6 @@ ImageView<lab> rgbtolab_converter(ImageView<rgb8> in)
 
 
             float r_normalized = currentpixel.r / 255.f;
-            std::cout << r_normalized << std::endl;
             float g_normalized = currentpixel.g / 255.f;
             float b_normalized = currentpixel.b / 255.f;
 
