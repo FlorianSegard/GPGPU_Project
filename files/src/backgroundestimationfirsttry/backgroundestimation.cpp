@@ -22,7 +22,6 @@ float labDistance(lab p1, lab p2) {
 }
 
 
-
 void check_background(ImageView<lab> in, ImageView<lab> currentBackground, ImageView<lab> candidateBackground, ImageView<int> currentTimePixels)
 {
     for (int y = 0; y < in.width; y++)
@@ -41,6 +40,7 @@ void check_background(ImageView<lab> in, ImageView<lab> currentBackground, Image
 
             float distance = labDistance(currentpixel, currentpixel_background);
             if (distance < 25)
+            {
                 if (currentpixel_time == 0)
                 {
                     lineptr_lab_candidate[x] = currentpixel;
@@ -56,7 +56,7 @@ void check_background(ImageView<lab> in, ImageView<lab> currentBackground, Image
                     lineptr_lab_background[x] = currentpixel_candidate;
                     lineptr_time[x]++;
                 }
-
+            }
             else
             {
                 lineptr_lab_background[x] = averageLAB(currentpixel, currentpixel_background);
