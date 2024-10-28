@@ -80,7 +80,7 @@ int main()
         for (int x = 0; x < width; ++x) {
             // rgb8 pixel_value({1, 0, 0});
             lineptr[x] = {1, 10, 1};
-            lineptr_time[x] = {0};
+            lineptr_time[x] = 0;
             // std::cout << "Pixel at (" << x << ", " << y << "): r = " << (int)lineptr[x].r 
             //           << ", g = " << (int)lineptr[x].g 
             //           << ", b = " << (int)lineptr[x].b << std::endl;

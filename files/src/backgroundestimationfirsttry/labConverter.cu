@@ -42,15 +42,15 @@ __host__ __device__ float f_GPU(float t) {
 // -------------------------------------------------------------------------------------------------------------------------------
 
 
-__global__ void rgbtolab_converter_GPU(rgb* zero_image_buffer, std::ptrdiff_t stride_image, 
+__global__ void rgbtolab_converter_GPU(rgb8* zero_image_buffer, std::ptrdiff_t stride_image, 
                                         lab* converted_image_buffer, std::ptrdiff_t stride_converted_image,
-                                        int width, int height) 
+                                        int width, int height)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        rgb* lineptr = (rgb*)((std::byte*)zero_image_buffer + y * stride_image);
+        rgb8* lineptr = (rgb8*)((std::byte*)zero_image_buffer + y * stride_image);
         lab* lineptr_converted = (lab*)((std::byte*)converted_image_buffer + y * stride_converted_image);
 
         rgb8 currentpixel = lineptr[x];
@@ -84,21 +84,21 @@ __global__ void rgbtolab_converter_GPU(rgb* zero_image_buffer, std::ptrdiff_t st
 
         lab currentpixel_lab = {L, a, b};
 
-        lineptr_lab[x] = currentpixel_lab;
+	printf("%f %f %f\n", L, a, b);
+        lineptr_converted[x] = currentpixel_lab;
     }
 }
 
 
 
-__global__ void initialize_buffers(rgb* zero_image_buffer, int width, int height, std::ptrdiff_t stride_image) {
+__global__ void initialize_buffers_GPU(rgb8* zero_image_buffer, int width, int height, std::ptrdiff_t stride_image) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        rgb* lineptr = (rgb*)((std::byte*)zero_image_buffer + y * stride_image);
+        rgb8* lineptr = (rgb8*)((std::byte*)zero_image_buffer + y * stride_image);
 
         lineptr[x] = {1, 10, 1};
-        lineptr_time[x] = 0;
     }
 }
 
@@ -109,7 +109,7 @@ int main()
 
     int width = 100;
     int height = 100;
-    Image<rgb> zero_image(width, height, true);
+    Image<rgb8> zero_image(width, height, true);
     Image<lab> converted_image(width, height, true);
 
 
@@ -118,10 +118,10 @@ int main()
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     // just initializing for the testing (zero image and initializing time map)
-    initialize_buffers<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, zero_image.width, zero_image.height, zero_image.stride);
+    initialize_buffers_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, zero_image.width, zero_image.height, zero_image.stride);
     cudaDeviceSynchronize();
     
-    rgbtolab_converter_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, zero_image.stride, converted_image.buffer, converted_image.stride, zero_image.height, zero_image.stride)
+    rgbtolab_converter_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, zero_image.stride, converted_image.buffer, converted_image.stride, zero_image.height, zero_image.stride);
     cudaDeviceSynchronize();
 
 }
