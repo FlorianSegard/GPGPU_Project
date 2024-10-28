@@ -4,7 +4,7 @@
 
 // prob optional because in the backgroundestimation.cpp but need to test to check if it works because these are not gpu functions
 // -------------------------------------------------------------------------------------------------------------------------------
-lab averageLAB(lab p1, lab p2) {
+__host__ __device__ lab averageLAB_GPU(lab p1, lab p2) {
     lab result;
     result.L = (p1.L + p2.L) / 2;
     result.a = (p1.a + p2.a) / 2;
@@ -14,7 +14,7 @@ lab averageLAB(lab p1, lab p2) {
 
 
 // Distance euclidienne
-float labDistance(lab p1, lab p2) {
+__host__ __device__ float labDistance_GPU(lab p1, lab p2) {
     return sqrt(pow(p1.L - p2.L, 2) + pow(p1.a - p2.a, 2) + pow(p1.b - p2.b, 2));
 }
 // -------------------------------------------------------------------------------------------------------------------------------
@@ -35,6 +35,13 @@ __global__ void check_background_GPU(lab* in_buffer, std::ptrdiff_t stride_in,
         lab* lineptr_lab_candidate = (lab*)((std::byte*)candidateBackground_buffer + y * stride_candidateBackground);
         int* lineptr_time = (int*)((std::byte*)currentTimePixels_buffer + y * stride_time);
 
+	float distance = labDistance_GPU(lineptr_lab_background[x], lineptr_lab[x]);
+	int currentpixel_time = lineptr_time[x];
+	lab currentpixel = lineptr_lab[x];
+	lab currentpixel_candidate = lineptr_lab_candidate[x];
+	lab currentpixel_background = lineptr_lab_background[x];
+	printf("%d\n", lineptr_time[x]);
+	printf("%d\n", currentpixel_time);
         if (distance < 25)
         {
             if (currentpixel_time == 0)
@@ -44,7 +51,7 @@ __global__ void check_background_GPU(lab* in_buffer, std::ptrdiff_t stride_in,
             }   
             else if (currentpixel_time < 100)
             {
-                lineptr_lab_candidate[x] = averageLAB(currentpixel, currentpixel_candidate);
+                lineptr_lab_candidate[x] = averageLAB_GPU(currentpixel, currentpixel_candidate);
                 lineptr_time[x]++;
             }
             else
@@ -55,7 +62,7 @@ __global__ void check_background_GPU(lab* in_buffer, std::ptrdiff_t stride_in,
         }
         else
         {
-            lineptr_lab_background[x] = averageLAB(currentpixel, currentpixel_background);
+            lineptr_lab_background[x] = averageLAB_GPU(currentpixel, currentpixel_background);
             lineptr_time[x] = 0;
         }
     }
@@ -93,7 +100,7 @@ int main()
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     // just initializing for the testing (zero image and initializing time map)
-    initialize_buffers<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, currentTimePixels.buffer, 
+    initialize_buffers_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, currentTimePixels.buffer, 
                                                             zero_image.width, zero_image.height, 
                                                             zero_image.stride, currentTimePixels.stride);
 
@@ -113,12 +120,14 @@ int main()
                  cudaMemcpyDeviceToDevice);
 
 
-    check_background<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, zero_image.stride,
+    while (true) {
+    check_background_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, zero_image.stride,
                                                             currentBackground.buffer, currentBackground.stride,
                                                             candidateBackground.buffer, candidateBackground.stride,
                                                             currentTimePixels.buffer, currentTimePixels.stride,
                                                             zero_image.width, zero_image.height);
-
+    
+    }
     cudaDeviceSynchronize();
 
     

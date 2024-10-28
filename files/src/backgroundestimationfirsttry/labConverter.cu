@@ -5,7 +5,7 @@
 
 // prob optional because in the backgroundestimation.cpp but need to test to check if it works because these are not gpu functions
 // -------------------------------------------------------------------------------------------------------------------------------
-float* XYZ_color_space(float r_linear, float g_linear, float b_linear)
+__host__ __device__ float* XYZ_color_space_GPU(float r_linear, float g_linear, float b_linear)
 {
     float matrix[9] = { 0.4124564, 0.3575761, 0.1804375,
                         0.2126729, 0.7151522, 0.0721750,
@@ -25,14 +25,14 @@ float* XYZ_color_space(float r_linear, float g_linear, float b_linear)
 }
 
 // depends if it's rgb is already in linear
-float get_linear(float r_g_b)
+__host__ __device__ float get_linear_GPU(float r_g_b)
 {
     if (r_g_b <= 0.04045)
         return r_g_b / 12.92;
     return pow((r_g_b + 0.055) / 1.055, 2.4);
 }
 
-float f(float t) {
+__host__ __device__ float f_GPU(float t) {
     if (t > pow(6.0/29.0, 3)) {
         return pow(t, 1.0/3.0);
     } else {
@@ -60,23 +60,23 @@ __global__ void rgbtolab_converter_GPU(rgb* zero_image_buffer, std::ptrdiff_t st
         float g_normalized = currentpixel.g / 255.f;
         float b_normalized = currentpixel.b / 255.f;
 
-        float r_linear = get_linear(r_normalized);
-        float g_linear = get_linear(g_normalized);
-        float b_linear = get_linear(b_normalized);
+        float r_linear = get_linear_GPU(r_normalized);
+        float g_linear = get_linear_GPU(g_normalized);
+        float b_linear = get_linear_GPU(b_normalized);
 
-        float* result = XYZ_color_space(r_linear, g_linear, b_linear);
+        float* result = XYZ_color_space_GPU(r_linear, g_linear, b_linear);
 
         float X = result[0];
         float Y = result[1];
         float Z = result[2];
-        
+
         float X_n = X / 0.95047;
         float Y_n = Y / 1.0;
         float Z_n = Z / 1.08883;
 
-        float X_n_sqrt = f(X_n);
-        float Y_n_sqrt = f(Y_n);
-        float Z_n_sqrt = f(Z_n);
+        float X_n_sqrt = f_GPU(X_n);
+        float Y_n_sqrt = f_GPU(Y_n);
+        float Z_n_sqrt = f_GPU(Z_n);
 
         float L = 116 * Y_n_sqrt - 16;
         float a = 500 * (X_n_sqrt - Y_n_sqrt);
@@ -97,8 +97,8 @@ __global__ void initialize_buffers(rgb* zero_image_buffer, int width, int height
     if (x < width && y < height) {
         rgb* lineptr = (rgb*)((std::byte*)zero_image_buffer + y * stride_image);
 
-        lineptr[x] = {1, 10, 1};  
-        lineptr_time[x] = 0; 
+        lineptr[x] = {1, 10, 1};
+        lineptr_time[x] = 0;
     }
 }
 
