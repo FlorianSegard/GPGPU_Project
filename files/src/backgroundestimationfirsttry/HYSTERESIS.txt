@@ -1,0 +1,73 @@
+#include <iostream>
+#include <vector>
+#include <opencv2/opencv.hpp>
+#include <cuda_runtime.h>
+
+int main() {
+    cv::Mat img = cv::imread("path_to_image.jpg");
+    if (img.empty()) {
+        std::cerr << "Error: Could not load image." << std::endl;
+        return -1;
+    }
+
+    // Convert the image to LAB color space
+    cv::Mat imgLab;
+    img.convertTo(img, CV_32FC3, 1.0 / 255.0); // Convert to float
+    cv::cvtColor(img, imgLab, cv::COLOR_BGR2Lab);
+
+    int width = imgLab.cols;
+    int height = imgLab.rows;
+    std::ptrdiff_t stride = width * sizeof(lab);
+
+    // Convert the image data to lab structure
+    std::vector<lab> input(width * height);
+    convertToLab(imgLab, input);
+
+    // Allocate memory on the GPU
+    lab* d_input;
+    char* d_marker;
+    char* d_output;
+    CHECK_CUDA_ERROR(cudaMalloc(&d_input, height * stride));
+    CHECK_CUDA_ERROR(cudaMalloc(&d_marker, width * height * sizeof(char)));
+    CHECK_CUDA_ERROR(cudaMalloc(&d_output, width * height * sizeof(char)));
+
+    // Copy data to the GPU
+    CHECK_CUDA_ERROR(cudaMemcpy(d_input, input.data(), height * stride, cudaMemcpyHostToDevice));
+
+    // Initialize marker and output on the GPU
+    std::vector<char> marker(width * height, 0);
+    std::vector<char> output(width * height, 0);
+    marker[width / 2 + height / 2 * width] = 1;
+    CHECK_CUDA_ERROR(cudaMemcpy(d_marker, marker.data(), width * height * sizeof(char), cudaMemcpyHostToDevice));
+    CHECK_CUDA_ERROR(cudaMemcpy(d_output, output.data(), width * height * sizeof(char), cudaMemcpyHostToDevice));
+
+    // Define CUDA kernel parameters
+    dim3 threadsPerBlock(16, 16);
+    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+
+    // Execute the CUDA kernel
+    bool host_has_changed;
+    do {
+        host_has_changed = false;
+        CHECK_CUDA_ERROR(cudaMemcpyToSymbol(has_changed, &host_has_changed, sizeof(bool)));
+        hysteresis_reconstruction<<<numBlocks, threadsPerBlock>>>(d_input, d_marker, d_output, width, height, stride);
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+        CHECK_CUDA_ERROR(cudaMemcpyFromSymbol(&host_has_changed, has_changed, sizeof(bool)));
+    } while (host_has_changed);
+
+    // Copy the results back to the host
+    CHECK_CUDA_ERROR(cudaMemcpy(output.data(), d_output, width * height * sizeof(char), cudaMemcpyDeviceToHost));
+
+    // Process the results (e.g., display or save the output image)
+    cv::Mat result(height, width, CV_8UC1, output.data());
+    cv::imshow("Hysteresis Result", result);
+    cv::waitKey(0);
+
+    // Free GPU memory
+    cudaFree(d_input);
+    cudaFree(d_marker);
+    cudaFree(d_output);
+
+    return 0;
+}
