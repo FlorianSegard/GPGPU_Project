@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <cuda_runtime.h>
 
 // Run with: nvcc hysteresis.cu -o hysteresis
@@ -87,6 +88,63 @@ __global__ void hysteresis_reconstruction(const lab* input, bool* marker, bool* 
 }
 
 int main() {
-	return 0;
-}
+    const int width = 64;
+    const int height = 64;
+    const std::ptrdiff_t stride = width * sizeof(lab);
 
+    // Allocate memory
+    std::vector<lab> input(width * height);
+    std::vector<bool> marker(width * height, false);
+    std::vector<bool> output(width * height, false);
+
+    // Initialize test data
+    initializeTestData(input.data(), width, height, stride);
+
+    // Set some markers for testing
+    marker[width / 2 + height / 2 * width] = true; // Center pixel
+
+    // Allocate device memory
+    lab* d_input;
+    bool* d_marker;
+    bool* d_output;
+    CHECK_CUDA_ERROR(cudaMalloc(&d_input, height * stride));
+    CHECK_CUDA_ERROR(cudaMalloc(&d_marker, width * height * sizeof(bool)));
+    CHECK_CUDA_ERROR(cudaMalloc(&d_output, width * height * sizeof(bool)));
+
+    // Copy data to device
+    CHECK_CUDA_ERROR(cudaMemcpy(d_input, input.data(), height * stride, cudaMemcpyHostToDevice));
+    CHECK_CUDA_ERROR(cudaMemcpy(d_marker, marker.data(), width * height * sizeof(bool), cudaMemcpyHostToDevice));
+    CHECK_CUDA_ERROR(cudaMemcpy(d_output, output.data(), width * height * sizeof(bool), cudaMemcpyHostToDevice));
+
+    // Set up grid and block dimensions
+    dim3 threadsPerBlock(16, 16);
+    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+
+    // Run hysteresis reconstruction
+    do {
+        has_changed = false;
+        hysteresis_reconstruction<<<numBlocks, threadsPerBlock>>>(d_input, d_marker, d_output, width, height, stride);
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+        CHECK_CUDA_ERROR(cudaMemcpyFromSymbol(&has_changed, has_changed, sizeof(bool), 0, cudaMemcpyDeviceToHost));
+    } while (has_changed);
+
+    // Copy result back to host
+    CHECK_CUDA_ERROR(cudaMemcpy(output.data(), d_output, width * height * sizeof(bool), cudaMemcpyDeviceToHost));
+
+    // Print result
+    std::cout << "Hysteresis result (center 5x5 section):\n";
+    for (int y = height / 2 - 2; y <= height / 2 + 2; ++y) {
+        for (int x = width / 2 - 2; x <= width / 2 + 2; ++x) {
+            std::cout << output[y * width + x] << " ";
+        }
+        std::cout << "\n";
+    }
+
+    // Free device memory
+    cudaFree(d_input);
+    cudaFree(d_marker);
+    cudaFree(d_output);
+
+    return 0;
+}
