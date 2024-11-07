@@ -40,6 +40,14 @@ struct _GstMyFilter
   GstVideoFilter base_cudafilter;
 
   e_device_t device;
+
+  // Modified: Params attributes
+  const gchar* bg_uri;
+  gint opening_size;
+  gint th_low;
+  gint th_high;
+  gint bg_sampling_rate;
+  gint bg_number_frame;
 };
 
 struct _GstMyFilterClass
