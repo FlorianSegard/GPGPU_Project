@@ -38,20 +38,25 @@ __global__ void rgb_to_lab(const uchar3* input, lab* output, int width, int heig
     float g = pixel.y / 255.0f;
     float b = pixel.z / 255.0f;
 
+    printf("rgb2lab 1");
+
     float var_R = (r > 0.04045) ? pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
     float var_G = (g > 0.04045) ? pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
     float var_B = (b > 0.04045) ? pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
 
+    printf("rgb2lab 2");
     float X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805;
     float Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722;
     float Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505;
 
+    printf("rgb2lab 3");
     float L = (Y > 0.008856) ? 116.0 * pow(Y, 1.0 / 3.0) - 16.0 : 903.3 * Y;
     float A = 500.0 * (((X > 0.008856) ? pow(X, 1.0 / 3.0) : (7.787 * X + 16.0 / 116.0)) -
                       ((Y > 0.008856) ? pow(Y, 1.0 / 3.0) : (7.787 * Y + 16.0 / 116.0)));
     float B = 200.0 * (((Y > 0.008856) ? pow(Y, 1.0 / 3.0) : (7.787 * Y + 16.0 / 116.0)) -
                       ((Z > 0.008856) ? pow(Z, 1.0 / 3.0) : (7.787 * Z + 16.0 / 116.0)));
 
+    printf("rgb2lab 4");
     output[idx] = {L, A, B};
 }
 
@@ -66,7 +71,8 @@ __global__ void hysteresis_reconstruction(const lab* input, bool* marker, bool* 
     if (x >= width || y >= height)
         return;
 
-    lab* lineptr = (lab*)((std::byte*)input + y * stride);
+    lab* lineptr;
+    lineptr = (lab*)((std::byte*)input + y * stride);
     int current_idx = y * width + x;
 
     if (output[current_idx] || !marker[current_idx]) // already processed or too low
@@ -76,10 +82,8 @@ __global__ void hysteresis_reconstruction(const lab* input, bool* marker, bool* 
     for (int dy = -1; dy <= 1; ++dy) {
         for (int dx = -1; dx <= 1; ++dx) {
             if (dx == 0 && dy == 0) continue;
-            
             int nx = x + dx;
             int ny = y + dy;
-            
             if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
                 int neighbor_idx = ny * width + x;
                 if (output[neighbor_idx]) {
