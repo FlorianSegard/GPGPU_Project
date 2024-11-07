@@ -1,7 +1,7 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <cuda_runtime.h>
-#include <opencv2/opencv.hpp>
 
 // Run with: nvcc hysteresis.cu -o hysteresis
 // ./hysteresis <your-image.jpg>
@@ -55,6 +55,8 @@ __global__ void rgb_to_lab(const uchar3* input, lab* output, int width, int heig
     output[idx] = {L, a, b};
 }
 
+__device__ bool has_changed;
+
 // -----------------------------------------------------------
 
 __device__ bool has_changed;
@@ -98,12 +100,26 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // Load the image using OpenCV
-    cv::Mat image = cv::imread(argv[1]);
-    cv::cvtColor(image, image, cv::COLOR_BGR2Lab);
+    // Load the image
+    std::ifstream file(argv[1], std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << argv[1] << std::endl;
+        return 1;
+    }
 
-    int width = image.cols;
-    int height = image.rows;
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::vector<unsigned char> buffer(static_cast<size_t>(size));
+    if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
+        std::cerr << "Failed to read file: " << argv[1] << std::endl;
+        return 1;
+    }
+
+    file.close();
+
+    int width = 640; // 480p
+    int height = 480; // 480p
     std::ptrdiff_t stride = width * sizeof(lab);
 
     // Allocate memory on the host
@@ -112,7 +128,7 @@ int main(int argc, char** argv) {
     std::vector<bool> output(width * height, false);
 
     // Copy the image data to the host memory
-    memcpy(input.data(), image.data, height * stride);
+    memcpy(input.data(), buffer.data(), height * stride);
 
     // Allocate memory on the device
     lab* d_input;
@@ -133,7 +149,7 @@ int main(int argc, char** argv) {
                    (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     // Convert the image to LAB
-    rgb_to_lab<<<numBlocks, threadsPerBlock>>>(reinterpret_cast<const uchar3*>(image.data), d_input, width, height);
+    rgb_to_lab<<<numBlocks, threadsPerBlock>>>(reinterpret_cast<const uchar3*>(buffer.data()), d_input, width, height);
     CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
     // Run hysteresis reconstruction
