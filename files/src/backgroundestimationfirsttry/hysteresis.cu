@@ -130,7 +130,10 @@ int main(int argc, char** argv) {
     std::cerr << "2";
     
     // Copy the image data to the host memory
-    memcpy(input.data(), buffer.data(), height * stride);
+    uchar3* rgb_data = reinterpret_cast<uchar3*>(buffer.data());
+    rgb_to_lab<<<numBlocks, threadsPerBlock>>>(rgb_data, d_input, width, height);
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+
     std::cerr << "2.5";
 
     // Allocate memory on the device
