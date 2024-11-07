@@ -159,7 +159,8 @@ int main(int argc, char** argv) {
     } while (has_changed);
 
     // Copy the result back to the host
-    CHECK_CUDA_ERROR(cudaMemcpy(output.data(), d_output, width * height * sizeof(bool), cudaMemcpyDeviceToHost));
+    std::vector<bool> host_output(width * height);
+    CHECK_CUDA_ERROR(cudaMemcpy(host_output.data(), d_output, width * height * sizeof(bool), cudaMemcpyDeviceToHost));
 
     // Free device memory
     cudaFree(d_input);
