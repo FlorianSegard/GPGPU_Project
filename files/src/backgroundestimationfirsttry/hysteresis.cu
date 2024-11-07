@@ -116,17 +116,22 @@ int main(int argc, char** argv) {
 
     file.close();
 
-    int width = 640; // 480p
-    int height = 480; // 480p
+    int width = 1280; // 480p
+    int height = 720; // 480p
     std::ptrdiff_t stride = width * sizeof(lab);
 
+    std::cerr << "1";
+    
     // Allocate memory on the host
     std::vector<lab> input(width * height);
-    std::vector<bool> marker(width * height, false);
-    std::vector<bool> output(width * height, false);
+    std::vector<uint8_t> marker(width * height, false);
+    std::vector<uint8_t> output(width * height, false);
 
+    std::cerr << "2";
+    
     // Copy the image data to the host memory
     memcpy(input.data(), buffer.data(), height * stride);
+    std::cerr << "2.5";
 
     // Allocate memory on the device
     lab* d_input;
@@ -136,20 +141,24 @@ int main(int argc, char** argv) {
     CHECK_CUDA_ERROR(cudaMalloc(&d_marker, width * height * sizeof(bool)));
     CHECK_CUDA_ERROR(cudaMalloc(&d_output, width * height * sizeof(bool)));
 
+    std::cerr << "3";
     // Copy data to the device
     CHECK_CUDA_ERROR(cudaMemcpy(d_input, input.data(), height * stride, cudaMemcpyHostToDevice));
     CHECK_CUDA_ERROR(cudaMemcpy(d_marker, marker.data(), width * height * sizeof(bool), cudaMemcpyHostToDevice));
     CHECK_CUDA_ERROR(cudaMemcpy(d_output, output.data(), width * height * sizeof(bool), cudaMemcpyHostToDevice));
 
+    std::cerr << "4";
     // Set up grid and block dimensions
     dim3 threadsPerBlock(16, 16);
     dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                    (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
+    std::cerr << "5";
     // Convert the image to LAB
     rgb_to_lab<<<numBlocks, threadsPerBlock>>>(reinterpret_cast<const uchar3*>(buffer.data()), d_input, width, height);
     CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
+    std::cerr << "6";
     // Run hysteresis reconstruction
     do {
         has_changed = false;
@@ -158,10 +167,12 @@ int main(int argc, char** argv) {
         CHECK_CUDA_ERROR(cudaMemcpyFromSymbol(&has_changed, has_changed, sizeof(bool), 0, cudaMemcpyDeviceToHost));
     } while (has_changed);
 
+    std::cerr << "7";
     // Copy the result back to the host
-    std::vector<bool> host_output(width * height);
+    std::vector<uint8_t> host_output(width * height);
     CHECK_CUDA_ERROR(cudaMemcpy(host_output.data(), d_output, width * height * sizeof(bool), cudaMemcpyDeviceToHost));
 
+    std::cerr << "8";
     // Free device memory
     cudaFree(d_input);
     cudaFree(d_marker);
