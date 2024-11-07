@@ -130,6 +130,17 @@ int main(int argc, char** argv) {
     std::cerr << "2";
     
     // Copy the image data to the host memory
+    dim3 threadsPerBlock(16, 16);
+    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+
+    lab* d_input;
+    CHECK_CUDA_ERROR(cudaMalloc(&d_input, height * stride));
+
+    uchar3* rgb_data = reinterpret_cast<uchar3*>(buffer.data());
+    rgb_to_lab<<<numBlocks, threadsPerBlock>>>(rgb_data, d_input, width, height);
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    
     uchar3* rgb_data = reinterpret_cast<uchar3*>(buffer.data());
     rgb_to_lab<<<numBlocks, threadsPerBlock>>>(rgb_data, d_input, width, height);
     CHECK_CUDA_ERROR(cudaDeviceSynchronize());
