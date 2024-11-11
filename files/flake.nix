@@ -70,8 +70,6 @@
           export LD_LIBRARY_PATH=${cudaPackages.cuda_nvprof.lib}/lib:$LD_LIBRARY_PATH
           export CUDAHOSTCXX=${pkgs.gcc11}/bin/g++
           export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc11}/bin/g++"
-          export CXXFLAGS="--std=c++11 -I${libstdc++}/include"
-          export LDFLAGS="-L${libstdc++}/lib"
 
         '';
       };
