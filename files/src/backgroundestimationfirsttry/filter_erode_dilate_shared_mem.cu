@@ -22,51 +22,103 @@ struct lab {
     } while (0)
 
 __global__ void erode(lab* input, lab* output, int width, int height, std::ptrdiff_t stride) {
-    // Coordonnées du pixel traité par ce thread
+
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    // Taille du voisinage 3x3 (1 pixel de part et d'autre)
     const int kernel_radius = 1;
+    const int BLOCK_DIM = 16;
 
-    // Définir un bloc de mémoire partagée pour stocker les pixels voisins
-    __shared__ lab shared_block[32 + 2][32 + 2]; // Par exemple, un bloc de 32x32 + bords
+    // Shared memory block avec padding pour les halos
+    __shared__ lab shared_block[18][18]; // (BLOCK_DIM + 2) × (BLOCK_DIM + 2)
 
-    // Indices locaux dans le bloc partagé
+    // Local indices in shared memory
     int local_x = threadIdx.x + kernel_radius;
     int local_y = threadIdx.y + kernel_radius;
 
-    // Charger le pixel dans la mémoire partagée
+    // Load center pixels
     if (x < width && y < height) {
         lab* lineptr = (lab*)((std::byte*)input + y * stride);
         shared_block[local_y][local_x] = lineptr[x];
     }
 
-    // Charger les pixels voisins nécessaires pour le calcul du voisinage
+    // Load halo regions
+    // Left and right halos
     if (threadIdx.x < kernel_radius) {
-        // Charger le bord gauche
-        if (x >= kernel_radius) {
-            shared_block[local_y][local_x - kernel_radius] = input[(y * stride) / sizeof(lab) + x - kernel_radius];
+        // Left
+        if (x > 0) {
+            lab* lineptr = (lab*)((std::byte*)input + y * stride);
+            shared_block[local_y][threadIdx.x] = lineptr[x - 1];
+        } else {
+            shared_block[local_y][threadIdx.x] = shared_block[local_y][local_x];
         }
-        // Charger le bord droit
-        if (x + blockDim.x < width) {
-            shared_block[local_y][local_x + blockDim.x] = input[(y * stride) / sizeof(lab) + x + blockDim.x];
+        
+        // Right
+        if (x + BLOCK_DIM < width) {
+            lab* lineptr = (lab*)((std::byte*)input + y * stride);
+            shared_block[local_y][threadIdx.x + BLOCK_DIM + kernel_radius] = lineptr[x + BLOCK_DIM];
+        } else {
+            shared_block[local_y][threadIdx.x + BLOCK_DIM + kernel_radius] = shared_block[local_y][local_x];
         }
     }
+
+    // Top and bottom halos
     if (threadIdx.y < kernel_radius) {
-        // Charger le bord supérieur
-        if (y >= kernel_radius) {
-            shared_block[local_y - kernel_radius][local_x] = input[((y - kernel_radius) * stride) / sizeof(lab) + x];
+        // Top
+        if (y > 0) {
+            lab* lineptr = (lab*)((std::byte*)input + (y - 1) * stride);
+            shared_block[threadIdx.y][local_x] = lineptr[x];
+        } else {
+            shared_block[threadIdx.y][local_x] = shared_block[local_y][local_x];
         }
-        // Charger le bord inférieur
-        if (y + blockDim.y < height) {
-            shared_block[local_y + blockDim.y][local_x] = input[((y + blockDim.y) * stride) / sizeof(lab) + x];
+        
+        // Bottom
+        if (y + BLOCK_DIM < height) {
+            lab* lineptr = (lab*)((std::byte*)input + (y + BLOCK_DIM) * stride);
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][local_x] = lineptr[x];
+        } else {
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][local_x] = shared_block[local_y][local_x];
+        }
+    }
+
+    // Load corner halos
+    if (threadIdx.x < kernel_radius && threadIdx.y < kernel_radius) {
+        // Top-left
+        if (x > 0 && y > 0) {
+            lab* lineptr = (lab*)((std::byte*)input + (y - 1) * stride);
+            shared_block[threadIdx.y][threadIdx.x] = lineptr[x - 1];
+        } else {
+            shared_block[threadIdx.y][threadIdx.x] = shared_block[local_y][local_x];
+        }
+
+        // Top-right
+        if (x + BLOCK_DIM < width && y > 0) {
+            lab* lineptr = (lab*)((std::byte*)input + (y - 1) * stride);
+            shared_block[threadIdx.y][threadIdx.x + BLOCK_DIM + kernel_radius] = lineptr[x + BLOCK_DIM];
+        } else {
+            shared_block[threadIdx.y][threadIdx.x + BLOCK_DIM + kernel_radius] = shared_block[local_y][local_x];
+        }
+
+        // Bottom-left
+        if (x > 0 && y + BLOCK_DIM < height) {
+            lab* lineptr = (lab*)((std::byte*)input + (y + BLOCK_DIM) * stride);
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][threadIdx.x] = lineptr[x - 1];
+        } else {
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][threadIdx.x] = shared_block[local_y][local_x];
+        }
+
+        // Bottom-right
+        if (x + BLOCK_DIM < width && y + BLOCK_DIM < height) {
+            lab* lineptr = (lab*)((std::byte*)input + (y + BLOCK_DIM) * stride);
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][threadIdx.x + BLOCK_DIM + kernel_radius] = lineptr[x + BLOCK_DIM];
+        } else {
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][threadIdx.x + BLOCK_DIM + kernel_radius] = shared_block[local_y][local_x];
         }
     }
 
     __syncthreads();
 
-    // Calculer le minimum dans le voisinage 3x3
+    // Calcul érosion
     if (x < width && y < height) {
         lab min_val = shared_block[local_y][local_x];
         for (int dy = -1; dy <= 1; ++dy) {
@@ -78,7 +130,6 @@ __global__ void erode(lab* input, lab* output, int width, int height, std::ptrdi
             }
         }
 
-        // Stocker le résultat dans la mémoire globale
         lab* lineptr_out = (lab*)((std::byte*)output + y * stride);
         lineptr_out[x] = min_val;
     }
