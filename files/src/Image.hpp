@@ -70,7 +70,6 @@ Image<T>::Image(int width, int height, bool device)
     this->deleter = cudaDelete;
   } else {
     this->stride = width * sizeof(T);
-    printf("%lu\n", this->stride);
     this->buffer = (T*)malloc(this->height * this->stride);
     this->deleter = free;
   }
