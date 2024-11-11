@@ -13,6 +13,20 @@
     } \
 } while(0)
 
+// Separate kernel launch error checking function
+inline void checkKernelLaunch() {
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        printf("Kernel launch error: %s\n", cudaGetErrorString(err));
+        exit(EXIT_FAILURE);
+    }
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        printf("Kernel synchronization error: %s\n", cudaGetErrorString(err));
+        exit(EXIT_FAILURE);
+    }
+}
+
 size_t background_ref_pitch;
 lab* background_ref = nullptr;
 size_t candidate_bg_pitch;
@@ -55,7 +69,7 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
         lab_buffer, lab_pitch,
         width, height
     )
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    checkKernelLaunch();
 
     // Residual image
     size_t residual_pitch;
@@ -70,7 +84,7 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
     // - residual_buffer, residual_pitch          : the buffer to fill
     // - heigt and width
     residual_image<<<blocksPerGrid, threadsPerBlock>>>();
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    checkKernelLaunch();
 
     // Update background model
     check_background_GPU<<<blocksPerGrid, threadsPerBlock>>>(
@@ -80,7 +94,7 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
         (int*)current_time_pixels, time_pixels_pitch,
         width, height
     );
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    checkKernelLaunch();
 
     // Perform eroding operation
     size_t eroded_pitch;
@@ -93,7 +107,7 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
         residual_buffer, eroded_buffer,
         width, height, residual_pitch
     );
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    checkKernelLaunch();
 
     // Perform dilatation operation
     size_t dilated_pitch;
@@ -106,7 +120,7 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
         eroded_buffer, dilated_buffer,
         width, height, eroded_pitch
     );
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    checkKernelLaunch();
 
     // Perform hysteresis operation
     size_t hysteresis_pitch;
@@ -119,14 +133,14 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
         dilated_buffer, hysteresis_buffer,
         width, height, dilated_pitch
     );
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    checkKernelLaunch();
 
     // TODO: Apply the new created hysteresis mask to rgb_buffer
     // - hysteresis_buffer, hysteresis_pitch      : the mask buffer
     // - rgb_buffer, rgb_pitch                    : the buffer to change
     // - heigt and widt h
     apply_mask<<<blocksPerGrid, threadsPerBlock>>>();
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    checkKernelLaunch();
 
     // Copy result back to pixels_buffer
     error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_buffer, rgb_pitch,
