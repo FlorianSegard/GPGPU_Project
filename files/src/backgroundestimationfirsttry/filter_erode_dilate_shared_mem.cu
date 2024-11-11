@@ -217,12 +217,35 @@ void printImageSection(lab* data, int width, int height, std::ptrdiff_t stride, 
     }
 }
 
-
 int main() {
     const int width = 64;
     const int height = 64;
-    const std::ptrdiff_t stride = width * sizeof(lab);
+    const std::ptrdiff_t stride = width * sizeof(lab);  // Simple stride calculation
     const int NUM_ITERATIONS = 100;  // Run multiple iterations
+
+    // Allocate host memory
+    lab* h_input = new lab[width * height];
+    lab* h_output = new lab[width * height];
+
+    // Initialize test data
+    initializeTestData(h_input, width, height, stride);
+
+    // Allocate device memory
+    lab *d_input, *d_output, *d_temp;
+    CHECK_CUDA_ERROR(cudaMalloc(&d_input, height * stride));
+    CHECK_CUDA_ERROR(cudaMalloc(&d_output, height * stride));
+    CHECK_CUDA_ERROR(cudaMalloc(&d_temp, height * stride));
+
+    // Copy input data to device
+    CHECK_CUDA_ERROR(cudaMemcpy(d_input, h_input, height * stride, cudaMemcpyHostToDevice));
+
+    // Set up grid and block dimensions
+    dim3 threadsPerBlock(16, 16); // May need to be changed ... to be tested
+    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+
+    printf("Print a section of the original image:");
+    printImageSection(h_input, width, height, stride, 0, 0, 5);
 
     // Create CUDA events for timing
     cudaEvent_t start, stop;
@@ -288,6 +311,39 @@ int main() {
     CHECK_CUDA_ERROR(cudaFree(d_input));
     CHECK_CUDA_ERROR(cudaFree(d_output));
     CHECK_CUDA_ERROR(cudaFree(d_temp));
+
+    /*
+    // Erosion
+    erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    
+    CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
+    printf("\nAfter erosion:");
+    printImageSection(h_output, width, height, stride, 0, 0, 5);
+
+    // Test dilation
+    dilate<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    
+    CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
+    printf("\nAfter dilation:");
+    printImageSection(h_output, width, height, stride, 0, 0, 5);
+
+    // Test erosion followed by dilation (closing operation)
+    erode<<<numBlocks, threadsPerBlock>>>(d_input, d_temp, width, height, stride);
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    dilate<<<numBlocks, threadsPerBlock>>>(d_temp, d_output, width, height, stride);
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+
+    CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
+    printf("\nAfter closing (erosion + dilation):");
+    printImageSection(h_output, width, height, stride, 0, 0, 5);
+
+    delete[] h_input;
+    delete[] h_output;
+    CHECK_CUDA_ERROR(cudaFree(d_input));
+    CHECK_CUDA_ERROR(cudaFree(d_output));
+    CHECK_CUDA_ERROR(cudaFree(d_temp));*/
 
     return 0;
 }
