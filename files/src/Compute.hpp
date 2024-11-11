@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "filer_impl.h"
 
 #ifdef __cplusplus
     extern "C" {
@@ -12,7 +13,7 @@ void cpt_init(Parameters* params);
 
 /// Function called by gstreamer to process the incoming frame
 void cpt_process_frame(uint8_t* buffer, int width, int height, int stride);
-    
+
 
 #ifdef __cplusplus
     }
