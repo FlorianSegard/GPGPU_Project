@@ -89,7 +89,7 @@ extern "C" {
     g_params = *params;
   }
 
-  void cpt_process_frame(std::byte *opened_input, std::byte *hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
+  void hysteresis(std::byte *opened_input, std::byte *hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
   {
     if (g_params.device == e_device_t::CPU)
       hysteresis_cpp(opened_input, hysteresis, width, height, opened_input_pitch, hysteresis_pitch, lower_threshold, upper_threshold);
