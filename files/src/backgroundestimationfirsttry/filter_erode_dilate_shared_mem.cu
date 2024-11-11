@@ -136,41 +136,102 @@ __global__ void erode(lab* input, lab* output, int width, int height, std::ptrdi
 }
 
 __global__ void dilate(lab* input, lab* output, int width, int height, std::ptrdiff_t stride) {
-    // Coordonnées du pixel traité par ce thread
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     const int kernel_radius = 1;
+    const int BLOCK_DIM = 16;
 
-    __shared__ lab shared_block[32 + 2][32 + 2];
+    // Shared memory block avec padding pour les halos
+    __shared__ lab shared_block[18][18]; // (BLOCK_DIM + 2) × (BLOCK_DIM + 2)
 
+    // Local indices in shared memory
     int local_x = threadIdx.x + kernel_radius;
     int local_y = threadIdx.y + kernel_radius;
 
+    // Load center pixels
     if (x < width && y < height) {
         lab* lineptr = (lab*)((std::byte*)input + y * stride);
         shared_block[local_y][local_x] = lineptr[x];
     }
 
+    // Load halo regions
+    // Left and right halos
     if (threadIdx.x < kernel_radius) {
-        if (x >= kernel_radius) {
-            shared_block[local_y][local_x - kernel_radius] = input[(y * stride) / sizeof(lab) + x - kernel_radius];
+        // Left
+        if (x > 0) {
+            lab* lineptr = (lab*)((std::byte*)input + y * stride);
+            shared_block[local_y][threadIdx.x] = lineptr[x - 1];
+        } else {
+            shared_block[local_y][threadIdx.x] = shared_block[local_y][local_x];
         }
-        if (x + blockDim.x < width) {
-            shared_block[local_y][local_x + blockDim.x] = input[(y * stride) / sizeof(lab) + x + blockDim.x];
+        
+        // Right
+        if (x + BLOCK_DIM < width) {
+            lab* lineptr = (lab*)((std::byte*)input + y * stride);
+            shared_block[local_y][threadIdx.x + BLOCK_DIM + kernel_radius] = lineptr[x + BLOCK_DIM];
+        } else {
+            shared_block[local_y][threadIdx.x + BLOCK_DIM + kernel_radius] = shared_block[local_y][local_x];
         }
     }
+
+    // Top and bottom halos
     if (threadIdx.y < kernel_radius) {
-        if (y >= kernel_radius) {
-            shared_block[local_y - kernel_radius][local_x] = input[((y - kernel_radius) * stride) / sizeof(lab) + x];
+        // Top
+        if (y > 0) {
+            lab* lineptr = (lab*)((std::byte*)input + (y - 1) * stride);
+            shared_block[threadIdx.y][local_x] = lineptr[x];
+        } else {
+            shared_block[threadIdx.y][local_x] = shared_block[local_y][local_x];
         }
-        if (y + blockDim.y < height) {
-            shared_block[local_y + blockDim.y][local_x] = input[((y + blockDim.y) * stride) / sizeof(lab) + x];
+        
+        // Bottom
+        if (y + BLOCK_DIM < height) {
+            lab* lineptr = (lab*)((std::byte*)input + (y + BLOCK_DIM) * stride);
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][local_x] = lineptr[x];
+        } else {
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][local_x] = shared_block[local_y][local_x];
+        }
+    }
+
+    // Load corner halos
+    if (threadIdx.x < kernel_radius && threadIdx.y < kernel_radius) {
+        // Top-left
+        if (x > 0 && y > 0) {
+            lab* lineptr = (lab*)((std::byte*)input + (y - 1) * stride);
+            shared_block[threadIdx.y][threadIdx.x] = lineptr[x - 1];
+        } else {
+            shared_block[threadIdx.y][threadIdx.x] = shared_block[local_y][local_x];
+        }
+
+        // Top-right
+        if (x + BLOCK_DIM < width && y > 0) {
+            lab* lineptr = (lab*)((std::byte*)input + (y - 1) * stride);
+            shared_block[threadIdx.y][threadIdx.x + BLOCK_DIM + kernel_radius] = lineptr[x + BLOCK_DIM];
+        } else {
+            shared_block[threadIdx.y][threadIdx.x + BLOCK_DIM + kernel_radius] = shared_block[local_y][local_x];
+        }
+
+        // Bottom-left
+        if (x > 0 && y + BLOCK_DIM < height) {
+            lab* lineptr = (lab*)((std::byte*)input + (y + BLOCK_DIM) * stride);
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][threadIdx.x] = lineptr[x - 1];
+        } else {
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][threadIdx.x] = shared_block[local_y][local_x];
+        }
+
+        // Bottom-right
+        if (x + BLOCK_DIM < width && y + BLOCK_DIM < height) {
+            lab* lineptr = (lab*)((std::byte*)input + (y + BLOCK_DIM) * stride);
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][threadIdx.x + BLOCK_DIM + kernel_radius] = lineptr[x + BLOCK_DIM];
+        } else {
+            shared_block[threadIdx.y + BLOCK_DIM + kernel_radius][threadIdx.x + BLOCK_DIM + kernel_radius] = shared_block[local_y][local_x];
         }
     }
 
     __syncthreads();
 
+    // Compute dilation
     if (x < width && y < height) {
         lab max_val = shared_block[local_y][local_x];
         for (int dy = -1; dy <= 1; ++dy) {
@@ -186,8 +247,6 @@ __global__ void dilate(lab* input, lab* output, int width, int height, std::ptrd
         lineptr_out[x] = max_val;
     }
 }
-
-
 
 // Helper function to initialize test data
 void initializeTestData(lab* data, int width, int height, std::ptrdiff_t stride) {
@@ -218,8 +277,8 @@ void printImageSection(lab* data, int width, int height, std::ptrdiff_t stride, 
 }
 
 int main() {
-    const int width = 64;
-    const int height = 64;
+    const int width = 1024;
+    const int height = 1024;
     const std::ptrdiff_t stride = width * sizeof(lab);  // Simple stride calculation
     const int NUM_ITERATIONS = 100;  // Run multiple iterations
 
@@ -253,14 +312,27 @@ int main() {
     cudaEventCreate(&stop);
     float milliseconds = 0;
 
-    // Warmup run
-    erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
+    // Add GPU warmup phase
+    for(int i = 0; i < 1000; i++) {  // More warmup iterations
+        erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
+    }
     cudaDeviceSynchronize();
 
-    // Time erosion
+    // Reset GPU before timing
+    cudaDeviceReset();
+    
+    // Increase problem size
+    const int width = 1024;  // Larger image
+    const int height = 1024;
+    
+    // Add CPU-GPU sync before timing
+    cudaDeviceSynchronize();
+    
+    // Time erosion with proper synchronization
     cudaEventRecord(start);
     for(int i = 0; i < NUM_ITERATIONS; i++) {
         erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
+        cudaDeviceSynchronize();  // Force synchronization each iteration
     }
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
@@ -311,39 +383,6 @@ int main() {
     CHECK_CUDA_ERROR(cudaFree(d_input));
     CHECK_CUDA_ERROR(cudaFree(d_output));
     CHECK_CUDA_ERROR(cudaFree(d_temp));
-
-    /*
-    // Erosion
-    erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-    
-    CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
-    printf("\nAfter erosion:");
-    printImageSection(h_output, width, height, stride, 0, 0, 5);
-
-    // Test dilation
-    dilate<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-    
-    CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
-    printf("\nAfter dilation:");
-    printImageSection(h_output, width, height, stride, 0, 0, 5);
-
-    // Test erosion followed by dilation (closing operation)
-    erode<<<numBlocks, threadsPerBlock>>>(d_input, d_temp, width, height, stride);
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-    dilate<<<numBlocks, threadsPerBlock>>>(d_temp, d_output, width, height, stride);
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-
-    CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
-    printf("\nAfter closing (erosion + dilation):");
-    printImageSection(h_output, width, height, stride, 0, 0, 5);
-
-    delete[] h_input;
-    delete[] h_output;
-    CHECK_CUDA_ERROR(cudaFree(d_input));
-    CHECK_CUDA_ERROR(cudaFree(d_output));
-    CHECK_CUDA_ERROR(cudaFree(d_temp));*/
 
     return 0;
 }

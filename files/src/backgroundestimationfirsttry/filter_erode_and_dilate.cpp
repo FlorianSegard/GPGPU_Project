@@ -95,8 +95,8 @@ void printImageSection(const lab* data, int width, int height, std::ptrdiff_t st
 }
 
 int main() {
-    const int width = 64;
-    const int height = 64;
+    const int width = 1024;
+    const int height = 1024;
     const std::ptrdiff_t stride = width * sizeof(lab);
     const int NUM_ITERATIONS = 100;  // Run multiple iterations for better timing
 
@@ -113,15 +113,16 @@ int main() {
     printImageSection(input.data(), width, height, stride, 0, 0, 5);
 
     // Timing variables
-    auto start = std::chrono::high_resolution_clock::now();
-    auto end = std::chrono::high_resolution_clock::now();
+    using Clock = std::chrono::high_resolution_clock;
+    auto start = Clock::now();
+    auto end = Clock::now();
     
     // Time erosion
-    start = std::chrono::high_resolution_clock::now();
+    start = Clock::now();
     for(int i = 0; i < NUM_ITERATIONS; i++) {
         erode(input.data(), output.data(), width, height, stride);
     }
-    end = std::chrono::high_resolution_clock::now();
+    end = Clock::now();
     std::cout << "\nCPU Erosion time (averaged over " << NUM_ITERATIONS << " iterations): " 
               << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / NUM_ITERATIONS 
               << " microseconds";
@@ -130,11 +131,11 @@ int main() {
     printImageSection(output.data(), width, height, stride, 0, 0, 5);
 
     // Time dilation
-    start = std::chrono::high_resolution_clock::now();
+    start = Clock::now();
     for(int i = 0; i < NUM_ITERATIONS; i++) {
         dilate(input.data(), output.data(), width, height, stride);
     }
-    end = std::chrono::high_resolution_clock::now();
+    end = Clock::now();
     std::cout << "\nCPU Dilation time (averaged over " << NUM_ITERATIONS << " iterations): " 
               << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / NUM_ITERATIONS 
               << " microseconds";
@@ -143,12 +144,12 @@ int main() {
     printImageSection(output.data(), width, height, stride, 0, 0, 5);
 
     // Time closing operation
-    start = std::chrono::high_resolution_clock::now();
+    start = Clock::now();
     for(int i = 0; i < NUM_ITERATIONS; i++) {
         erode(input.data(), temp.data(), width, height, stride);
         dilate(temp.data(), output.data(), width, height, stride);
     }
-    end = std::chrono::high_resolution_clock::now();
+    end = Clock::now();
     std::cout << "\nCPU Closing time (averaged over " << NUM_ITERATIONS << " iterations): " 
               << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / NUM_ITERATIONS 
               << " microseconds";
