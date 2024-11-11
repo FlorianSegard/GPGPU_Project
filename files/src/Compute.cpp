@@ -1,7 +1,6 @@
 #include "Compute.hpp"
 #include "Image.hpp"
 #include "logo.h"
-#include "filter_impl.h"
 
 #include <chrono>
 #include <thread>
