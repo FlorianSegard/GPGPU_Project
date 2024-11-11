@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 
 
-__global__ void red_mask(std::byte* hysteresis_buffer, std::byte* rgb_buffer, std::ptrdiff_t stride) {
+__global__ void red_mask(bool* hysteresis_buffer, rgb* rgb_buffer, std::ptrdiff_t stride) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
