@@ -13,20 +13,13 @@ typedef enum {
     GPU
 } e_device_t;
 
-
 typedef struct  {
     e_device_t device;
 } Parameters;
 
-
-struct lab
-{
-    float L, a, b;
-};
-
 void labConv_init(Parameters* params);
 
-void labConv_process_frame(ImageView<rgb> rgb_image, ImageView<lab> lab_image);
+void labConv_process_frame(ImageView<rgb8> rgb_image, ImageView<lab> lab_image);
 
 #ifdef __cplusplus
     }

@@ -21,7 +21,6 @@ struct lab {
     float b;
 };
 
-
 void filter_impl(uint8_t* pixels_buffer, int width, int height,
                  int plane_stride, int pixel_stride);
 
