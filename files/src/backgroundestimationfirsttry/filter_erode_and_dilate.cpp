@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <vector>
 #include <cmath>
+#include <chrono>
+
 
 struct lab {
     float L;
@@ -93,9 +95,10 @@ void printImageSection(const lab* data, int width, int height, std::ptrdiff_t st
 }
 
 int main() {
-    const int width = 64;
-    const int height = 64;
+    const int width = 1024;
+    const int height = 1024;
     const std::ptrdiff_t stride = width * sizeof(lab);
+    const int NUM_ITERATIONS = 100;  // Run multiple iterations for better timing
 
     // Allocate memory
     std::vector<lab> input(width * height);
@@ -109,19 +112,48 @@ int main() {
     std::cout << "Original image:";
     printImageSection(input.data(), width, height, stride, 0, 0, 5);
 
-    // Test erosion
-    erode(input.data(), output.data(), width, height, stride);
+    // Timing variables
+    using Clock = std::chrono::high_resolution_clock;
+    auto start = Clock::now();
+    auto end = Clock::now();
+    
+    // Time erosion
+    start = Clock::now();
+    for(int i = 0; i < NUM_ITERATIONS; i++) {
+        erode(input.data(), output.data(), width, height, stride);
+    }
+    end = Clock::now();
+    std::cout << "\nCPU Erosion time (averaged over " << NUM_ITERATIONS << " iterations): " 
+              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / NUM_ITERATIONS 
+              << " microseconds";
+    
     std::cout << "\nAfter erosion:";
     printImageSection(output.data(), width, height, stride, 0, 0, 5);
 
-    // Test dilation
-    dilate(input.data(), output.data(), width, height, stride);
+    // Time dilation
+    start = Clock::now();
+    for(int i = 0; i < NUM_ITERATIONS; i++) {
+        dilate(input.data(), output.data(), width, height, stride);
+    }
+    end = Clock::now();
+    std::cout << "\nCPU Dilation time (averaged over " << NUM_ITERATIONS << " iterations): " 
+              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / NUM_ITERATIONS 
+              << " microseconds";
+
     std::cout << "\nAfter dilation:";
     printImageSection(output.data(), width, height, stride, 0, 0, 5);
 
-    // Test closing (erosion followed by dilation)
-    erode(input.data(), temp.data(), width, height, stride);
-    dilate(temp.data(), output.data(), width, height, stride);
+    // Time closing operation
+    start = Clock::now();
+    for(int i = 0; i < NUM_ITERATIONS; i++) {
+        erode(input.data(), temp.data(), width, height, stride);
+        dilate(temp.data(), output.data(), width, height, stride);
+    }
+    end = Clock::now();
+    std::cout << "\nCPU Closing time (averaged over " << NUM_ITERATIONS << " iterations): " 
+              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / NUM_ITERATIONS 
+              << " microseconds";
+
     std::cout << "\nAfter closing (erosion + dilation):";
     printImageSection(output.data(), width, height, stride, 0, 0, 5);
 
