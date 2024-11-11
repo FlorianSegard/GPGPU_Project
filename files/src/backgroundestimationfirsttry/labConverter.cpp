@@ -1,9 +1,8 @@
 #include <iostream>
 #include "labConverter.hpp"
+#include "labConverterUtils.hpp"
 
-
-
-ImageView<lab> rgbtolab_converter(ImageView<rgb8> in, ImageView<lab> backgroundLAB, int width, int height)
+ImageView<lab> rgbtolab_converter_cpp(ImageView<rgb8> in, ImageView<lab> backgroundLAB, int width, int height)
 {
     for (int y = 0; y < height; y++)
     {
@@ -86,41 +85,64 @@ float f(float t) {
 }
 
 
+extern "C" {
 
-int main()
-{
+    static Parameters l_params;
 
-    int width = 100;
-    int height = 100;
-
-    Image<rgb8> zero_image(width, height, false);
-    Image<lab> lab_image(width, height, false);
-
-    for (int y = 0; y < height; ++y) {
-        rgb8* lineptr = (rgb8*)((std::byte*)zero_image.buffer + y * zero_image.stride);
-        for (int x = 0; x < width; ++x) {
-            // rgb8 pixel_value({1, 0, 0});
-            lineptr[x] = {1, 10, 1};
-            // std::cout << "Pixel at (" << x << ", " << y << "): r = " << (int)lineptr[x].r 
-            //           << ", g = " << (int)lineptr[x].g 
-            //           << ", b = " << (int)lineptr[x].b << std::endl;
-            // zero_image.buffer[y * width + x] = {0, 0, 0};
-            // std::cout << "x: " << x << ", y: " << y << std::endl;
-
-        }
-    }
-    rgbtolab_converter(zero_image, lab_image, width, height);
-
-
-
-    for (int y = 0; y < lab_image.height; ++y) {
-        lab* lineptr_lab = (lab*)((std::byte*)lab_image.buffer + y * lab_image.stride);
-
-        for (int x = 0; x < lab_image.width; ++x) {
-            lab pixel = lineptr_lab[x];
-            std::cout << "L: " << pixel.L << ", a: " << pixel.a << ", b: " << pixel.b << std::endl;
-        }
+    void background_init(Parameters* params)
+    {
+        l_params = *params;
     }
 
-    return 0;
+    void background_process_frame(ImageView<rgb8> in, ImageView<lab> backgroundLAB)
+    {
+        int width = in.width;
+        int height = in.height;
+        if (l_params.device == e_device_t::CPU)
+            rgbtolab_converter_cpp(in, backgroundLAB, width, height);
+
+        else if (l_params.device == e_device_t::GPU)
+            rgbtolab_converter_cu(in, backgroundLAB, width, height);
+    }
+
 }
+
+
+
+// int main()
+// {
+
+//     int width = 100;
+//     int height = 100;
+
+//     Image<rgb8> zero_image(width, height, false);
+//     Image<lab> lab_image(width, height, false);
+
+//     for (int y = 0; y < height; ++y) {
+//         rgb8* lineptr = (rgb8*)((std::byte*)zero_image.buffer + y * zero_image.stride);
+//         for (int x = 0; x < width; ++x) {
+//             // rgb8 pixel_value({1, 0, 0});
+//             lineptr[x] = {1, 10, 1};
+//             // std::cout << "Pixel at (" << x << ", " << y << "): r = " << (int)lineptr[x].r 
+//             //           << ", g = " << (int)lineptr[x].g 
+//             //           << ", b = " << (int)lineptr[x].b << std::endl;
+//             // zero_image.buffer[y * width + x] = {0, 0, 0};
+//             // std::cout << "x: " << x << ", y: " << y << std::endl;
+
+//         }
+//     }
+//     rgbtolab_converter(zero_image, lab_image, width, height);
+
+
+
+//     for (int y = 0; y < lab_image.height; ++y) {
+//         lab* lineptr_lab = (lab*)((std::byte*)lab_image.buffer + y * lab_image.stride);
+
+//         for (int x = 0; x < lab_image.width; ++x) {
+//             lab pixel = lineptr_lab[x];
+//             std::cout << "L: " << pixel.L << ", a: " << pixel.a << ", b: " << pixel.b << std::endl;
+//         }
+//     }
+
+//     return 0;
+// }
