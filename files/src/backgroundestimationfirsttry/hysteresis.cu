@@ -2,16 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <cuda_runtime.h>
-
-// Run with: nvcc hysteresis.cu -o hysteresis
-// ./hysteresis <your-image.jpg>
-
-// Simple LAB color structure
-struct lab {
-    float L;
-    float a;
-    float b;
-};
+#include "hysteresis.hpp"
 
 // Helper function to check CUDA errors
 #define CHECK_CUDA_ERROR(call) \
@@ -24,148 +15,104 @@ struct lab {
         } \
     } while (0)
 
-// CUDA kernel for converting RGB image to LAB
-__global__ void rgb_to_lab(const uchar3* input, lab* output, int width, int height) {
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-
-    if (x >= width || y >= height)
-        return;
-
-    int idx = y * width + x;
-    uchar3 pixel = input[idx];
-    float r = pixel.x / 255.0f;
-    float g = pixel.y / 255.0f;
-    float b = pixel.z / 255.0f;
-
-    float var_R = (r > 0.04045) ? pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
-    float var_G = (g > 0.04045) ? pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
-    float var_B = (b > 0.04045) ? pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
-
-    float X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805;
-    float Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722;
-    float Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505;
-
-    float L = (Y > 0.008856) ? 116.0 * pow(Y, 1.0 / 3.0) - 16.0 : 903.3 * Y;
-    float A = 500.0 * (((X > 0.008856) ? pow(X, 1.0 / 3.0) : (7.787 * X + 16.0 / 116.0)) -
-                      ((Y > 0.008856) ? pow(Y, 1.0 / 3.0) : (7.787 * Y + 16.0 / 116.0)));
-    float B = 200.0 * (((Y > 0.008856) ? pow(Y, 1.0 / 3.0) : (7.787 * Y + 16.0 / 116.0)) -
-                      ((Z > 0.008856) ? pow(Z, 1.0 / 3.0) : (7.787 * Z + 16.0 / 116.0)));
-
-    output[idx] = {L, A, B};
-}
+#define HYSTERESIS_TILE_WIDTH 34 // block size de 32 x 32 et on rajoute 2 pixels de padding
+#define LOWER_THRESHOLD 4.0
+#define UPPER_THRESHOLD 30.0
 
 // -----------------------------------------------------------
 
-__device__ bool has_changed;
-
-__global__ void hysteresis_reconstruction(const lab* input, bool* marker, bool* output, int width, int height, std::ptrdiff_t stride) {
+__global__ void hysteresis_thresholding(std::byte *input, std::byte *output, int width, int height, size_t input_pitch, size_t output_pitch, float threshold)
+{
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= width || y >= height)
         return;
 
-    lab* lineptr = (lab*)((std::byte*)input + y * stride);
-    int current_idx = y * width + x;
+    float *input_lineptr = (float *)(input + y * input_pitch);
+    float in_val = input_lineptr[x];
 
-    if (output[current_idx] || !marker[current_idx]) // already processed or too low
+    // Applique le seuil et on stocke le résultat dans la sortie
+    bool *output_lineptr = (bool *)(output + y * output_pitch);
+    output_lineptr[x] = in_val > threshold;
+}
+
+
+__global__ void hysteresis_kernel(std::byte *upper, std::byte *lower, int width, int height, int upper_pitch, int lower_pitch, bool *has_changed_global)
+{
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x >= width || y >= height)
         return;
 
-    // Check 8-connected neighbors
-    for (int dy = -1; dy <= 1; ++dy) {
-        for (int dx = -1; dx <= 1; ++dx) {
-            if (dx == 0 && dy == 0) continue;
-            
-            int nx = x + dx;
-            int ny = y + dy;
-            
-            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                int neighbor_idx = ny * width + x;
-                if (output[neighbor_idx]) {
-                    output[current_idx] = true;
-                    has_changed = true;
-                    return;
-                }
-            }
+    bool has_changed = true;
+
+    while (has_changed)
+    {
+        has_changed = false;
+        __syncthreads();
+
+        bool *upper_lineptr = (bool *)(upper + y * upper_pitch);
+        bool *lower_lineptr = (bool *)(lower + y * lower_pitch);
+
+        // Si le pixel est déjà marqué dans l'image supérieure, on passe au suivant
+        if (upper_lineptr[x])
+            break;
+
+        // Si le pixel n'est pas marqué dans l'image inférieure, on passe au suivant
+        if (!lower_lineptr[x])
+            break;
+
+        // on vérifie les pixels voisins pour propager le marquage
+        if ((x > 0 && upper_lineptr[x - 1]) ||
+            (x < width - 1 && upper_lineptr[x + 1]) ||
+            (y > 0 && ((bool *)(upper + (y - 1) * upper_pitch))[x]) ||
+            (y < height - 1 && ((bool *)(upper + (y + 1) * upper_pitch))[x]))
+        {
+            upper_lineptr[x] = true;
+            has_changed = true;
+            *has_changed_global = true;
+            break;
         }
+
+        __syncthreads();
     }
 }
 
-int main(int argc, char** argv) {
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <input_image.jpg>" << std::endl;
-        return 1;
-    }
+void hysteresis_cu(std::byte *opened_input, std::byte *hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
+{
+    dim3 blockSize(32, 32);
+    dim3 gridSize((width + (blockSize.x - 1)) / blockSize.x, (height + (blockSize.y - 1)) / blockSize.y);
 
-    // Load the image
-    std::ifstream file(argv[1], std::ios::binary | std::ios::ate);
-    if (!file.is_open()) {
-        std::cerr << "Failed to open file: " << argv[1] << std::endl;
-        return 1;
-    }
+    size_t lower_threshold_pitch;
+    std::byte *lower_threshold_input;
+    CHECK_CUDA_ERROR(cudaMallocPitch(&lower_threshold_input, &lower_threshold_pitch, width * sizeof(bool), height));
 
-    std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    std::vector<unsigned char> buffer(static_cast<size_t>(size));
-    if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
-        std::cerr << "Failed to read file: " << argv[1] << std::endl;
-        return 1;
-    }
-
-    file.close();
-
-    int width = 640; // 480p
-    int height = 480; // 480p
-    std::ptrdiff_t stride = width * sizeof(lab);
-
-    // Allocate memory on the host
-    std::vector<lab> input(width * height);
-    std::vector<bool> marker(width * height, false);
-    std::vector<bool> output(width * height, false);
-
-    // Copy the image data to the host memory
-    memcpy(input.data(), buffer.data(), height * stride);
-
-    // Allocate memory on the device
-    lab* d_input;
-    bool* d_marker;
-    bool* d_output;
-    CHECK_CUDA_ERROR(cudaMalloc(&d_input, height * stride));
-    CHECK_CUDA_ERROR(cudaMalloc(&d_marker, width * height * sizeof(bool)));
-    CHECK_CUDA_ERROR(cudaMalloc(&d_output, width * height * sizeof(bool)));
-
-    // Copy data to the device
-    CHECK_CUDA_ERROR(cudaMemcpy(d_input, input.data(), height * stride, cudaMemcpyHostToDevice));
-    CHECK_CUDA_ERROR(cudaMemcpy(d_marker, marker.data(), width * height * sizeof(bool), cudaMemcpyHostToDevice));
-    CHECK_CUDA_ERROR(cudaMemcpy(d_output, output.data(), width * height * sizeof(bool), cudaMemcpyHostToDevice));
-
-    // Set up grid and block dimensions
-    dim3 threadsPerBlock(16, 16);
-    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-
-    // Convert the image to LAB
-    rgb_to_lab<<<numBlocks, threadsPerBlock>>>(reinterpret_cast<const uchar3*>(buffer.data()), d_input, width, height);
+    // seuil inf et sup
+    hysteresis_thresholding<<<gridSize, blockSize>>>(opened_input, lower_threshold_input, width, height, opened_input_pitch, lower_threshold_pitch, lower_threshold);
+    hysteresis_thresholding<<<gridSize, blockSize>>>(opened_input, hysteresis, width, height, opened_input_pitch, hysteresis_pitch, upper_threshold);
     CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
-    // Run hysteresis reconstruction
-    do {
-        has_changed = false;
-        hysteresis_reconstruction<<<numBlocks, threadsPerBlock>>>(d_input, d_marker, d_output, width, height, stride);
+    bool h_has_changed = true;
+
+    // flag de changement
+    bool *d_has_changed;
+    CHECK_CUDA_ERROR(cudaMalloc(&d_has_changed, sizeof(bool)));
+
+    // on propage sur l'image.
+    while (h_has_changed)
+    {
+        CHECK_CUDA_ERROR(cudaMemset(d_has_changed, false, sizeof(bool)));
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-        CHECK_CUDA_ERROR(cudaMemcpyFromSymbol(&has_changed, has_changed, sizeof(bool), 0, cudaMemcpyDeviceToHost));
-    } while (has_changed);
 
-    // Copy the result back to the host
-    std::vector<bool> host_output(width * height);
-    CHECK_CUDA_ERROR(cudaMemcpy(host_output.data(), d_output, width * height * sizeof(bool), cudaMemcpyDeviceToHost));
+        hysteresis_kernel<<<gridSize, blockSize>>>(hysteresis, lower_threshold_input, width, height, hysteresis_pitch, lower_threshold_pitch, d_has_changed);
 
-    // Free device memory
-    cudaFree(d_input);
-    cudaFree(d_marker);
-    cudaFree(d_output);
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
-    return 0;
+        CHECK_CUDA_ERROR(cudaMemcpy(&h_has_changed, d_has_changed, sizeof(bool), cudaMemcpyDeviceToHost));
+    }
+
+    cudaFree(lower_threshold_input);
+    cudaFree(d_has_changed);
 }

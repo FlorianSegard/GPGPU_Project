@@ -1,17 +1,35 @@
-#ifndef LABCONVERTER_HPP
-#define LABCONVERTER_HPP
+#pragma once
 
 #include <cmath>
 #include "../Image.hpp"
+
+
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
+typedef enum {
+    CPU,
+    GPU
+} e_device_t;
+
+
+typedef struct  {
+    e_device_t device;
+} Parameters;
+
 
 struct lab
 {
     float L, a, b;
 };
 
-ImageView<lab> rgbtolab_converter(ImageView<rgb8> in);
-float* XYZ_color_space(float r_linear, float g_linear, float b_linear);
-float get_linear(float r_g_b);
-float f(float t);
+void labConv_init(Parameters* params);
 
+void labConv_process_frame(ImageView<lab> in, ImageView<lab> currentBackground, 
+                ImageView<lab> candidateBackground, ImageView<int> currentTimePixels, 
+                ImageView<float> currentDistancePixels);
+
+#ifdef __cplusplus
+    }
 #endif
