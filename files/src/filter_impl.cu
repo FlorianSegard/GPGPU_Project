@@ -64,7 +64,7 @@ extern "C"
         size_t residual_pitch;
         lab* residual_buffer; // type: lab array pointer
         error = cudaMallocPitch(&residual_buffer, &residual_pitch,
-                                width * sizeof(Lab), height);
+                                width * sizeof(lab), height);
         CHECK_CUDA_ERROR(error);
 
         // TODO: GPU residual image to code with the following args
@@ -133,7 +133,7 @@ extern "C"
 
         // Copy result back to pixels_buffer
         error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_buffer, rgb_pitch,
-                             width * sizeof(rgb8), height, cudaMemcpyDeviceToHost));
+                             width * sizeof(rgb8), height, cudaMemcpyDeviceToHost);
         CHECK_CUDA_ERROR(error);
 
         // Clean up temporary buffers
