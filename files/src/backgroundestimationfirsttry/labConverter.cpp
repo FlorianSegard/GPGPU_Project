@@ -2,12 +2,12 @@
 #include "labConverter.hpp"
 #include "labConverterUtils.hpp"
 
-ImageView<lab> rgbtolab_converter_cpp(ImageView<rgb8> in, ImageView<lab> backgroundLAB, int width, int height)
+ImageView<lab> rgbtolab_converter_cpp(ImageView<rgb8> rgb_image, ImageView<lab> lab_image, int width, int height)
 {
     for (int y = 0; y < height; y++)
     {
-        rgb8* lineptr = (rgb8*)((std::byte*)in.buffer + y * in.stride);
-        lab* lineptr_lab = (lab*)((std::byte*)backgroundLAB.buffer + y * backgroundLAB.stride);
+        rgb8* lineptr = (rgb8*)((std::byte*)rgb_image.buffer + y * rgb_image.stride);
+        lab* lineptr_lab = (lab*)((std::byte*)lab_image.buffer + y * lab_image.stride);
 
         for (int x = 0; x < width; x++)
         {
@@ -47,7 +47,7 @@ ImageView<lab> rgbtolab_converter_cpp(ImageView<rgb8> in, ImageView<lab> backgro
 
         }
     }
-    return backgroundLAB;
+    return lab_image;
 }
 
 extern "C" {
@@ -59,15 +59,15 @@ extern "C" {
         l_params = *params;
     }
 
-    void labConv_process_frame(ImageView<rgb8> in, ImageView<lab> backgroundLAB)
+    void labConv_process_frame(ImageView<rgb8> rgb_image, ImageView<lab> lab_image)
     {
-        int width = in.width;
-        int height = in.height;
+        int width = rgb_image.width;
+        int height = rgb_image.height;
         if (l_params.device == e_device_t::CPU)
-            rgbtolab_converter_cpp(in, backgroundLAB, width, height);
+            rgbtolab_converter_cpp(rgb_image, lab_image, width, height);
 
         else if (l_params.device == e_device_t::GPU)
-            rgbtolab_converter_cu(in, backgroundLAB, width, height);
+            rgbtolab_converter_cu(rgb_image, lab_image, width, height);
     }
 
 }

@@ -2,13 +2,13 @@
 #include "labConverter.hpp"
 #include "labConverterUtils.hpp"
 
-__global__ void rgbtolab_converter_GPU(ImageView<rgb8> in, ImageView<lab> backgroundLAB, int width, int height)
+__global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab> backgroundLAB, int width, int height)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        rgb8* lineptr = (rgb8*)((std::byte*)in.buffer + y * in.stride);
+        rgb8* lineptr = (rgb8*)((std::byte*)rgb_image.buffer + y * rgb_image.stride);
         lab* lineptr_lab = (lab*)((std::byte*)backgroundLAB.buffer + y * backgroundLAB.stride);
 
         rgb8 currentpixel = lineptr[x];
@@ -46,13 +46,13 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> in, ImageView<lab> backgr
     }
 }
 
-void rgbtolab_converter_cu(ImageView<rgb8> in, ImageView<lab> backgroundLAB, int width, int height)
+void rgbtolab_converter_cu(ImageView<rgb8> rgb_image, ImageView<lab> backgroundLAB, int width, int height)
 {
     dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x, 
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
-    rgbtolab_converter_GPU<<<blocksPerGrid, threadsPerBlock>>>(in, backgroundLAB, width, height);
+    rgbtolab_converter_GPU<<<blocksPerGrid, threadsPerBlock>>>(rgb_image, backgroundLAB, width, height);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {

@@ -26,9 +26,7 @@ struct lab
 
 void labConv_init(Parameters* params);
 
-void labConv_process_frame(ImageView<lab> in, ImageView<lab> currentBackground, 
-                ImageView<lab> candidateBackground, ImageView<int> currentTimePixels, 
-                ImageView<float> currentDistancePixels);
+void labConv_process_frame(ImageView<rgb> rgb_image, ImageView<lab> lab_image);
 
 #ifdef __cplusplus
     }

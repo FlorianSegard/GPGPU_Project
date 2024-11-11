@@ -93,7 +93,7 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
 
     labConv_init(&params);
 
-    labConv_process_frame(ImageView<rgb8> in, ImageView<lab> backgroundLAB);
+    labConv_process_frame(rgb_image, lab_image);
 
     checkKernelLaunch();
 
@@ -113,7 +113,7 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
 
 
 
-    
+
     // residual_image<<<blocksPerGrid, threadsPerBlock>>>();
 
 
