@@ -54,12 +54,12 @@ extern "C" {
 
     static Parameters l_params;
 
-    void background_init(Parameters* params)
+    void labConv_init(Parameters* params)
     {
         l_params = *params;
     }
 
-    void background_process_frame(ImageView<rgb8> in, ImageView<lab> backgroundLAB)
+    void labConv_process_frame(ImageView<rgb8> in, ImageView<lab> backgroundLAB)
     {
         int width = in.width;
         int height = in.height;
