@@ -96,7 +96,7 @@ __global__ void hysteresis_reconstruction(const lab* input, bool* marker, bool* 
     }
 }
 
-int main(int argc, char** argv) {
+/*int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <input_image.jpg>" << std::endl;
         return 1;
@@ -172,4 +172,4 @@ int main(int argc, char** argv) {
     cudaFree(d_output);
 
     return 0;
-}
+}*/
