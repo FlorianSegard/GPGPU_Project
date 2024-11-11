@@ -129,7 +129,7 @@ gst_myfilter_class_init (GstMyFilterClass * klass)
   //video_filter_class->transform_frame = GST_DEBUG_FUNCPTR (gst_myfilter_transform_frame);
   video_filter_class->transform_frame_ip = GST_DEBUG_FUNCPTR (gst_myfilter_transform_frame_ip);
 
-  // Modified: Parsing methods and value assignment 
+  // Modified: Parsing methods and value assignment
   g_object_class_install_property (gobject_class, PROP_BG_URI,
     g_param_spec_string("uri", "BG_URI", "Uri toward a background image",
       DEFAULT_BG_URI, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -331,8 +331,8 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
   GstClockTime timestamp = GST_BUFFER_TIMESTAMP(frame->buffer);
 
   // TODO: this is the main process, we will call it later
-  //filter_impl(pixels, width, height, plane_stride, pixel_stride, timestamp);
-  g_assert(pixel_stride == 3); // RGB
+  g_assert(pixel_stride == 3);
+  filter_impl(pixels, width, height, plane_stride, pixel_stride, timestamp);
 
   cpt_process_frame(pixels, width, height, plane_stride);
 
