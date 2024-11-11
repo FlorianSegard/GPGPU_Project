@@ -2,7 +2,7 @@
 
 #include <cuda_runtime.h>
 
-#include <cstdint>
+#include <stdint.h>
 #include "Image.hpp"
 
 #ifdef __cplusplus
