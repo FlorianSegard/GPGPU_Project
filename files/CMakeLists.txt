@@ -23,7 +23,7 @@ target_link_libraries(Compute PRIVATE CUDA::cudart)
 add_library(filter_impl src/filter_impl.h src/filter_impl.cu)
 target_link_libraries(filter_impl PRIVATE CUDA::cudart)
 
-add_executable(stream src/stream.cpp src/gstfilter.cpp src/gstfilter.h)
+add_executable(stream src/stream.cpp src/gstfilter.c src/gstfilter.h)
 
 target_link_libraries(stream PUBLIC PkgConfig::GStreamerVideo cudart filter_impl)
 
