@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cuda_runtime.h>
-
+#include <chrono>
 // Run with: nvcc filter_erode_and_dilate.cu -o filter_erode_and_dilate
 
 // Simple LAB color structure
@@ -217,61 +217,72 @@ void printImageSection(lab* data, int width, int height, std::ptrdiff_t stride, 
     }
 }
 
+
 int main() {
     const int width = 64;
     const int height = 64;
-    const std::ptrdiff_t stride = width * sizeof(lab);  // Simple stride calculation
+    const std::ptrdiff_t stride = width * sizeof(lab);
+    const int NUM_ITERATIONS = 100;  // Run multiple iterations
 
-    // Allocate host memory
-    lab* h_input = new lab[width * height];
-    lab* h_output = new lab[width * height];
+    // Create CUDA events for timing
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    float milliseconds = 0;
 
-    // Initialize test data
-    initializeTestData(h_input, width, height, stride);
-
-    // Allocate device memory
-    lab *d_input, *d_output, *d_temp;
-    CHECK_CUDA_ERROR(cudaMalloc(&d_input, height * stride));
-    CHECK_CUDA_ERROR(cudaMalloc(&d_output, height * stride));
-    CHECK_CUDA_ERROR(cudaMalloc(&d_temp, height * stride));
-
-    // Copy input data to device
-    CHECK_CUDA_ERROR(cudaMemcpy(d_input, h_input, height * stride, cudaMemcpyHostToDevice));
-
-    // Set up grid and block dimensions
-    dim3 threadsPerBlock(16, 16); // May need to be changed ... to be tested
-    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-
-    printf("Print a section of the original image:");
-    printImageSection(h_input, width, height, stride, 0, 0, 5);
-
-    // Erosion
+    // Warmup run
     erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-    
+    cudaDeviceSynchronize();
+
+    // Time erosion
+    cudaEventRecord(start);
+    for(int i = 0; i < NUM_ITERATIONS; i++) {
+        erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
+    }
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    printf("\nGPU Erosion time (averaged over %d iterations): %.2f microseconds", 
+           NUM_ITERATIONS, (milliseconds * 1000.0f) / NUM_ITERATIONS);
+
     CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
     printf("\nAfter erosion:");
     printImageSection(h_output, width, height, stride, 0, 0, 5);
 
-    // Test dilation
-    dilate<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-    
+    // Time dilation
+    cudaEventRecord(start);
+    for(int i = 0; i < NUM_ITERATIONS; i++) {
+        dilate<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
+    }
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    printf("\nGPU Dilation time (averaged over %d iterations): %.2f microseconds", 
+           NUM_ITERATIONS, (milliseconds * 1000.0f) / NUM_ITERATIONS);
+
     CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
     printf("\nAfter dilation:");
     printImageSection(h_output, width, height, stride, 0, 0, 5);
 
-    // Test erosion followed by dilation (closing operation)
-    erode<<<numBlocks, threadsPerBlock>>>(d_input, d_temp, width, height, stride);
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-    dilate<<<numBlocks, threadsPerBlock>>>(d_temp, d_output, width, height, stride);
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    // Time closing operation
+    cudaEventRecord(start);
+    for(int i = 0; i < NUM_ITERATIONS; i++) {
+        erode<<<numBlocks, threadsPerBlock>>>(d_input, d_temp, width, height, stride);
+        dilate<<<numBlocks, threadsPerBlock>>>(d_temp, d_output, width, height, stride);
+    }
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    printf("\nGPU Closing time (averaged over %d iterations): %.2f microseconds", 
+           NUM_ITERATIONS, (milliseconds * 1000.0f) / NUM_ITERATIONS);
 
     CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
     printf("\nAfter closing (erosion + dilation):");
     printImageSection(h_output, width, height, stride, 0, 0, 5);
 
+    // Cleanup
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
     delete[] h_input;
     delete[] h_output;
     CHECK_CUDA_ERROR(cudaFree(d_input));
