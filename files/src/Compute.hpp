@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include "filer_impl.h"
 
 #ifdef __cplusplus
     extern "C" {
