@@ -21,6 +21,15 @@ struct lab {
     float b;
 };
 
+typedef enum {
+    CPU,
+    GPU
+} e_device_t;
+
+typedef struct  {
+    e_device_t device;
+} Parameters;
+
 void filter_impl(uint8_t* pixels_buffer, int width, int height,
                  int plane_stride, int pixel_stride);
 

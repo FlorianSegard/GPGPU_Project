@@ -3,7 +3,6 @@
 #include <cmath>
 #include "../Image.hpp"
 
-
 #ifdef __cplusplus
     extern "C" {
 #endif
