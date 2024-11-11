@@ -1,12 +1,13 @@
 #pragma once
 
-#include <cstdint>
 #include <cuda_runtime.h>
 #include "Image.hpp"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <cstdint>
 
 // RGB color structure
 // struct rgb8 {
