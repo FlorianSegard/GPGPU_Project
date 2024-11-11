@@ -64,7 +64,7 @@
           libunwind
           elfutils
           orc
-          libstdc++
+          libstdc++,
         ];
         shellHook = with pkgs; ''
           export LD_LIBRARY_PATH=${cudaPackages.cuda_nvprof.lib}/lib:$LD_LIBRARY_PATH
