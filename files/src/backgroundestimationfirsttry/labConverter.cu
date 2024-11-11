@@ -21,8 +21,9 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> in, ImageView<lab> backgr
         float r_linear = get_linear_GPU(r_normalized);
         float g_linear = get_linear_GPU(g_normalized);
         float b_linear = get_linear_GPU(b_normalized);
-
-        float* result = XYZ_color_space_GPU(r_linear, g_linear, b_linear);
+        
+        float result[3];
+        XYZ_color_space_GPU(r_linear, g_linear, b_linear, result);
 
         float X = result[0];
         float Y = result[1];
