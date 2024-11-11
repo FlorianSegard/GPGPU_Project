@@ -27,6 +27,15 @@ inline void checkKernelLaunch() {
     }
 }
 
+// ============== CUDA FUNCTIONS ==============
+
+
+
+
+
+
+
+
 size_t background_ref_pitch;
 lab* background_ref = nullptr;
 size_t candidate_bg_pitch;
@@ -34,8 +43,6 @@ lab* candidate_background = nullptr;
 
 // TODO: what to do when background_ref / candidate_background null?
 // TODO: is it possible to reuse buffers instead of always creating new ones?
-
-
 
 void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride, int pixel_stride)
 {
