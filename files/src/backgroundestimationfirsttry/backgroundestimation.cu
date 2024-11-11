@@ -33,7 +33,7 @@ __global__ void check_background_GPU(ImageView<lab> in, ImageView<lab> currentBa
         lab* lineptr_lab_background = (lab*)((std::byte*)currentBackground.buffer + y * currentBackground.stride);
         lab* lineptr_lab_candidate = (lab*)((std::byte*)candidateBackground.buffer + y * candidateBackground.stride);
         int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
-        float* lineptr_distance (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
+        float* lineptr_distance = (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
 
         float distance = labDistance_GPU(lineptr_lab_background[x], lineptr_lab[x]);
         lineptr_distance[x] = distance;
@@ -122,7 +122,7 @@ int main()
 
 
     while (true) {
-    check_background_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image, currentBackground, candidateBackground, currentTimePixels, width, height);
+    check_background_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image, currentBackground, candidateBackground, currentTimePixels, currentDistancePixels, width, height);
     
     }
     cudaDeviceSynchronize();

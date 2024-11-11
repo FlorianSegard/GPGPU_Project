@@ -7,6 +7,6 @@
 
 lab averageLAB(lab p1, lab p2);
 float labDistance(lab p1, lab p2);
-void check_background(ImageView<lab> in);
+void check_background(ImageView<lab> in, ImageView<lab> currentBackground, ImageView<lab> candidateBackground, ImageView<int> currentTimePixels, ImageView<float> currentDistancePixels, int width, int height);
 
 #endif

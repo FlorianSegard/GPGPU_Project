@@ -30,7 +30,7 @@ void check_background(ImageView<lab> in, ImageView<lab> currentBackground, Image
         lab* lineptr_lab_background = (lab*)((std::byte*)currentBackground.buffer + y * currentBackground.stride);
         lab* lineptr_lab_candidate = (lab*)((std::byte*)candidateBackground.buffer + y * candidateBackground.stride);
         int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
-        float* lineptr_distance (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
+        float* lineptr_distance = (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
 
         for (int x = 0; x < height; x++)
         {

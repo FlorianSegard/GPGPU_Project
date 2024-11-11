@@ -5,12 +5,12 @@
 
 ImageView<lab> rgbtolab_converter(ImageView<rgb8> in, ImageView<lab> backgroundLAB, int width, int height)
 {
-    for (int y = 0; y < height; ++y)
+    for (int y = 0; y < height; y++)
     {
         rgb8* lineptr = (rgb8*)((std::byte*)in.buffer + y * in.stride);
         lab* lineptr_lab = (lab*)((std::byte*)backgroundLAB.buffer + y * backgroundLAB.stride);
 
-        for (int x = 0; x < width; ++x)
+        for (int x = 0; x < width; x++)
         {
             rgb8 currentpixel = lineptr[x];
 
@@ -94,7 +94,7 @@ int main()
     int height = 100;
 
     Image<rgb8> zero_image(width, height, false);
-    Image<lab> lab_image(width, height, false):
+    Image<lab> lab_image(width, height, false);
 
     for (int y = 0; y < height; ++y) {
         rgb8* lineptr = (rgb8*)((std::byte*)zero_image.buffer + y * zero_image.stride);
