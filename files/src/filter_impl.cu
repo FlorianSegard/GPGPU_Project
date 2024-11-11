@@ -75,7 +75,7 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
         rgb_buffer, rgb_pitch,
         lab_buffer, lab_pitch,
         width, height
-    )
+    );
     checkKernelLaunch();
 
     // Residual image
