@@ -22,16 +22,17 @@ float labDistance(lab p1, lab p2) {
 }
 
 
-void check_background(ImageView<lab> in, ImageView<lab> currentBackground, ImageView<lab> candidateBackground, ImageView<int> currentTimePixels)
+void check_background(ImageView<lab> in, ImageView<lab> currentBackground, ImageView<lab> candidateBackground, ImageView<int> currentTimePixels, ImageView<float> currentDistancePixels, int width, int height)
 {
-    for (int y = 0; y < in.width; y++)
+    for (int y = 0; y < width; y++)
     {
         lab* lineptr_lab = (lab*)((std::byte*)in.buffer + y * in.stride);
         lab* lineptr_lab_background = (lab*)((std::byte*)currentBackground.buffer + y * currentBackground.stride);
         lab* lineptr_lab_candidate = (lab*)((std::byte*)candidateBackground.buffer + y * candidateBackground.stride);
         int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
+        float* lineptr_distance (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
 
-        for (int x = 0; x < in.height; x++)
+        for (int x = 0; x < height; x++)
         {
             lab currentpixel = lineptr_lab[x];
             lab currentpixel_background = lineptr_lab_background[x];
@@ -39,6 +40,7 @@ void check_background(ImageView<lab> in, ImageView<lab> currentBackground, Image
             int currentpixel_time = lineptr_time[x];
 
             float distance = labDistance(currentpixel, currentpixel_background);
+            lineptr_distance[x] = distance;
             if (distance < 25)
             {
                 if (currentpixel_time == 0)
@@ -72,7 +74,9 @@ int main()
     int height = 100;
 
     Image<lab> zero_image(width, height, false);
+    
     Image<int> currentTimePixels(width, height, false);
+    Image<float> currentDistancePixels(width, height, false);
 
     for (int y = 0; y < height; ++y) {
         lab* lineptr = (lab*)((std::byte*)zero_image.buffer + y * zero_image.stride);
@@ -80,7 +84,7 @@ int main()
         for (int x = 0; x < width; ++x) {
             // rgb8 pixel_value({1, 0, 0});
             lineptr[x] = {1, 10, 1};
-            lineptr_time[x] = 0;
+            lineptr_time[x] = {0};
             // std::cout << "Pixel at (" << x << ", " << y << "): r = " << (int)lineptr[x].r 
             //           << ", g = " << (int)lineptr[x].g 
             //           << ", b = " << (int)lineptr[x].b << std::endl;
@@ -95,12 +99,12 @@ int main()
     int i = 0;
     while (true)
     {
-        check_background(zero_image, currentBackground, candidateBackground, currentTimePixels);
+        check_background(zero_image, currentBackground, candidateBackground, currentTimePixels, currentDistancePixels, width, height);
 
-        for (int y = 0; y < height; ++y) 
+        for (int y = 0; y < height; y++) 
         {
             int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
-            for (int x = 0; x < width; ++x) 
+            for (int x = 0; x < width; x++) 
             {
                 std::cout << lineptr_time[x] << std::endl;
             }

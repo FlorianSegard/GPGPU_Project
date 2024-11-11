@@ -42,16 +42,14 @@ __host__ __device__ float f_GPU(float t) {
 // -------------------------------------------------------------------------------------------------------------------------------
 
 
-__global__ void rgbtolab_converter_GPU(rgb8* zero_image_buffer, std::ptrdiff_t stride_image, 
-                                        lab* converted_image_buffer, std::ptrdiff_t stride_converted_image,
-                                        int width, int height)
+__global__ void rgbtolab_converter_GPU(ImageView<rgb8> in, ImageView<lab> backgroundLAB, int width, int height)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        rgb8* lineptr = (rgb8*)((std::byte*)zero_image_buffer + y * stride_image);
-        lab* lineptr_converted = (lab*)((std::byte*)converted_image_buffer + y * stride_converted_image);
+        rgb8* lineptr = (rgb8*)((std::byte*)in.buffer + y * in.stride);
+        lab* lineptr_lab = (lab*)((std::byte*)backgroundLAB.buffer + y * backgroundLAB.stride);
 
         rgb8 currentpixel = lineptr[x];
 
@@ -121,7 +119,7 @@ int main()
     initialize_buffers_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, zero_image.width, zero_image.height, zero_image.stride);
     cudaDeviceSynchronize();
     
-    rgbtolab_converter_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image.buffer, zero_image.stride, converted_image.buffer, converted_image.stride, zero_image.height, zero_image.stride);
+    rgbtolab_converter_GPU<<<threadsPerBlock, blocksPerGrid>>>(zero_image, lab_image, width, height);
     cudaDeviceSynchronize();
 
 }
