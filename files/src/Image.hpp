@@ -6,10 +6,10 @@
 #include "stb_image.h"
 #include "cuda_runtime.h"
 
-// struct rgb8
-// {
-//   uint8_t r, g, b;
-// };
+struct rgb8
+{
+  uint8_t r, g, b;
+};
 
 // View over a 2D buffer
 template <class T>
