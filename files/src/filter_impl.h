@@ -2,17 +2,18 @@
 
 #include <cstdint>
 #include <cuda_runtime.h>
+#include "Image.hpp"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // RGB color structure
-struct rgb8 {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-};
+// struct rgb8 {
+//     uint8_t r;
+//     uint8_t g;
+//     uint8_t b;
+// };
 
 // LAB color structure
 struct lab {
