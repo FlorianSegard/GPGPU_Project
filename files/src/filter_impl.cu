@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include "backgroundestimationfirsttry/labConverter.hpp"
+#include "backgroundestimationfirsttry/labConverter.hpp" //maybe do it better like do a library in the makefile or somehtign
 
 // Cuda error checking macro
 #define CHECK_CUDA_ERROR(call) do { \
