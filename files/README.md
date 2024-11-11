@@ -8,7 +8,7 @@ nix develop
 
 ```
 export buildir=... # pas dans l'AFS
-cmake -S . -B $builddir -DCMAKE_BUILD_TYPE=Debug
+cmake -S . -B $buildir -DCMAKE_BUILD_TYPE=Debug
 ```
 
 or

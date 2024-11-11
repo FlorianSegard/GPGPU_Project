@@ -19,7 +19,7 @@ add_library(stb_image src/stb_image.h src/stb_image.c)
 add_library(Compute src/Compute.cpp src/Compute.cu src/logo.c)
 target_link_libraries(Compute PRIVATE CUDA::cudart)
 
-add_executable(stream src/stream.cpp src/gstfilter.c src/gstfilter.h)
+add_executable(stream src/stream.cpp src/gstfilter.c src/gstfilter.h src/filter_impl.c src/filter_impl.h)
 
 
 target_link_libraries(stream PUBLIC PkgConfig::GStreamerVideo cudart)

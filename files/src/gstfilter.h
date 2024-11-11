@@ -23,6 +23,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 #include "Compute.hpp"
+#include "filter_impl.h"
 
 G_BEGIN_DECLS
 

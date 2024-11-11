@@ -1,3 +1,5 @@
+#include "filter_impl.h"
+
 #include <iostream>
 
 struct rgb {
@@ -58,7 +60,7 @@ extern "C"
         std::byte* lab_buffer; // type: lab array pointer
         error = cudaMallocPitch(&lab_buffer, &lab_pitch,
                                 width * sizeof(lab), height));
-        CHECK_CUDA_ERROR(error)
+        CHECK_CUDA_ERROR(error);
 
         // Convert RGB to LAB
         rgbtolab_converter_GPU<<<blocksPerGrid, threadsPerBlock>>>(

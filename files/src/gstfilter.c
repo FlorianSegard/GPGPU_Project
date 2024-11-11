@@ -39,6 +39,7 @@
 #include <gst/video/gstvideofilter.h>
 #include "gstfilter.h"
 #include "Compute.hpp"
+#include "filter_impl.h"
 
 /* properties */
 enum {
@@ -215,25 +216,25 @@ gst_myfilter_get_property (GObject * object, guint property_id,
   // Modified: get properties method
   switch (property_id) {
     case PROP_DEVICE:
-      g_value_set_int(value, cudafilter->device)
+      g_value_set_int(value, cudafilter->device);
       break;
     case PROP_BG_URI:
-      g_value_set_string(value, cudafilter->bg_uri)
+      g_value_set_string(value, cudafilter->bg_uri);
       break;
     case PROP_OPENING_SIZE:
-      g_value_set_int(value, cudafilter->opening_size)
+      g_value_set_int(value, cudafilter->opening_size);
       break;
     case PROP_TH_LOW:
-      g_value_set_int(value, cudafilter->th_low)
+      g_value_set_int(value, cudafilter->th_low);
       break;
     case PROP_TH_HIGH:
-      g_value_set_int(value, cudafilter->th_high)
+      g_value_set_int(value, cudafilter->th_high);
       break;
     case PROP_BG_SAMPLING_RATE:
-      g_value_set_int(value, cudafilter->bg_sampling_rate)
+      g_value_set_int(value, cudafilter->bg_sampling_rate);
       break;
     case PROP_BG_NUMBER_FRAME:
-      g_value_set_int(value, cudafilter->bg_number_frame)
+      g_value_set_int(value, cudafilter->bg_number_frame);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);

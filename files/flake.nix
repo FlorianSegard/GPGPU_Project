@@ -60,6 +60,10 @@
           gst_all_1.gst-plugins-ugly
           gst_all_1.gst-plugins-bad
           gst_all_1.gst-plugins-good
+          pcre2
+          libunwind
+          elfutils
+          orc
         ];
         shellHook = with pkgs; ''
           export LD_LIBRARY_PATH=${cudaPackages.cuda_nvprof.lib}/lib:$LD_LIBRARY_PATH
