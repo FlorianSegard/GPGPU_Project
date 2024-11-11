@@ -101,10 +101,11 @@ void printImageSection(lab* data, int width, int height, std::ptrdiff_t stride, 
 
 
 int main() {
+    // Define dimensions once at the start
     const int width = 1024;
     const int height = 1024;
-    const std::ptrdiff_t stride = width * sizeof(lab);  // Simple stride calculation
-    const int NUM_ITERATIONS = 100;  // Run multiple iterations
+    const std::ptrdiff_t stride = width * sizeof(lab);
+    const int NUM_ITERATIONS = 100;
 
     // Allocate host memory
     lab* h_input = new lab[width * height];
@@ -123,7 +124,7 @@ int main() {
     CHECK_CUDA_ERROR(cudaMemcpy(d_input, h_input, height * stride, cudaMemcpyHostToDevice));
 
     // Set up grid and block dimensions
-    dim3 threadsPerBlock(16, 16); // May need to be changed ... to be tested
+    dim3 threadsPerBlock(16, 16);
     dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                    (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
@@ -136,27 +137,17 @@ int main() {
     cudaEventCreate(&stop);
     float milliseconds = 0;
 
-    // Add GPU warmup phase
-    for(int i = 0; i < 1000; i++) {  // More warmup iterations
+    // Warmup phase
+    for(int i = 0; i < 1000; i++) {
         erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
     }
     cudaDeviceSynchronize();
 
-    // Reset GPU before timing
-    cudaDeviceReset();
-    
-    // Increase problem size
-    const int width = 1024;  // Larger image
-    const int height = 1024;
-    
-    // Add CPU-GPU sync before timing
-    cudaDeviceSynchronize();
-    
-    // Time erosion with proper synchronization
+    // Time erosion
     cudaEventRecord(start);
     for(int i = 0; i < NUM_ITERATIONS; i++) {
         erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
-        cudaDeviceSynchronize();  // Force synchronization each iteration
+        cudaDeviceSynchronize();
     }
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
@@ -172,6 +163,7 @@ int main() {
     cudaEventRecord(start);
     for(int i = 0; i < NUM_ITERATIONS; i++) {
         dilate<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
+        cudaDeviceSynchronize();
     }
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
@@ -188,6 +180,7 @@ int main() {
     for(int i = 0; i < NUM_ITERATIONS; i++) {
         erode<<<numBlocks, threadsPerBlock>>>(d_input, d_temp, width, height, stride);
         dilate<<<numBlocks, threadsPerBlock>>>(d_temp, d_output, width, height, stride);
+        cudaDeviceSynchronize();
     }
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
