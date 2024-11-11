@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <cuda_runtime.h>
-#include <gst/gst.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +23,7 @@ struct lab {
 
 
 void filter_impl(uint8_t* pixels_buffer, int width, int height,
-                 int plane_stride, int pixel_stride, GstClockTime timestamp);
+                 int plane_stride, int pixel_stride);
 
 #ifdef __cplusplus
 }
