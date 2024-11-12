@@ -118,7 +118,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     Image<float> currentDistancePixels(width, height, true);
 
-    background_process_frame(lab_image, currentBackground, candidateBackground, currentTimePixels, currentDistancePixels);
+    background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, current_distance_pixels);
 
     checkKernelLaunch();
 
