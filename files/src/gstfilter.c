@@ -332,7 +332,7 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
 
   // TODO: this is the main process, we will call it later
   g_assert(pixel_stride == 3);
-  filter_impl(pixels, width, height, plane_stride);
+  filter_impl_cu(pixels, width, height, plane_stride);
 
   cpt_process_frame(pixels, width, height, plane_stride);
 
