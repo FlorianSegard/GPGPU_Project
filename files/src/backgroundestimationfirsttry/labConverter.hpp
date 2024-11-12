@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "../Image.hpp"
+#include "../filter_impl.h"
 
 #ifdef __cplusplus
     extern "C" {
