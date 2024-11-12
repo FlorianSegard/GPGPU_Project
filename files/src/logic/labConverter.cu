@@ -18,9 +18,9 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab>
         float g_normalized = currentpixel.g / 255.f;
         float b_normalized = currentpixel.b / 255.f;
 
-        float r_linear = get_linear_GPU(r_normalized);
-        float g_linear = get_linear_GPU(g_normalized);
-        float b_linear = get_linear_GPU(b_normalized);
+        float r_linear = get_linear(r_normalized);
+        float g_linear = get_linear(g_normalized);
+        float b_linear = get_linear(b_normalized);
         
         float result[3];
         XYZ_color_space_GPU(r_linear, g_linear, b_linear, result);
@@ -33,9 +33,9 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab>
         float Y_n = Y / 1.0;
         float Z_n = Z / 1.08883;
 
-        float X_n_sqrt = f_GPU(X_n);
-        float Y_n_sqrt = f_GPU(Y_n);
-        float Z_n_sqrt = f_GPU(Z_n);
+        float X_n_sqrt = f(X_n);
+        float Y_n_sqrt = f(Y_n);
+        float Z_n_sqrt = f(Z_n);
 
         float L = 116 * Y_n_sqrt - 16;
         float a = 500 * (X_n_sqrt - Y_n_sqrt);
