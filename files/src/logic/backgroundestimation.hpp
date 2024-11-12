@@ -2,7 +2,9 @@
 
 
 #include <cmath>
-#include "labConverter.hpp"
+#include "../Image.hpp"
+#include "../filter_impl.h"
+// #include "labConverter.hpp"
 
 #ifdef __cplusplus
     extern "C" {
@@ -17,10 +19,10 @@ typedef struct  {
     e_device_t device;
 } Parameters;
 
-struct lab
-{
-    float L, a, b;
-};
+// struct lab
+// {
+//     float L, a, b;
+// };
 
 void background_init(Parameters* params);
 

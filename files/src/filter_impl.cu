@@ -2,7 +2,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include "backgroundestimationfirsttry/labConverter.hpp" //maybe do it better like do a library in the makefile or somehtign
+#include "logic/labConverter.hpp"
+#include "logic/backgroundestimation.hpp"
 #include "filter_impl.h"
 
 // Cuda error checking macro
@@ -34,22 +35,28 @@ inline void checkKernelLaunch() {
 
 
 
+Image<lab> currentBackground;
+Image<lab> candidateBackground;
+Image<int> currentTimePixels;
+bool isInitialized = false;
 
-
-
-size_t background_ref_pitch;
-lab* background_ref = nullptr;
-size_t candidate_bg_pitch;
-lab* candidate_background = nullptr;
+void initializeGlobals(int width, int height) {
+    if (!isInitialized) {
+        current_background = Image<lab>(width, height, true);
+        current_background = Image<lab>(width, height, true);
+        current_background = Image<int>(width, height, true);
+        isInitialized = true;
+    }
+}
 
 // TODO: what to do when background_ref / candidate_background null?
 // TODO: is it possible to reuse buffers instead of always creating new ones?
 
-void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride, int pixel_stride)
+void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride)
 {
+    initializeGlobals(width, height);
 
-
-    Parameters params;    
+    Parameters params;
     params.device = GPU;
 
     // GPU properties for kernel calls
@@ -90,7 +97,6 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
 
 
     // Convert RGB to LAB
-
     labConv_init(&params);
 
     labConv_process_frame(rgb_image, lab_image);
@@ -98,11 +104,11 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
     checkKernelLaunch();
 
     // Residual image
-    size_t residual_pitch;
-    lab* residual_buffer; // type: lab array pointer
-    error = cudaMallocPitch(&residual_buffer, &residual_pitch,
-                            width * sizeof(lab), height);
-    CHECK_CUDA_ERROR(error);
+    // size_t residual_pitch;
+    // lab* residual_buffer; // type: lab array pointer
+    // error = cudaMallocPitch(&residual_buffer, &residual_pitch,
+    //                         width * sizeof(lab), height);
+    // CHECK_CUDA_ERROR(error);
 
     // TODO: GPU residual image to code with the following args
     // - background_ref, background_ref_pitch     : the background reference
@@ -110,8 +116,11 @@ void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride
     // - residual_buffer, residual_pitch          : the buffer to fill
     // - heigt and width
 
+    Image<float> currentDistancePixels(width, height, true);
 
+    background_process_frame(lab_image, currentBackground, candidateBackground, currentTimePixels, currentDistancePixels);
 
+    checkKernelLaunch();
 
 
     // residual_image<<<blocksPerGrid, threadsPerBlock>>>();

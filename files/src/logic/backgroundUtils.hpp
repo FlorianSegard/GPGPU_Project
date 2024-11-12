@@ -1,5 +1,7 @@
 #pragma once
 #include <cmath>
+#include "../Image.hpp"
+#include "../filter_impl.h"
 
 // Shared to average lab pixels
 __host__ __device__ lab averageLAB(lab p1, lab p2) {

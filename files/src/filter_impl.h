@@ -23,8 +23,8 @@ struct lab {
     float b;
 };
 
-void filter_impl(uint8_t* pixels_buffer, int width, int height,
-                 int plane_stride, int pixel_stride);
+void filter_impl_cu(uint8_t* pixels_buffer, int width, int height,
+                 int plane_stride);
 
 #ifdef __cplusplus
 }
