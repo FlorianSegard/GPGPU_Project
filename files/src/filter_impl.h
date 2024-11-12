@@ -4,7 +4,6 @@
 
 #include "stb_image.h"
 #include "Image.hpp"
-#include "Compute.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,8 +23,7 @@ struct lab {
     float b;
 };
 
-void filter_impl_cu(uint8_t* pixels_buffer, int width, int height,
-                 int plane_stride);
+void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride);
 
 #ifdef __cplusplus
 }

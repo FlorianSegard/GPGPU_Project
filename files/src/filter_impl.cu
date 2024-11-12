@@ -51,7 +51,7 @@ void initializeGlobals(int width, int height) {
 
 // TODO: what to do when background_ref / candidate_background null?
 // TODO: is it possible to reuse buffers instead of always creating new ones?
-
+extern "C" {
 void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride)
 {
   	printf("call\n");
@@ -200,4 +200,5 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     // cudaFree(residual_buffer);
     // cudaFree(eroded_buffer);
     // cudaFree(dilated_buffer);
+}
 }
