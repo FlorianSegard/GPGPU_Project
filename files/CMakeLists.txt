@@ -20,12 +20,13 @@ add_library(Compute src/Compute.cpp src/Compute.cu src/logo.c)
 target_link_libraries(Compute PRIVATE CUDA::cudart)
 
 # New
-add_library(filter_impl src/filter_impl.h src/filter_impl.cu)
-target_link_libraries(filter_impl PRIVATE CUDA::cudart)
+# add_library(filter_impl src/filter_impl.h src/filter_impl.cu)
+# target_link_libraries(filter_impl PRIVATE CUDA::cudart)
 
 add_executable(stream src/stream.cpp src/gstfilter.c src/gstfilter.h)
 
-target_link_libraries(stream PUBLIC PkgConfig::GStreamerVideo cudart filter_impl)
+# target_link_libraries(stream PUBLIC PkgConfig::GStreamerVideo cudart filter_impl)
+target_link_libraries(stream PUBLIC PkgConfig::GStreamerVideo)
 
 ## La beauté de NIX....
 target_link_libraries(stream PUBLIC $<TARGET_FILE:Compute>)
