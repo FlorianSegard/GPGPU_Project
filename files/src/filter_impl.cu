@@ -56,7 +56,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 {
   	printf("call\n");
     initializeGlobals(width, height);
-
+	printf("call2\n");
     Parameters params;
     params.device = GPU;
 
@@ -65,7 +65,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     dim3 threadsPerBlock(32, 32);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-
+	printf("call3\n");
     // Alloc memory and copy input RGB buffer
     // -> cudaMemcpy2D 'kind' param - https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g18fa99055ee694244a270e4d5101e95b
     
@@ -78,7 +78,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     // CHECK_CUDA_ERROR(error);
 
     Image<rgb8> rgb_image(width, height, true);
-
+	printf("call4\n");
 
     error = cudaMemcpy2D(rgb_image.buffer, rgb_image.stride, pixels_buffer, plane_stride,
                          width * sizeof(rgb8), height, cudaMemcpyDefault);
@@ -93,7 +93,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     // error = cudaMallocPitch(&lab_buffer, &lab_pitch,
     //                         width * sizeof(lab), height);
     // CHECK_CUDA_ERROR(error);
-
+	printf("call5\n");
     Image<lab> lab_image(width, height, true);
 
 
@@ -101,7 +101,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     labConv_init(&params);
 
     labConv_process_frame(rgb_image, lab_image);
-
+	printf("call6\n");
     checkKernelLaunch();
 
     // Residual image
@@ -116,7 +116,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     // - lab_buffer, lab_pitch                    : the current image
     // - residual_buffer, residual_pitch          : the buffer to fill
     // - heigt and width
-
+	printf("call7\n");
     Image<float> current_distance_pixels(width, height, true);
 
     background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, current_distance_pixels);
