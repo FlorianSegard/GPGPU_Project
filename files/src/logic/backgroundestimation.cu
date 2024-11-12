@@ -2,9 +2,9 @@
 #include "backgroundestimation.hpp"
 #include "backgroundUtils.hpp"
 
-__global__ void check_background_kernel(Image<lab> in, Image<lab> currentBackground,
-                                            Image<lab> candidateBackground, Image<int> currentTimePixels,
-                                            Image<float> currentDistancePixels, int width, int height)
+__global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> currentBackground,
+                                            ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
+                                            ImageView<float> currentDistancePixels, int width, int height)
 {
 
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -54,9 +54,9 @@ __global__ void check_background_kernel(Image<lab> in, Image<lab> currentBackgro
 
 
 
-void check_background_cu(Image<lab> in, Image<lab> currentBackground,
-                            Image<lab> candidateBackground, Image<int> currentTimePixels,
-                            Image<float> currentDistancePixels, int width, int height)
+void check_background_cu(ImageView<lab> in, ImageView<lab> currentBackground,
+                            ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
+                            ImageView<float> currentDistancePixels, int width, int height)
 {
     dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x, 
