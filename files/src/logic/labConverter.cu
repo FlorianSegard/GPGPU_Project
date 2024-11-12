@@ -23,7 +23,7 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab>
         float b_linear = get_linear(b_normalized);
         
         float result[3];
-        XYZ_color_space_GPU(r_linear, g_linear, b_linear, result);
+        XYZ_color_space(r_linear, g_linear, b_linear, result);
 
         float X = result[0];
         float Y = result[1];
