@@ -22,6 +22,10 @@ void background_process_frame(Image<lab> in, Image<lab> currentBackground,
                 Image<lab> candidateBackground, Image<int> currentTimePixels,
                 Image<float> currentDistancePixels);
 
+void check_background_cu(Image<lab> in, Image<lab> currentBackground,
+                            Image<lab> candidateBackground, Image<int> currentTimePixels,
+                            Image<float> currentDistancePixels, int width, int height);
+
 #ifdef __cplusplus
     }
 #endif

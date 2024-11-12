@@ -2,9 +2,9 @@
 #include "backgroundestimation.hpp"
 #include "backgroundUtils.hpp"
 
-void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
-                            ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
-                            ImageView<float> currentDistancePixels, int width, int height)
+void check_background_cpp(Image<lab> in, Image<lab> currentBackground,
+                            Image<lab> candidateBackground, Image<int> currentTimePixels,
+                            Image<float> currentDistancePixels, int width, int height)
 {
     for (int y = 0; y < width; y++)
     {
