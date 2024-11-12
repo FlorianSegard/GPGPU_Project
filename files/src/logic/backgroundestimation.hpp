@@ -4,6 +4,7 @@
 #include <cmath>
 #include "../Image.hpp"
 #include "../filter_impl.h"
+#include "../Compute.hpp"
 // #include "labConverter.hpp"
 
 #ifdef __cplusplus
