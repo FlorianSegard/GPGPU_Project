@@ -54,7 +54,7 @@ void initializeGlobals(int width, int height) {
 
 void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride)
 {
-  	printf("call");
+  	printf("call\n");
     initializeGlobals(width, height);
 
     Parameters params;
