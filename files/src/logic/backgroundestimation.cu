@@ -61,7 +61,7 @@ void check_background_cu(ImageView<lab> in, ImageView<lab> currentBackground,
     dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x, 
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    printf("wiwou");
+    std::cout << "wiwou" << std::endl;
     check_background_kernel<<<threadsPerBlock, blocksPerGrid>>>(in, currentBackground, candidateBackground, 
                                                                 currentTimePixels, currentDistancePixels, width, height);
 }
