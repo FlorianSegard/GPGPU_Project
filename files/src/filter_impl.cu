@@ -1,4 +1,3 @@
-#include "filter_impl.h"
 #include <cuda_runtime.h>
 #include <cstdio>
 #include <cstdlib>
