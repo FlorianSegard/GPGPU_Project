@@ -29,7 +29,7 @@ add_executable(stream src/stream.cpp src/gstfilter.c src/gstfilter.h)
 target_link_libraries(stream PUBLIC PkgConfig::GStreamerVideo)
 
 ## La beauté de NIX....
-target_link_libraries(Compute PUBLIC $<TARGET_FILE:filter_impl>)
+target_link_libraries(stream PUBLIC $<TARGET_FILE:filter_impl>)
 target_link_libraries(stream PUBLIC $<TARGET_FILE:Compute>)
 target_link_directories(stream PUBLIC "${CUDAToolkit_LIBRARY_DIR}")
 set_target_properties(stream PROPERTIES
