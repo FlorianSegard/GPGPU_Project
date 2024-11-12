@@ -35,16 +35,16 @@ inline void checkKernelLaunch() {
 
 
 
-Image<lab> currentBackground;
-Image<lab> candidateBackground;
-Image<int> currentTimePixels;
+Image<lab> current_background;
+Image<lab> candidate_background;
+Image<int> current_time_pixels;
 bool isInitialized = false;
 
 void initializeGlobals(int width, int height) {
     if (!isInitialized) {
         current_background = Image<lab>(width, height, true);
-        current_background = Image<lab>(width, height, true);
-        current_background = Image<int>(width, height, true);
+        candidate_background = Image<lab>(width, height, true);
+        current_time_pixels = Image<int>(width, height, true);
         isInitialized = true;
     }
 }
