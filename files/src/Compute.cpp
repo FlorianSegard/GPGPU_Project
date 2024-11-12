@@ -61,11 +61,11 @@ extern "C" {
   void cpt_process_frame(uint8_t* buffer, int width, int height, int stride)
   {
     // ImageView<rgb8> img = ImageView<rgb8>{(rgb8*)buffer, width, height, stride};
-    // if (g_params.device == e_device_t::CPU)
-    //   filter_impl(buffer, width, height, stride);
-    // else if (g_params.device == e_device_t::GPU)
-    //   filter_impl(buffer, width, height, stride);
-      // compute_cu(img);
+    if (g_params.device == e_device_t::CPU)
+      filter_impl(buffer, width, height, stride, stride);
+    else if (g_params.device == e_device_t::GPU)
+      filter_impl(buffer, width, height, stride, stride);
+      compute_cu(img);
   }
 
 }
