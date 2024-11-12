@@ -44,7 +44,9 @@ void initializeGlobals(int width, int height) {
     if (!isInitialized) {
       	printf("call ---\n");
         current_background = Image<lab>(width, height, true);
+        printf("call ---\n");
         candidate_background = Image<lab>(width, height, true);
+        printf("call ---\n");
         current_time_pixels = Image<int>(width, height, true);
         isInitialized = true;
     }
@@ -103,6 +105,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     labConv_process_frame(rgb_image, lab_image);
 	printf("call6\n");
+    cudaDeviceSynchronize();
     checkKernelLaunch();
 
     // Residual image
@@ -121,7 +124,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     Image<float> current_distance_pixels(width, height, true);
 
     background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, current_distance_pixels);
-
+	cudaDeviceSynchronize();
     checkKernelLaunch();
 
 
