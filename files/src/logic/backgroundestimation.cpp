@@ -58,7 +58,9 @@ extern "C" {
 
     void background_init(Parameters* params)
     {
+        std::cout << "avant" << std::endl;
         b_params = *params;
+        std::cout << "apres" << std::endl;
     }
 
     void background_process_frame(ImageView<lab> in, ImageView<lab> currentBackground,
@@ -67,6 +69,7 @@ extern "C" {
     {
         int width = in.width;
         int height = in.height;
+        std::cout << "wrapper" << std::endl;
         if (b_params.device == e_device_t::CPU)
             check_background_cpp(in, currentBackground, 
                         candidateBackground, currentTimePixels, 
