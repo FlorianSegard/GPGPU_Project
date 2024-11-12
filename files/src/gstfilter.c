@@ -334,7 +334,7 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
   g_assert(pixel_stride == 3);
   // filter_impl(pixels, width, height, plane_stride, pixel_stride);
 
-  cpt_process_frame(pixels, width, height, plane_stride, pixel_stride);
+  cpt_process_frame(pixels, width, height, plane_stride);
 
 
   return GST_FLOW_OK;
