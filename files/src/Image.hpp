@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstring>
+//#include <cstring>
 #include <string_view>
 #include <memory>
 #include "stb_image.h"
@@ -93,7 +93,7 @@ Image<T>& Image<T>::operator=(Image&& other) noexcept
   return *this;
 }
 
-template <class T>
+/*template <class T>
 Image<T> Image<T>::clone() const
 {
   Image<T> out(this->width, this->height);
@@ -102,4 +102,4 @@ Image<T> Image<T>::clone() const
                 (char*)this->buffer + y * this->stride, //
                 this->width * sizeof(T));
   return out;
-}
+}*/
