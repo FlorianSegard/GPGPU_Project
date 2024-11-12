@@ -42,6 +42,7 @@ bool isInitialized = false;
 
 void initializeGlobals(int width, int height) {
     if (!isInitialized) {
+      	printf("call ---\n");
         current_background = Image<lab>(width, height, true);
         candidate_background = Image<lab>(width, height, true);
         current_time_pixels = Image<int>(width, height, true);
