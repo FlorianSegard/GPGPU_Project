@@ -4,6 +4,7 @@
 
 #include "stb_image.h"
 #include "Image.hpp"
+#include "Compute.hpp"
 
 #ifdef __cplusplus
 extern "C" {
