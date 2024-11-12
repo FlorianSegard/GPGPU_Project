@@ -46,6 +46,7 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab>
     }
 }
 
+extern "C"
 void rgbtolab_converter_cu(ImageView<rgb8> rgb_image, ImageView<lab> backgroundLAB, int width, int height)
 {
     dim3 threadsPerBlock(16, 16);
