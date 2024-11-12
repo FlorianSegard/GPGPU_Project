@@ -25,7 +25,7 @@ target_link_libraries(Compute PRIVATE CUDA::cudart)
 
 add_executable(stream src/stream.cpp src/gstfilter.c src/gstfilter.h)
 
-# target_link_libraries(stream PUBLIC PkgConfig::GStreamerVideo cudart filter_impl)
+target_link_libraries(stream PUBLIC PkgConfig::GStreamerVideo cudart filter_impl)
 
 ## La beauté de NIX....
 target_link_libraries(stream PUBLIC $<TARGET_FILE:Compute>)
