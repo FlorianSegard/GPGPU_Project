@@ -58,6 +58,7 @@ void check_background_cu(ImageView<lab> in, ImageView<lab> currentBackground,
                             ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
                             ImageView<float> currentDistancePixels, int width, int height)
 {
+    std::cout << "wiwo2u" << std::endl;
     dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x, 
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
