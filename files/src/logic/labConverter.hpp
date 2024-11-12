@@ -3,6 +3,7 @@
 #include <cmath>
 #include "../Image.hpp"
 #include "../filter_impl.h"
+#include "Computer.hpp"
 
 #ifdef __cplusplus
     extern "C" {
