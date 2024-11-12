@@ -10,14 +10,6 @@
     extern "C" {
 #endif
 
-typedef enum {
-    CPU,
-    GPU
-} e_device_t;
-
-typedef struct  {
-    e_device_t device;
-} Parameters;
 
 // struct lab
 // {
