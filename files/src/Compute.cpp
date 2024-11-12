@@ -65,7 +65,7 @@ extern "C" {
       filter_impl(buffer, width, height, stride, stride);
     else if (g_params.device == e_device_t::GPU)
       filter_impl(buffer, width, height, stride, stride);
-      compute_cu(img);
+      // compute_cu(img);
   }
 
 }

@@ -39,7 +39,6 @@
 #include <gst/video/gstvideofilter.h>
 #include "gstfilter.h"
 #include "Compute.hpp"
-#include "filter_impl.h"
 
 /* properties */
 enum {
