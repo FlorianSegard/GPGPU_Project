@@ -36,7 +36,7 @@
           unzip
           cmake
           linuxPackages.nvidia_x11
-          gcc11
+          gcc12
           coreutils
           libGLU
           libGL
@@ -66,10 +66,10 @@
           orc
         ];
         shellHook = with pkgs; ''
-          export CXX=${gcc11}/bin/g++
+          export CXX=${gcc12}/bin/g++
           export LD_LIBRARY_PATH=${cudaPackages.cuda_nvprof.lib}/lib:$LD_LIBRARY_PATH
-          export CUDAHOSTCXX=${pkgs.gcc11}/bin/g++
-          export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc11}/bin/g++"
+          export CUDAHOSTCXX=${pkgs.gcc12}/bin/g++
+          export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc12}/bin/g++"
 
         '';
       };
