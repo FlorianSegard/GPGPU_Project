@@ -60,11 +60,11 @@ extern "C" {
 
   void cpt_process_frame(uint8_t* buffer, int width, int height, int stride)
   {
-    auto img = ImageView<rgb8>{(rgb8*)buffer, width, height, stride};
-    if (g_params.device == e_device_t::CPU)
-      filter_impl(img);
-    else if (g_params.device == e_device_t::GPU)
-      filter_impl(img);
+    // ImageView<rgb8> img = ImageView<rgb8>{(rgb8*)buffer, width, height, stride};
+    // if (g_params.device == e_device_t::CPU)
+    //   filter_impl(buffer, width, height, stride);
+    // else if (g_params.device == e_device_t::GPU)
+    //   filter_impl(buffer, width, height, stride);
       // compute_cu(img);
   }
 
