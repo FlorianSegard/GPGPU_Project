@@ -2,7 +2,7 @@
 #include <cmath>
 
 // Shared function to convert RGB to XYZ color space.
-__device__ inline void XYZ_color_space(float r_linear, float g_linear, float b_linear, float* result) {
+__host__ __device__ void XYZ_color_space(float r_linear, float g_linear, float b_linear, float* result) {
     float matrix[9] = { 0.4124564, 0.3575761, 0.1804375,
                         0.2126729, 0.7151522, 0.0721750,
                         0.0193339, 0.1191920, 0.9503041 };
@@ -13,7 +13,7 @@ __device__ inline void XYZ_color_space(float r_linear, float g_linear, float b_l
 }
 
 // Function to convert sRGB to linear RGB.
-__device__ inline float get_linear(float r_g_b) {
+__host__ __device__ float get_linear(float r_g_b) {
     if (r_g_b <= 0.04045f) {
         return r_g_b / 12.92f;
     }
@@ -21,7 +21,7 @@ __device__ inline float get_linear(float r_g_b) {
 }
 
 // Helper function for lab color space conversion.
-__device__ inline float f(float t) {
+__host__ __device__ float f(float t) {
     if (t > powf(6.0f/29.0f, 3.0f)) {
         return powf(t, 1.0f/3.0f);
     } else {
