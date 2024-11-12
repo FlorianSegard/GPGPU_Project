@@ -16,12 +16,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall")
 
 
 add_library(stb_image src/stb_image.h src/stb_image.c)
-add_library(Compute src/Compute.cpp src/Compute.cu src/logo.c)
+add_library(Compute src/Compute.cpp src/Compute.cu src/logo.c src/filter_impl.h src/filter_impl.cu)
 target_link_libraries(Compute PRIVATE CUDA::cudart)
 
 # New
-add_library(filter_impl src/filter_impl.h src/filter_impl.cu)
-target_link_libraries(filter_impl PRIVATE CUDA::cudart)
+# add_library(filter_impl src/filter_impl.h src/filter_impl.cu)
+# target_link_libraries(filter_impl PRIVATE CUDA::cudart)
 
 add_executable(stream src/stream.cpp src/gstfilter.c src/gstfilter.h)
 
@@ -29,7 +29,7 @@ add_executable(stream src/stream.cpp src/gstfilter.c src/gstfilter.h)
 target_link_libraries(stream PUBLIC PkgConfig::GStreamerVideo)
 
 ## La beauté de NIX....
-target_link_libraries(stream PUBLIC $<TARGET_FILE:filter_impl>)
+# target_link_libraries(stream PUBLIC $<TARGET_FILE:filter_impl>)
 target_link_libraries(stream PUBLIC $<TARGET_FILE:Compute>)
 target_link_directories(stream PUBLIC "${CUDAToolkit_LIBRARY_DIR}")
 set_target_properties(stream PROPERTIES
