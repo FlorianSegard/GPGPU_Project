@@ -122,6 +122,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     // - heigt and width
 	printf("call7\n");
     Image<float> current_distance_pixels(width, height, true);
+    background_init(&params);
 
     background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, current_distance_pixels);
 	cudaDeviceSynchronize();
