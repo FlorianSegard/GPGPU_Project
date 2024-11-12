@@ -61,9 +61,9 @@ extern "C" {
         b_params = *params;
     }
 
-    void background_process_frame(ImageView<lab> in, ImageView<lab> currentBackground, 
-                        ImageView<lab> candidateBackground, ImageView<int> currentTimePixels, 
-                        ImageView<float> currentDistancePixels)
+    void background_process_frame(Image<lab> in, Image<lab> currentBackground,
+                        Image<lab> candidateBackground, Image<int> currentTimePixels,
+                        Image<float> currentDistancePixels)
     {
         int width = in.width;
         int height = in.height;
