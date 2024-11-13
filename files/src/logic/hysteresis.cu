@@ -29,11 +29,11 @@ __global__ void hysteresis_thresholding(ImageView<float> input, ImageView<bool> 
     if (x >= width || y >= height)
         return;
 
-    float *input_lineptr = (float *)(input.buffer + y * input_pitch);
+    float *input_lineptr = (float *)((std::byte*)input.buffer + y * input_pitch);
     float in_val = input_lineptr[x];
 
     // Applique le seuil et on stocke le résultat dans la sortie
-    bool *output_lineptr = (bool *)(output.buffer + y * output_pitch);
+    bool *output_lineptr = (bool *)((std::byte*)output.buffer + y * output_pitch);
     output_lineptr[x] = in_val > threshold;
 }
 
@@ -53,8 +53,8 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         has_changed = false;
         __syncthreads();
 
-        bool *upper_lineptr = (bool *)(upper.buffer + y * upper_pitch);
-        bool *lower_lineptr = (bool *)(lower.buffer + y * lower_pitch);
+        bool *upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper_pitch);
+        bool *lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower_pitch);
 
         // Si le pixel est déjà marqué dans l'image supérieure, on passe au suivant
         if (upper_lineptr[x])
@@ -67,8 +67,8 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         // on vérifie les pixels voisins pour propager le marquage
         if ((x > 0 && upper_lineptr[x - 1]) ||
             (x < width - 1 && upper_lineptr[x + 1]) ||
-            (y > 0 && ((bool *)(upper.buffer + (y - 1) * upper_pitch))[x]) ||
-            (y < height - 1 && ((bool *)(upper.buffer + (y + 1) * upper_pitch))[x]))
+            (y > 0 && ((bool *)((std::byte*)upper.buffer + (y - 1) * upper_pitch))[x]) ||
+            (y < height - 1 && ((bool *)((std::byte*)upper.buffer + (y + 1) * upper_pitch))[x]))
         {
             upper_lineptr[x] = true;
             has_changed = true;
