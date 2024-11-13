@@ -50,6 +50,22 @@ __global__ void debug_bool_kernel(ImageView<bool> bf, ImageView<rgb8> rgb_buffer
 }
 
 
+__global__ void debug_float_kernel(ImageView<float> bf, ImageView<rgb8> rgb_buffer, int width, int height, std::ptrdiff_t stride) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x >= width || y >= height)
+        return;
+
+    float* bl = (float*)((std::byte*)bf.buffer + y * bf.stride);
+    rgb8* rgb_value = (rgb8*)((std::byte*)rgb_buffer.buffer + y * rgb_buffer.stride);
+
+    rgb_value[x].r = round(fmaxf((int)(bl[x]), 255.0));
+    rgb_value[x].g = round(fmaxf((int)(bl[x]), 255.0));
+    rgb_value[x].b = round(fmaxf((int)(bl[x]), 255.0));
+}
+
+
 Image<lab> current_background;
 Image<lab> candidate_background;
 Image<int> current_time_pixels;
@@ -156,7 +172,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
 
     // Alloc and red mask operation
-    debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height, plane_stride);
+    mask_process_frame(hysteresis_image, rgb_image, width, height, plane_stride);
     cudaDeviceSynchronize();
     checkKernelLaunch();
     std::cout << "red mask call succeeded" << std::endl;
