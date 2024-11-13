@@ -147,7 +147,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height, plane_stride);
 
-    //*
+    /*
     // Alloc and perform eroding operation
     Image<float> dilate_image(width, height, true);
 
