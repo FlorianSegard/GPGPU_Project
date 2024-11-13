@@ -86,8 +86,7 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
     dim3 gridSize((width + (blockSize.x - 1)) / blockSize.x, (height + (blockSize.y - 1)) / blockSize.y);
 
     size_t lower_threshold_pitch;
-    std::byte *lower_threshold_input;
-    CHECK_CUDA_ERROR(cudaMallocPitch(&lower_threshold_input, &lower_threshold_pitch, width * sizeof(bool), height));
+    Image<bool> lower_threshold_input(width, height, true);
 
     // seuil inf et sup
     hysteresis_thresholding<<<gridSize, blockSize>>>(opened_input, lower_threshold_input, width, height, opened_input_pitch, lower_threshold_pitch, lower_threshold);
@@ -114,6 +113,5 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
         CHECK_CUDA_ERROR(cudaMemcpy(&h_has_changed, d_has_changed, sizeof(bool), cudaMemcpyDeviceToHost));
     }
 
-    cudaFree(lower_threshold_input);
     cudaFree(d_has_changed);
 }
