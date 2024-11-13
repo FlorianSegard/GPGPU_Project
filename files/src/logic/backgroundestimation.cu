@@ -2,6 +2,7 @@
 #include "backgroundestimation.hpp"
 #include "backgroundUtils.hpp"
 
+//TODO: is lineptr_lab_candidate initialized with full 0??? (we need it)
 __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> currentBackground,
                                             ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
                                             ImageView<float> currentDistancePixels, int width, int height)
