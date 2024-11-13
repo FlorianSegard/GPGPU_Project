@@ -5,6 +5,7 @@
 #include "logic/labConverter.hpp"
 #include "logic/backgroundestimation.hpp"
 #include "filter_impl.h"
+#include "logic/filter_erode_and_dilate.hpp"
 
 // Cuda error checking macro
 #define CHECK_CUDA_ERROR(call) do { \
@@ -42,11 +43,8 @@ bool isInitialized = false;
 
 void initializeGlobals(int width, int height) {
     if (!isInitialized) {
-      	printf("call ---\n");
         current_background = Image<lab>(width, height, true);
-        printf("call ---\n");
         candidate_background = Image<lab>(width, height, true);
-        printf("call ---\n");
         current_time_pixels = Image<int>(width, height, true);
         isInitialized = true;
     }
@@ -54,112 +52,66 @@ void initializeGlobals(int width, int height) {
 
 // TODO: what to do when background_ref / candidate_background null?
 // TODO: is it possible to reuse buffers instead of always creating new ones?
+// Check error after each initialization
 extern "C" {
 void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride)
 {
-  	printf("call\n");
-    initializeGlobals(width, height);
-	printf("call2\n");
+    // Init device and global variables
     Parameters params;
     params.device = GPU;
+    initializeGlobals(width, height);
+
+
 
     // GPU properties for kernel calls
     cudaError_t error;
     dim3 threadsPerBlock(32, 32);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-	printf("call3\n");
-    // Alloc memory and copy input RGB buffer
-    // -> cudaMemcpy2D 'kind' param - https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g18fa99055ee694244a270e4d5101e95b
-    
-    
-    // size_t rgb_pitch;
-    // rgb8* rgb_buffer; // type: rgb8 array pointer
-    // error = cudaMallocPitch(&rgb_buffer, &rgb_pitch,
-    //                         width * sizeof(rgb8), height);
 
-    // CHECK_CUDA_ERROR(error);
-
+    // Clone pixels_buffer inside new allocated rgb_buffer
     Image<rgb8> rgb_image(width, height, true);
-	printf("call4\n");
-
     error = cudaMemcpy2D(rgb_image.buffer, rgb_image.stride, pixels_buffer, plane_stride,
                          width * sizeof(rgb8), height, cudaMemcpyDefault);
-
     CHECK_CUDA_ERROR(error);
 
-    // Allocate LAB converted image buffer
 
-    // size_t lab_pitch;
-    // lab* lab_buffer; // type: lab array pointer
 
-    // error = cudaMallocPitch(&lab_buffer, &lab_pitch,
-    //                         width * sizeof(lab), height);
-    // CHECK_CUDA_ERROR(error);
-	printf("call5\n");
+    // Allocate lab converted image buffer
+    labConv_init(&params);
     Image<lab> lab_image(width, height, true);
 
-
-    // Convert RGB to LAB
-    labConv_init(&params);
-
+    // Convert RGB to LAB -> result stored inside lab_buffer
     labConv_process_frame(rgb_image, lab_image);
-	printf("call6\n");
     cudaDeviceSynchronize();
     checkKernelLaunch();
+    std::cout << "labConv call succeeded" << std::endl;
 
-    // Residual image
-    // size_t residual_pitch;
-    // lab* residual_buffer; // type: lab array pointer
-    // error = cudaMallocPitch(&residual_buffer, &residual_pitch,
-    //                         width * sizeof(lab), height);
-    // CHECK_CUDA_ERROR(error);
 
-    // TODO: GPU residual image to code with the following args
-    // - background_ref, background_ref_pitch     : the background reference
-    // - lab_buffer, lab_pitch                    : the current image
-    // - residual_buffer, residual_pitch          : the buffer to fill
-    // - heigt and width
-	printf("call7\n");
-    Image<float> current_distance_pixels(width, height, true);
+
+    // Update background and get residual image
     background_init(&params);
+    Image<float> residual_image(width, height, true);
 
-    background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, current_distance_pixels);
+    background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, residual_image);
 	cudaDeviceSynchronize();
     checkKernelLaunch();
-
-
-    // residual_image<<<blocksPerGrid, threadsPerBlock>>>();
-
-
-    // checkKernelLaunch();
+    std::cout << "background call succeeded" << std::endl;
 
 
 
+    // Alloc and perform eroding operation
+    filter_init(&params);
+    Image<float> erode_image(width, height, true);
+    erode_process_frame<<<blocksPerGrid, threadsPerBlock>>>(
+            residual_image, erode_image,
+         width, height, plane_stride
+    );
+    cudaDeviceSynchronize();
+    checkKernelLaunch();
+    std::cout << "erode call succeeded" << std::endl;
 
 
-    // // Update background model
-    // check_background_GPU<<<blocksPerGrid, threadsPerBlock>>>(
-    //     lab_buffer, lab_pitch,
-    //     background_ref, background_ref_pitch,
-    //     candidate_background, candidate_bg_pitch,
-    //     (int*)current_time_pixels, time_pixels_pitch,
-    //     width, height
-    // );
-    // checkKernelLaunch();
-
-    // // Perform eroding operation
-    // size_t eroded_pitch;
-    // lab* eroded_buffer; // type: lab array pointer
-    // error = cudaMallocPitch(&eroded_buffer, &eroded_pitch,
-    //                         width * sizeof(lab), height);
-    // CHECK_CUDA_ERROR(error);
-
-    // erode<<<blocksPerGrid, threadsPerBlock>>>(
-    //     residual_buffer, eroded_buffer,
-    //     width, height, residual_pitch
-    // );
-    // checkKernelLaunch();
 
     // // Perform dilatation operation
     // size_t dilated_pitch;

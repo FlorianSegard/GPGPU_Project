@@ -3,15 +3,10 @@
 #include <vector>
 #include <cmath>
 #include <chrono>
+#include "filter_erode_and_dilate.hpp"
 
 
-struct lab {
-    float L;
-    float a;
-    float b;
-};
-
-void erode(const lab* input, lab* output, int width, int height, std::ptrdiff_t stride) {
+void erode_cpp(const lab* input, lab* output, int width, int height, std::ptrdiff_t stride) {
     for (int y = 0; y < height; ++y) {
         const lab* lineptr = (const lab*)((const std::byte*)input + y * stride);
         lab* lineptr_out = (lab*)((std::byte*)output + y * stride);
@@ -38,7 +33,7 @@ void erode(const lab* input, lab* output, int width, int height, std::ptrdiff_t 
     }
 }
 
-void dilate(const lab* input, lab* output, int width, int height, std::ptrdiff_t stride) {
+void dilate_cpp(const lab* input, lab* output, int width, int height, std::ptrdiff_t stride) {
     for (int y = 0; y < height; ++y) {
         const lab* lineptr = (const lab*)((const std::byte*)input + y * stride);
         lab* lineptr_out = (lab*)((std::byte*)output + y * stride);
@@ -65,6 +60,34 @@ void dilate(const lab* input, lab* output, int width, int height, std::ptrdiff_t
     }
 }
 
+
+extern "C" {
+
+static Parameters b_params;
+
+void filter_init(Parameters *params) {
+    b_params = *params;
+}
+
+void erode_process_frame(float* input, float* output, int width, int height, std::ptrdiff_t stride) {
+    if (b_params.device == e_device_t::CPU)
+        erode_cpp(input, output, width, height, stride);
+
+    else if (b_params.device == e_device_t::GPU)
+        erode_cu(input, output, width, height, stride);
+}
+
+void dilate_process_frame(float* input, float* output, int width, int height, std::ptrdiff_t stride) {
+    if (b_params.device == e_device_t::CPU)
+        dilate_cpp(input, output, width, height, stride);
+
+    else if (b_params.device == e_device_t::GPU)
+        dilate_cu(input, output, width, height, stride);
+}
+
+}
+
+/*
 // Helper function to initialize test data
 void initializeTestData(lab* data, int width, int height, std::ptrdiff_t stride) {
     for (int y = 0; y < height; y++) {
@@ -158,4 +181,4 @@ int main() {
     printImageSection(output.data(), width, height, stride, 0, 0, 5);
 
     return 0;
-}
+} */

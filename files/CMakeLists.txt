@@ -26,9 +26,12 @@ add_library(Compute
     src/logic/labConverter.hpp
     src/logic/labConverter.cu
     src/logic/labConverterUtils.hpp
-    src/logic/backgroundestimation.cpp     # Ensure this is included
+    src/logic/backgroundestimation.cpp
     src/logic/backgroundestimation.cu
-    src/logic/backgroundestimation.hpp
+    src/logic/backgroundestimation.hph
+    src/logic/filter_erode_and_dilate.cpp
+    src/logic/filter_erode_and_dilate.cu
+    src/logic/filter_erode_and_dilate.hpp
 )
 target_link_libraries(Compute PRIVATE CUDA::cudart)
 

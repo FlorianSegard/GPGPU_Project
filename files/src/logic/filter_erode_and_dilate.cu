@@ -21,21 +21,21 @@ struct lab {
         } \
     } while (0)
 
-__global__ void erode(lab* input, lab* output, int width, int height, std::ptrdiff_t stride) {
+__global__ void erode(float* input, float* output, int width, int height, std::ptrdiff_t stride) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        lab* lineptr = (lab*)((std::byte*)input + y * stride);
-        lab* lineptr_out = (lab*)((std::byte*)output + y * stride);
+        float* lineptr = (float*)((std::byte*)input + y * stride);
+        float* lineptr_out = (float*)((std::byte*)output + y * stride);
 
-        lab min_val = lineptr[x];
+        float min_val = lineptr[x];
         for (int dy = -1; dy <= 1; ++dy) {
             for (int dx = -1; dx <= 1; ++dx) {
                 int nx = x + dx;
                 int ny = y + dy;
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    lab* neighbor = (lab*)((std::byte*)input + ny * stride);
+                    float* neighbor = (float*)((std::byte*)input + ny * stride);
                     min_val.L = fminf(min_val.L, neighbor[nx].L);
                     min_val.a = fminf(min_val.a, neighbor[nx].a);
                     min_val.b = fminf(min_val.b, neighbor[nx].b);
@@ -46,21 +46,21 @@ __global__ void erode(lab* input, lab* output, int width, int height, std::ptrdi
     }
 }
 
-__global__ void dilate(lab* input, lab* output, int width, int height, std::ptrdiff_t stride) {
+__global__ void dilate(float* input, float* output, int width, int height, std::ptrdiff_t stride) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        lab* lineptr = (lab*)((std::byte*)input + y * stride);
-        lab* lineptr_out = (lab*)((std::byte*)output + y * stride);
+        float* lineptr = (float*)((std::byte*)input + y * stride);
+        float* lineptr_out = (float*)((std::byte*)output + y * stride);
 
-        lab max_val = lineptr[x];
+        float max_val = lineptr[x];
         for (int dy = -1; dy <= 1; ++dy) {
             for (int dx = -1; dx <= 1; ++dx) {
                 int nx = x + dx;
                 int ny = y + dy;
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    lab* neighbor = (lab*)((std::byte*)input + ny * stride);
+                    float* neighbor = (float*)((std::byte*)input + ny * stride);
                     max_val.L = fmaxf(max_val.L, neighbor[nx].L);
                     max_val.a = fmaxf(max_val.a, neighbor[nx].a);
                     max_val.b = fmaxf(max_val.b, neighbor[nx].b);
@@ -71,6 +71,24 @@ __global__ void dilate(lab* input, lab* output, int width, int height, std::ptrd
     }
 }
 
+
+void erode_cu(float* input, float* output, int width, int height, std::ptrdiff_t stride)
+{
+    dim3 threadsPerBlock(16, 16);
+    dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                       (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    erode<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, stride);
+}
+
+void dilate_cu(float* input, float* output, int width, int height, std::ptrdiff_t stride)
+{
+    dim3 threadsPerBlock(16, 16);
+    dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                       (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    dilate<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, stride);
+}
+
+/*
 // Helper function to initialize test data
 void initializeTestData(lab* data, int width, int height, std::ptrdiff_t stride) {
     for (int y = 0; y < height; y++) {
@@ -202,4 +220,4 @@ int main() {
     CHECK_CUDA_ERROR(cudaFree(d_temp));
 
     return 0;
-}
+} **/

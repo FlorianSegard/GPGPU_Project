@@ -11,13 +11,6 @@
     extern "C" {
 #endif
 
-
-
-// struct lab
-// {
-//     float L, a, b;
-// };
-
 void background_init(Parameters* params);
 
 void background_process_frame(ImageView<lab> in, ImageView<lab> currentBackground,
@@ -25,8 +18,8 @@ void background_process_frame(ImageView<lab> in, ImageView<lab> currentBackgroun
                 ImageView<float> currentDistancePixels);
 
 void check_background_cu(ImageView<lab> in, ImageView<lab> currentBackground,
-                            ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
-                            ImageView<float> currentDistancePixels, int width, int height);
+                         ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
+                         ImageView<float> currentDistancePixels, int width, int height);
 
 #ifdef __cplusplus
     }
