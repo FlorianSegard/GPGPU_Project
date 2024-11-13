@@ -1,12 +1,13 @@
 #include "hysteresis.hpp"
 #include <vector>
 
-void hysteresis_thresholding_cpp(ImageView<float> input, ImageView<bool> output, int width, int height, int input_pitch, int output_pitch, float threshold)
+/*
+void hysteresis_thresholding_cpp(ImageView<float> input, std::byte* output, int width, int height, int input_pitch, int output_pitch, float threshold)
 {
     for (int y = 0; y < height; ++y)
     {
         float *input_lineptr = reinterpret_cast<float *>(input.buffer + y * input_pitch);
-        bool *output_lineptr = reinterpret_cast<bool *>(output.buffer + y * output_pitch);
+        bool *output_lineptr = reinterpret_cast<bool *>(output + y * output_pitch);
 
         for (int x = 0; x < width; ++x)
         {
@@ -67,8 +68,11 @@ void hysteresis_cpp(ImageView<float> opened_input, ImageView<bool> hysteresis, i
         has_changed_global = false;
         hysteresis_kernel_cpp(hysteresis, lower_threshold_input.data(), width, height, hysteresis_pitch, lower_threshold_pitch, has_changed_global);
     }
+} */
+void hysteresis_cpp(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
+{
+    return;
 }
-
 
 extern "C" {
 
