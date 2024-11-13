@@ -148,9 +148,8 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "erode call succeeded" << std::endl;
 
-    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
 
-    /*
+
     // Alloc and perform eroding operation
     Image<float> dilate_image(width, height, true);
 
@@ -162,8 +161,9 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "dilate call succeeded" << std::endl;
 
+    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
 
-
+    /*
     // Alloc and perform hysteresis operation
     hysteresis_init(&params);
     Image<bool> hysteresis_image(width, height, true);
