@@ -142,13 +142,13 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     erode_process_frame(
             residual_image, erode_image,
-         width, height, plane_stride
+         width, height, erode_image.stride
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
     std::cout << "erode call succeeded" << std::endl;
 
-    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height, plane_stride);
+    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height, erode_image.stride);
 
     /*
     // Alloc and perform eroding operation
@@ -156,7 +156,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     dilate_process_frame(
             erode_image, dilate_image,
-            width, height, plane_stride
+            width, height, dilate_image.stride
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
@@ -179,7 +179,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
 
     // Alloc and red mask operation
-    mask_process_frame(hysteresis_image, rgb_image, width, height, plane_stride);
+    mask_process_frame(hysteresis_image, rgb_image, width, height, rgb_image.stride);
     cudaDeviceSynchronize();
     checkKernelLaunch();
     std::cout << "red mask call succeeded" << std::endl;

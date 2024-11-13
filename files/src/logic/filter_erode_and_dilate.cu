@@ -15,13 +15,13 @@
         } \
     } while (0)
 
-__global__ void erode(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride) {
+__global__ void erode(ImageView<float> input, ImageView<float> output, int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        float* lineptr = (float*)((std::byte*)input.buffer + y * stride);
-        float* lineptr_out = (float*)((std::byte*)output.buffer + y * stride);
+        float* lineptr = (float*)((std::byte*)input.buffer + y * input.stride);
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
 
         float min_val = lineptr[x];
         for (int dy = -1; dy <= 1; ++dy) {
@@ -29,7 +29,7 @@ __global__ void erode(ImageView<float> input, ImageView<float> output, int width
                 int nx = x + dx;
                 int ny = y + dy;
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    float* neighbor = (float*)((std::byte*)input.buffer + ny * stride);
+                    float* neighbor = (float*)((std::byte*)input.buffer + ny * input.stride);
                     min_val = fminf(min_val, neighbor[nx]);
                 }
             }
@@ -38,13 +38,13 @@ __global__ void erode(ImageView<float> input, ImageView<float> output, int width
     }
 }
 
-__global__ void dilate(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride) {
+__global__ void dilate(ImageView<float> input, ImageView<float> output, int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        float* lineptr = (float*)((std::byte*)input.buffer + y * stride);
-        float* lineptr_out = (float*)((std::byte*)output.buffer + y * stride);
+        float* lineptr = (float*)((std::byte*)input.buffer + y * input.stride);
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
 
         float max_val = lineptr[x];
         for (int dy = -1; dy <= 1; ++dy) {
@@ -52,7 +52,7 @@ __global__ void dilate(ImageView<float> input, ImageView<float> output, int widt
                 int nx = x + dx;
                 int ny = y + dy;
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    float* neighbor = (float*)((std::byte*)input.buffer + ny * stride);
+                    float* neighbor = (float*)((std::byte*)input.buffer + ny * input.stride);
                     max_val = fmaxf(max_val, neighbor[nx]);
                 }
             }
@@ -62,20 +62,20 @@ __global__ void dilate(ImageView<float> input, ImageView<float> output, int widt
 }
 
 
-void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride)
+void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height)
 {
     dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    erode<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, stride);
+    erode<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height);
 }
 
-void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride)
+void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height)
 {
     dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    dilate<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, stride);
+    dilate<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height);
 }
 
 /*

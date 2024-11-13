@@ -3,7 +3,7 @@
 #include "red_mask.hpp"
 
 
-__global__ void red_mask_kernel(ImageView<bool> hysteresis_buffer, ImageView<rgb8> rgb_buffer, int width, int height, std::ptrdiff_t stride) {
+__global__ void red_mask_kernel(ImageView<bool> hysteresis_buffer, ImageView<rgb8> rgb_buffer, int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -18,10 +18,10 @@ __global__ void red_mask_kernel(ImageView<bool> hysteresis_buffer, ImageView<rgb
     rgb_value[x].b = rgb_value[x].b / 2;
 }
 
-void red_mask_cu(ImageView<bool> hysteresis_buffer, ImageView<rgb8> rgb_buffer, int width, int height, std::ptrdiff_t stride)
+void red_mask_cu(ImageView<bool> hysteresis_buffer, ImageView<rgb8> rgb_buffer, int width, int height)
 {
     dim3 threadsPerBlock(32, 32);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    red_mask_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_buffer, rgb_buffer, width, height, stride);
+    red_mask_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_buffer, rgb_buffer, width, height);
 }

@@ -6,10 +6,10 @@
 #include "filter_erode_and_dilate.hpp"
 
 
-void erode_cpp(const ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride) {
+void erode_cpp(const ImageView<float> input, ImageView<float> output, int width, int height) {
     for (int y = 0; y < height; ++y) {
-        const lab* lineptr = (const lab*)((const std::byte*)input.buffer + y * stride);
-        lab* lineptr_out = (lab*)((std::byte*)output.buffer + y * stride);
+        const lab* lineptr = (const lab*)((const std::byte*)input.buffer + y * input.stride);
+        lab* lineptr_out = (lab*)((std::byte*)output.buffer + y * output.stride);
         
         for (int x = 0; x < width; ++x) {
             lab min_val = lineptr[x];
@@ -21,7 +21,7 @@ void erode_cpp(const ImageView<float> input, ImageView<float> output, int width,
                     int ny = y + dy;
                     
                     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                        const lab* neighbor = (const lab*)((const std::byte*)input.buffer + ny * stride);
+                        const lab* neighbor = (const lab*)((const std::byte*)input.buffer + ny * input.stride);
                         min_val.L = std::min(min_val.L, neighbor[nx].L);
                         min_val.a = std::min(min_val.a, neighbor[nx].a);
                         min_val.b = std::min(min_val.b, neighbor[nx].b);
@@ -33,10 +33,10 @@ void erode_cpp(const ImageView<float> input, ImageView<float> output, int width,
     }
 }
 
-void dilate_cpp(const ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride) {
+void dilate_cpp(const ImageView<float> input, ImageView<float> output, int width, int height) {
     for (int y = 0; y < height; ++y) {
-        const lab* lineptr = (const lab*)((const std::byte*)input.buffer + y * stride);
-        lab* lineptr_out = (lab*)((std::byte*)output.buffer + y * stride);
+        const lab* lineptr = (const lab*)((const std::byte*)input.buffer + y * input.stride);
+        lab* lineptr_out = (lab*)((std::byte*)output.buffer + y * output.stride);
         
         for (int x = 0; x < width; ++x) {
             lab max_val = lineptr[x];
@@ -48,7 +48,7 @@ void dilate_cpp(const ImageView<float> input, ImageView<float> output, int width
                     int ny = y + dy;
                     
                     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                        const lab* neighbor = (const lab*)((const std::byte*)input.buffer + ny * stride);
+                        const lab* neighbor = (const lab*)((const std::byte*)input.buffer + ny * input.stride);
                         max_val.L = std::max(max_val.L, neighbor[nx].L);
                         max_val.a = std::max(max_val.a, neighbor[nx].a);
                         max_val.b = std::max(max_val.b, neighbor[nx].b);
@@ -69,20 +69,20 @@ void filter_init(Parameters *params) {
     b_params = *params;
 }
 
-void erode_process_frame(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride) {
+void erode_process_frame(ImageView<float> input, ImageView<float> output, int width, int height) {
     if (b_params.device == e_device_t::CPU)
-        erode_cpp(input, output, width, height, stride);
+        erode_cpp(input, output, width, height);
 
     else if (b_params.device == e_device_t::GPU)
-        erode_cu(input, output, width, height, stride);
+        erode_cu(input, output, width, height);
 }
 
-void dilate_process_frame(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride) {
+void dilate_process_frame(ImageView<float> input, ImageView<float> output, int width, int height) {
     if (b_params.device == e_device_t::CPU)
-        dilate_cpp(input, output, width, height, stride);
+        dilate_cpp(input, output, width, height);
 
     else if (b_params.device == e_device_t::GPU)
-        dilate_cu(input, output, width, height, stride);
+        dilate_cu(input, output, width, height);
 }
 
 }
