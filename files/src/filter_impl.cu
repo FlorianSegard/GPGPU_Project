@@ -6,6 +6,7 @@
 #include "logic/backgroundestimation.hpp"
 #include "logic/filter_erode_and_dilate.hpp"
 #include "logic/hysteresis.hpp"
+#include "logic/red_mask.hpp"
 #include "filter_impl.h"
 
 // Cuda error checking macro
@@ -141,12 +142,13 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     std::cout << "hysteresis call succeeded" << std::endl;
 
 
-    // // TODO: Apply the new created hysteresis mask to rgb_buffer
-    // // - hysteresis_buffer, hysteresis_pitch      : the mask buffer
-    // // - rgb_buffer, rgb_pitch                    : the buffer to change
-    // // - heigt and widt h
-    // apply_mask<<<blocksPerGrid, threadsPerBlock>>>();
-    // checkKernelLaunch();
+
+    // Alloc and red mask operation
+    mask_process_frame(hysteresis_image, rgb_image, width, height, plane_stride);
+    cudaDeviceSynchronize();
+    checkKernelLaunch();
+    std::cout << "red mask call succeeded" << std::endl;
+
 
     // // Copy result back to pixels_buffer
     // error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_buffer, rgb_pitch,

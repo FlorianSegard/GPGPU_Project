@@ -35,6 +35,9 @@ add_library(Compute
     src/logic/hysteresis.cpp
     src/logic/hysteresis.cu
     src/logic/hysteresis.hpp
+    src/logic/red_mask.cpp
+    src/logic/red_mask.cu
+    src/logic/red_mask.hpp
 )
 target_link_libraries(Compute PRIVATE CUDA::cudart)
 
