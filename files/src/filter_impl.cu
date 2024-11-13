@@ -151,6 +151,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     std::cout << "red mask call succeeded" << std::endl;
 
 
+
     // // Copy result back to pixels_buffer
     error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
                          width * sizeof(rgb8), height, cudaMemcpyDefault);
