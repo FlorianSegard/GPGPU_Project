@@ -120,7 +120,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     Image<float> dilate_image(width, height, true);
 
     dilate_process_frame(
-            residual_image, erode_image,
+            erode_image, dilate_image,
             width, height, plane_stride
     );
     cudaDeviceSynchronize();
