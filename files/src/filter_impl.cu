@@ -155,7 +155,8 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "dilate call succeeded" << std::endl;
 
-
+    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height, plane_stride);
+    /*
 
     // Alloc and perform hysteresis operation
     hysteresis_init(&params);
@@ -176,6 +177,8 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     cudaDeviceSynchronize();
     checkKernelLaunch();
     std::cout << "red mask call succeeded" << std::endl;
+
+    */
 
 
 
