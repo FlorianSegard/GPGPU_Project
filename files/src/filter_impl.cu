@@ -34,8 +34,20 @@ inline void checkKernelLaunch() {
 
 // ============== CUDA FUNCTIONS ==============
 
+__global__ void debug_bool_kernel(ImageView<bool> bf, ImageView<rgb8> rgb_buffer, int width, int height, std::ptrdiff_t stride) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
 
+    if (x >= width || y >= height)
+        return;
 
+    bool bl = (bool*)((std::byte*)bf.buffer + y * bf.stride)[x];
+    rgb8* rgb_value = (rgb8*)((std::byte*)rgb_buffer.buffer + y * rgb_buffer.stride);
+
+    rgb_value[x].r = bl ? 255 : 0;//rgb_value[x].r / 2 + (bf ? 127 : 0);
+    rgb_value[x].g = bl ? 255 : 0;//rgb_value[x].g / 2;
+    rgb_value[x].b = bl ? 255 : 0;//rgb_value[x].b / 2;
+}
 
 
 Image<lab> current_background;
@@ -143,9 +155,8 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     std::cout << "hysteresis call succeeded" << std::endl;
 
 
-
     // Alloc and red mask operation
-    mask_process_frame(hysteresis_image, rgb_image, width, height, plane_stride);
+    debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height, plane_stride);
     cudaDeviceSynchronize();
     checkKernelLaunch();
     std::cout << "red mask call succeeded" << std::endl;
