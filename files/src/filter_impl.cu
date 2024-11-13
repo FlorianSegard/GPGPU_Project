@@ -60,9 +60,9 @@ __global__ void debug_float_kernel(ImageView<float> bf, ImageView<rgb8> rgb_buff
     float* bl = (float*)((std::byte*)bf.buffer + y * bf.stride);
     rgb8* rgb_value = (rgb8*)((std::byte*)rgb_buffer.buffer + y * rgb_buffer.stride);
 
-    rgb_value[x].r = round(fmaxf((int)(bl[x]), 255.0));
-    rgb_value[x].g = round(fmaxf((int)(bl[x]), 255.0));
-    rgb_value[x].b = round(fmaxf((int)(bl[x]), 255.0));
+    rgb_value[x].r = (uint8_t) round(fminf((bl[x]), 255.0));
+    rgb_value[x].g = (uint8_t) round(fminf((bl[x]), 255.0));
+    rgb_value[x].b = (uint8_t) round(fminf((bl[x]), 255.0));
 }
 
 
