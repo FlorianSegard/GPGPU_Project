@@ -4,8 +4,8 @@
 #include <iostream>
 #include "logic/labConverter.hpp"
 #include "logic/backgroundestimation.hpp"
-#include "filter_impl.h"
 #include "logic/filter_erode_and_dilate.hpp"
+#include "filter_impl.h"
 
 // Cuda error checking macro
 #define CHECK_CUDA_ERROR(call) do { \
