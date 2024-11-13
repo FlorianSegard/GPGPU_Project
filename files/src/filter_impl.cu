@@ -133,9 +133,10 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     hysteresis_init(&params);
     Image<bool> hysteresis_image(width, height, true);
 
+    //TODO: retrieve threshold values
     hysteresis_process_frame(
             dilate_image, hysteresis_image,
-            width, height, plane_stride, plane_stride
+            width, height, 3, 30
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
@@ -151,9 +152,9 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
 
     // // Copy result back to pixels_buffer
-    // error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_buffer, rgb_pitch,
-    //                      width * sizeof(rgb8), height, cudaMemcpyDeviceToHost);
-    // CHECK_CUDA_ERROR(error);
+    error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
+                         width * sizeof(rgb8), height, cudaMemcpyDeviceToHost);
+    CHECK_CUDA_ERROR(error);
 
     // // Clean up temporary buffers
     // cudaFree(rgb_buffer);
