@@ -1,4 +1,5 @@
 #include "hysteresis.hpp"
+#include <vector>
 
 void hysteresis_thresholding_cpp(ImageView<float> input, ImageView<bool> output, int width, int height, int input_pitch, int output_pitch, float threshold)
 {
