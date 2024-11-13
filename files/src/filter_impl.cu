@@ -71,13 +71,16 @@ Image<lab> candidate_background;
 Image<int> current_time_pixels;
 bool isInitialized = false;
 
-void initializeGlobals(int width, int height) {
-    if (!isInitialized) {
-        current_background = Image<lab>(width, height, true);
-        candidate_background = Image<lab>(width, height, true);
-        current_time_pixels = Image<int>(width, height, true);
-        isInitialized = true;
-    }
+void initializeGlobals(int width, int height, ImageView<lab> lab_image, int plane_stride) {
+    current_background = Image<lab>(width, height, true);
+    candidate_background = Image<lab>(width, height, true);
+    current_time_pixels = Image<int>(width, height, true);
+    isInitialized = true;
+
+    cudaError_t error;
+    error = cudaMemcpy2D(current_background.buffer, current_background.stride, lab_image, plane_stride,
+                         width * sizeof(lab), height, cudaMemcpyDefault);
+    CHECK_CUDA_ERROR(error);
 }
 
 // TODO: what to do when background_ref / candidate_background null?
@@ -89,8 +92,6 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     // Init device and global variables
     Parameters params;
     params.device = GPU;
-    initializeGlobals(width, height);
-
 
 
     // GPU properties for kernel calls
@@ -118,6 +119,8 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     std::cout << "labConv call succeeded" << std::endl;
 
 
+    if (!isInitialized)
+        initializeGlobals(width, height, lab_image);
 
     // Update background and get residual image
     background_init(&params);
