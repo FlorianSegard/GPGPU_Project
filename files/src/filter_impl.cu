@@ -81,7 +81,6 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image) {
     error = cudaMemcpy2D(current_background.buffer, current_background.stride, lab_image.buffer, lab_image.stride,
                          width * sizeof(lab), height, cudaMemcpyDefault);
     CHECK_CUDA_ERROR(error);
-    cudaError_t error;
     error = cudaMemcpy2D(candidate_background.buffer, candidate_background.stride, lab_image.buffer, lab_image.stride,
                          width * sizeof(lab), height, cudaMemcpyDefault);
     CHECK_CUDA_ERROR(error);
