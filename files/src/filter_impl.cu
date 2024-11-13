@@ -5,6 +5,7 @@
 #include "logic/labConverter.hpp"
 #include "logic/backgroundestimation.hpp"
 #include "logic/filter_erode_and_dilate.hpp"
+#include "logic/hysteresis.hpp"
 #include "filter_impl.h"
 
 // Cuda error checking macro
@@ -103,6 +104,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     // Alloc and perform eroding operation
     filter_init(&params);
     Image<float> erode_image(width, height, true);
+
     erode_process_frame(
             residual_image, erode_image,
          width, height, plane_stride
@@ -111,9 +113,11 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "erode call succeeded" << std::endl;
 
+
+
     // Alloc and perform eroding operation
-    filter_init(&params);
     Image<float> dilate_image(width, height, true);
+
     dilate_process_frame(
             residual_image, erode_image,
             width, height, plane_stride
@@ -124,18 +128,18 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
 
 
-    // Perform hysteresis operation
-    // size_t hysteresis_pitch;
-    // bool* hysteresis_buffer; // type: bool array pointer
-    // error = cudaMallocPitch(&hysteresis_buffer, &hysteresis_pitch,
-    //                         width * sizeof(bool), height);
-    // CHECK_CUDA_ERROR(error);
+    // Alloc and perform hysteresis operation
+    hysteresis_init(&params);
+    Image<bool> hysteresis_image(width, height, true);
 
-    // hysteresis_reconstruction<<<blocksPerGrid, threadsPerBlock>>>(
-    //     dilated_buffer, hysteresis_buffer,
-    //     width, height, dilated_pitch
-    // );
-    // checkKernelLaunch();
+    hysteresis_process_frame(
+            dilate_image, hysteresis_image,
+            width, height, plane_stride, plane_stride, plane_stride, plane_stride
+    );
+    cudaDeviceSynchronize();
+    checkKernelLaunch();
+    std::cout << "hysteresis call succeeded" << std::endl;
+
 
     // // TODO: Apply the new created hysteresis mask to rgb_buffer
     // // - hysteresis_buffer, hysteresis_pitch      : the mask buffer

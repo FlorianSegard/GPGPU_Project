@@ -1,22 +1,11 @@
 #include "hysteresis.hpp"
 
-
-/// Your CUDA version of the algorithm
-/// This function is called by cpt_process_frame for each frame
-void hysteresis_cu(std::byte *opened_input, std::byte *hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold);
-
-
-/// Your cpp version of the algorithm
-/// This function is called by cpt_process_frame for each frame
-void hysteresis_cpp(std::byte *opened_input, std::byte *hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold);
-
-
-void hysteresis_thresholding_cpp(std::byte *input, std::byte *output, int width, int height, int input_pitch, int output_pitch, float threshold)
+void hysteresis_thresholding_cpp(ImageView<float> input, ImageView<bool> output, int width, int height, int input_pitch, int output_pitch, float threshold)
 {
     for (int y = 0; y < height; ++y)
     {
-        float *input_lineptr = reinterpret_cast<float *>(input + y * input_pitch);
-        bool *output_lineptr = reinterpret_cast<bool *>(output + y * output_pitch);
+        float *input_lineptr = reinterpret_cast<float *>(input.buffer + y * input_pitch);
+        bool *output_lineptr = reinterpret_cast<bool *>(output.buffer + y * output_pitch);
 
         for (int x = 0; x < width; ++x)
         {
@@ -26,7 +15,7 @@ void hysteresis_thresholding_cpp(std::byte *input, std::byte *output, int width,
     }
 }
 
-void hysteresis_kernel_cpp(std::byte *upper, std::byte *lower, int width, int height, int upper_pitch, int lower_pitch, bool &has_changed_global)
+void hysteresis_kernel_cpp(ImageView<float> upper, ImageView<bool> lower, int width, int height, int upper_pitch, int lower_pitch, bool &has_changed_global)
 {
     bool has_changed = true;
 
@@ -36,8 +25,8 @@ void hysteresis_kernel_cpp(std::byte *upper, std::byte *lower, int width, int he
 
         for (int y = 0; y < height; ++y)
         {
-            bool *upper_lineptr = reinterpret_cast<bool *>(upper + y * upper_pitch);
-            bool *lower_lineptr = reinterpret_cast<bool *>(lower + y * lower_pitch);
+            bool *upper_lineptr = reinterpret_cast<bool *>(upper.buffer + y * upper_pitch);
+            bool *lower_lineptr = reinterpret_cast<bool *>(lower.buffer + y * lower_pitch);
 
             for (int x = 0; x < width; ++x)
             {
@@ -49,8 +38,8 @@ void hysteresis_kernel_cpp(std::byte *upper, std::byte *lower, int width, int he
 
                 if ((x > 0 && upper_lineptr[x - 1]) ||
                     (x < width - 1 && upper_lineptr[x + 1]) ||
-                    (y > 0 && reinterpret_cast<bool *>(upper + (y - 1) * upper_pitch)[x]) ||
-                    (y < height - 1 && reinterpret_cast<bool *>(upper + (y + 1) * upper_pitch)[x]))
+                    (y > 0 && reinterpret_cast<bool *>(upper.buffer + (y - 1) * upper_pitch)[x]) ||
+                    (y < height - 1 && reinterpret_cast<bool *>(upper.buffer + (y + 1) * upper_pitch)[x]))
                 {
                     upper_lineptr[x] = true;
                     has_changed = true;
@@ -62,7 +51,7 @@ void hysteresis_kernel_cpp(std::byte *upper, std::byte *lower, int width, int he
 }
 
 /// CPU Single threaded version of the Method
-void hysteresis_cpp(std::byte *opened_input, std::byte *hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
+void hysteresis_cpp(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
 {
     std::vector<std::byte> lower_threshold_input(width * height * sizeof(bool));
     int lower_threshold_pitch = width * sizeof(bool);
@@ -84,12 +73,12 @@ extern "C" {
 
   static Parameters g_params;
 
-  void cpt_init(Parameters* params)
+  void hysteresis_init(Parameters* params)
   {
     g_params = *params;
   }
 
-  void hysteresis(std::byte *opened_input, std::byte *hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
+  void hysteresis_process_frame(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
   {
     if (g_params.device == e_device_t::CPU)
       hysteresis_cpp(opened_input, hysteresis, width, height, opened_input_pitch, hysteresis_pitch, lower_threshold, upper_threshold);

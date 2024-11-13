@@ -91,6 +91,7 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
 
     // seuil inf et sup
     hysteresis_thresholding<<<gridSize, blockSize>>>(opened_input, lower_threshold_input, width, height, opened_input_pitch, lower_threshold_pitch, lower_threshold);
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     hysteresis_thresholding<<<gridSize, blockSize>>>(opened_input, hysteresis, width, height, opened_input_pitch, hysteresis_pitch, upper_threshold);
     CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
