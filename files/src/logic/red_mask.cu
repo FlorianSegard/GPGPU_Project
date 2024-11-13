@@ -10,14 +10,11 @@ __global__ void red_mask_kernel(ImageView<bool> hysteresis_buffer, ImageView<rgb
     if (x >= width || y >= height)
         return;
     bool hyst_value = (bool*)((std::byte*)hysteresis_buffer.buffer + y * hysteresis_buffer.stride)[x];
-    rgb8 rgb_value = (rgb8*)((std::byte*)rgb_buffer.buffer + y * rgb_buffer.stride)[x];
+    rgb8* rgb_value = (rgb8*)((std::byte*)rgb_buffer.buffer + y * rgb_buffer.stride);
 
-    rgb_value.r = rgb_value.r / 2 + (hyst_value ? 127 : 0);
-    rgb_value.g = rgb_value.g / 2;
-    rgb_value.b = rgb_value.b / 2;
-
-    rgb8* lineptr_rgb= (rgb8*)((std::byte*)rgb_buffer.buffer + y * rgb_buffer.stride);
-    lineptr_rgb[x] = rgb_value;
+    rgb_value[x].r = rgb_value[x].r / 2 + (hyst_value ? 127 : 0);
+    rgb_value[x].g = rgb_value[x].g / 2;
+    rgb_value[x].b = rgb_value[x].b / 2;
 }
 
 void red_mask_cu(ImageView<bool> hysteresis_buffer, ImageView<rgb8> rgb_buffer, int width, int height, std::ptrdiff_t stride)
