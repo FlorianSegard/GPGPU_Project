@@ -32,6 +32,9 @@ add_library(Compute
     src/logic/filter_erode_and_dilate.cpp
     src/logic/filter_erode_and_dilate.cu
     src/logic/filter_erode_and_dilate.hpp
+    src/logic/hysteresis.cpp
+    src/logic/hysteresis.cu.cu
+    src/logic/hysteresis.hpp
 )
 target_link_libraries(Compute PRIVATE CUDA::cudart)
 
