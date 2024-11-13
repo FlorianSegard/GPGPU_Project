@@ -154,7 +154,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     // // Copy result back to pixels_buffer
     error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
-                         width * sizeof(rgb8), height, cudaMemcpyDefault);
+                         width * sizeof(rgb8), height, cudaMemcpyDeviceToHost);
     CHECK_CUDA_ERROR(error);
     std::cout << "copy back to pixels_buffer" << std::endl;
 
