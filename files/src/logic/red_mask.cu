@@ -8,8 +8,8 @@ __global__ void red_mask_kernel(ImageView<bool> hysteresis_buffer, ImageView<rgb
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        if (hysteresis_buffer[y * stride + x]) {
-                    rgb_buffer[y * stride + x * 3] = min(255, rgb_buffer[y * stride + x * 3] + 0.5 * 255);
+        if (hysteresis_buffer.buffer[y * stride + x]) {
+                    rgb_buffer.buffer[y * stride + x * 3] = min(255, rgb_buffer.buffer[y * stride + x * 3] + 0.5 * 255);
         }
     }
 }
