@@ -30,9 +30,7 @@ __global__ void erode(ImageView<float> input, ImageView<float> output, int width
                 int ny = y + dy;
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
                     float* neighbor = (float*)((std::byte*)input.buffer + ny * stride);
-                    min_val.L = fminf(min_val.L, neighbor[nx].L);
-                    min_val.a = fminf(min_val.a, neighbor[nx].a);
-                    min_val.b = fminf(min_val.b, neighbor[nx].b);
+                    min_val = fminf(min_val, neighbor[nx]);
                 }
             }
         }
@@ -55,9 +53,7 @@ __global__ void dilate(ImageView<float> input, ImageView<float> output, int widt
                 int ny = y + dy;
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
                     float* neighbor = (float*)((std::byte*)input.buffer + ny * stride);
-                    max_val.L = fmaxf(max_val.L, neighbor[nx].L);
-                    max_val.a = fmaxf(max_val.a, neighbor[nx].a);
-                    max_val.b = fmaxf(max_val.b, neighbor[nx].b);
+                    max_val = fmaxf(max_val, neighbor[nx]);
                 }
             }
         }
