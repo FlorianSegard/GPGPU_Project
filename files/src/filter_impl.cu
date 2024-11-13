@@ -181,6 +181,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
 
     // Alloc and red mask operation
+    mask_init(&params);
     mask_process_frame(hysteresis_image, rgb_image, width, height);
     cudaDeviceSynchronize();
     checkKernelLaunch();
