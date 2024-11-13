@@ -111,22 +111,20 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "erode call succeeded" << std::endl;
 
+    // Alloc and perform eroding operation
+    filter_init(&params);
+    Image<float> dilate_image(width, height, true);
+    dilate_process_frame(
+            residual_image, erode_image,
+            width, height, plane_stride
+    );
+    cudaDeviceSynchronize();
+    checkKernelLaunch();
+    std::cout << "dilate call succeeded" << std::endl;
 
 
-    // // Perform dilatation operation
-    // size_t dilated_pitch;
-    // lab* dilated_buffer; // type: lab array pointer
-    // error = cudaMallocPitch(&dilated_buffer, &dilated_pitch,
-    //                         width * sizeof(lab), height);
-    // CHECK_CUDA_ERROR(error);
 
-    // dilate<<<blocksPerGrid, threadsPerBlock>>>(
-    //     eroded_buffer, dilated_buffer,
-    //     width, height, eroded_pitch
-    // );
-    // checkKernelLaunch();
-
-    // // Perform hysteresis operation
+    // Perform hysteresis operation
     // size_t hysteresis_pitch;
     // bool* hysteresis_buffer; // type: bool array pointer
     // error = cudaMallocPitch(&hysteresis_buffer, &hysteresis_pitch,
