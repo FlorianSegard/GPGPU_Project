@@ -129,7 +129,9 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     std::cout << "background call succeeded" << std::endl;
 
 
+    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height, plane_stride);
 
+    /*
     // Alloc and perform eroding operation
     filter_init(&params);
     Image<float> erode_image(width, height, true);
@@ -142,9 +144,8 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "erode call succeeded" << std::endl;
 
-    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height, plane_stride);
 
-    /*
+
     // Alloc and perform eroding operation
     Image<float> dilate_image(width, height, true);
 
