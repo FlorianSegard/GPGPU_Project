@@ -71,14 +71,14 @@ Image<lab> candidate_background;
 Image<int> current_time_pixels;
 bool isInitialized = false;
 
-void initializeGlobals(int width, int height, ImageView<lab> lab_image, int plane_stride) {
+void initializeGlobals(int width, int height, ImageView<lab> lab_image) {
     current_background = Image<lab>(width, height, true);
     candidate_background = Image<lab>(width, height, true);
     current_time_pixels = Image<int>(width, height, true);
     isInitialized = true;
 
     cudaError_t error;
-    error = cudaMemcpy2D(current_background.buffer, current_background.stride, lab_image, plane_stride,
+    error = cudaMemcpy2D(current_background.buffer, current_background.stride, lab_image.buffer, lab_image.stride,
                          width * sizeof(lab), height, cudaMemcpyDefault);
     CHECK_CUDA_ERROR(error);
 }
