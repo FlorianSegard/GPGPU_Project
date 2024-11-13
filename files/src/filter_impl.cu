@@ -134,7 +134,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     hysteresis_process_frame(
             dilate_image, hysteresis_image,
-            width, height, plane_stride, plane_stride, plane_stride, plane_stride
+            width, height, plane_stride, plane_stride
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
