@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cuda_runtime.h>
 #include <chrono>
+#include "filter_erode_and_dilate.hpp"
 // Run with: nvcc filter_erode_and_dilate.cu -o filter_erode_and_dilate
 
 // Simple LAB color structure
