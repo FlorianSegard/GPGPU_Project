@@ -134,7 +134,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "background call succeeded" << std::endl;
 
-
+    //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
 
     // Alloc and perform eroding operation
     filter_init(&params);
@@ -148,7 +148,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "erode call succeeded" << std::endl;
 
-
+    //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
 
     // Alloc and perform eroding operation
     Image<float> dilate_image(width, height, true);
@@ -161,9 +161,9 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "dilate call succeeded" << std::endl;
 
-    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
+    //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
 
-    /*
+
     // Alloc and perform hysteresis operation
     hysteresis_init(&params);
     Image<bool> hysteresis_image(width, height, true);
@@ -177,7 +177,9 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "hysteresis call succeeded" << std::endl;
 
+    debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height);
 
+    /*
     // Alloc and red mask operation
     mask_process_frame(hysteresis_image, rgb_image, width, height, rgb_image.stride);
     cudaDeviceSynchronize();
