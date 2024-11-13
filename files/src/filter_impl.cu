@@ -161,7 +161,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     checkKernelLaunch();
     std::cout << "dilate call succeeded" << std::endl;
 
-    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
+    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
 
     /*
     // Alloc and perform hysteresis operation
