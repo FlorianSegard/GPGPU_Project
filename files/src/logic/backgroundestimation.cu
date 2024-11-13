@@ -22,16 +22,12 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
         float distance = labDistance(lineptr_lab_background[x], lineptr_lab[x]);
         lineptr_distance[x] = distance;
 
-        if (distance < 25) {
-            lineptr_distance[x] = 0;
-        }
         int currentpixel_time = lineptr_time[x];
         lab currentpixel = lineptr_lab[x];
         lab currentpixel_candidate = lineptr_lab_candidate[x];
         lab currentpixel_background = lineptr_lab_background[x];
 
-
-        if (distance >= 25)
+        if (distance >= 15)
         {
             if (currentpixel_time == 0)
             {
