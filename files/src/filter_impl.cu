@@ -171,7 +171,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     //TODO: retrieve threshold values
     hysteresis_process_frame(
             dilate_image, hysteresis_image,
-            width, height, 5, 30
+            width, height, 20, 60
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
