@@ -40,7 +40,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
             else
             {
                 lineptr_lab_background[x] = currentpixel_candidate;
-                lineptr_time[x]++;
+                lineptr_time[x] = 0;
             }
         }
         else
