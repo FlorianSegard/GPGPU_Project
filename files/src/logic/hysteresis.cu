@@ -67,8 +67,8 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         // on vérifie les pixels voisins pour propager le marquage
         if ((x > 0 && upper_lineptr[x - 1]) ||
             (x < width - 1 && upper_lineptr[x + 1]) ||
-            (y > 0 && ((bool *)((std::byte*)upper.buffer + (y - 1) * upper_pitch))[x]) ||
-            (y < height - 1 && ((bool *)((std::byte*)upper.buffer + (y + 1) * upper_pitch))[x]))
+            (y > 0 && ((bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride))[x]) ||
+            (y < height - 1 && ((bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride))[x]))
         {
             upper_lineptr[x] = true;
             has_changed = true;
