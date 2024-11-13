@@ -11,15 +11,15 @@
 extern "C" {
 #endif
 
-void erode_cpp(const lab* input, lab* output, int width, int height, std::ptrdiff_t stride);
-void dilate_cpp(const lab* input, lab* output, int width, int height, std::ptrdiff_t stride);
+void erode_cpp(const ImageView<float> input, lab* output, int width, int height, std::ptrdiff_t stride);
+void dilate_cpp(const ImageView<float> input, lab* output, int width, int height, std::ptrdiff_t stride);
 
-void erode_cu(float* input, float* output, int width, int height, std::ptrdiff_t stride);
-void dilate_cu(float* input, float* output, int width, int height, std::ptrdiff_t stride);
+void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride);
+void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride);
 
 void filter_init(Parameters *params);
-void erode_process_frame(float* input, float* output, int width, int height, std::ptrdiff_t stride);
-void dilate_process_frame(float* input, float* output, int width, int height, std::ptrdiff_t stride);
+void erode_process_frame(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride);
+void dilate_process_frame(ImageView<float> input, ImageView<float> output, int width, int height, std::ptrdiff_t stride);
 
 #ifdef __cplusplus
 }
