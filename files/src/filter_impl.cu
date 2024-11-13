@@ -34,7 +34,7 @@ inline void checkKernelLaunch() {
 
 // ============== CUDA FUNCTIONS ==============
 
-__global__ void debug_bool_kernel(ImageView<bool> bf, ImageView<rgb8> rgb_buffer, int width, int height, std::ptrdiff_t stride) {
+__global__ void debug_bool_kernel(ImageView<bool> bf, ImageView<rgb8> rgb_buffer, int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -50,7 +50,7 @@ __global__ void debug_bool_kernel(ImageView<bool> bf, ImageView<rgb8> rgb_buffer
 }
 
 
-__global__ void debug_float_kernel(ImageView<float> bf, ImageView<rgb8> rgb_buffer, int width, int height, std::ptrdiff_t stride) {
+__global__ void debug_float_kernel(ImageView<float> bf, ImageView<rgb8> rgb_buffer, int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -142,13 +142,13 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     erode_process_frame(
             residual_image, erode_image,
-         width, height, erode_image.stride
+            width, height
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
     std::cout << "erode call succeeded" << std::endl;
 
-    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height, erode_image.stride);
+    debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
 
     /*
     // Alloc and perform eroding operation
@@ -156,7 +156,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     dilate_process_frame(
             erode_image, dilate_image,
-            width, height, dilate_image.stride
+            width, height
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
