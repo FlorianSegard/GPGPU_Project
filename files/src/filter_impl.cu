@@ -103,7 +103,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     // Alloc and perform eroding operation
     filter_init(&params);
     Image<float> erode_image(width, height, true);
-    erode_process_frame<<<blocksPerGrid, threadsPerBlock>>>(
+    erode_process_frame(
             residual_image, erode_image,
          width, height, plane_stride
     );
