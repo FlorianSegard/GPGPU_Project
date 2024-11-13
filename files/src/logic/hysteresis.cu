@@ -21,7 +21,7 @@
 
 // -----------------------------------------------------------
 
-__global__ void hysteresis_thresholding(std::byte *input, std::byte *output, int width, int height, size_t input_pitch, size_t output_pitch, float threshold)
+__global__ void hysteresis_thresholding(ImageView<float> input, ImageView<bool> output, int width, int height, size_t input_pitch, size_t output_pitch, float threshold)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -29,16 +29,16 @@ __global__ void hysteresis_thresholding(std::byte *input, std::byte *output, int
     if (x >= width || y >= height)
         return;
 
-    float *input_lineptr = (float *)(input + y * input_pitch);
+    float *input_lineptr = (float *)(input.buffer + y * input_pitch);
     float in_val = input_lineptr[x];
 
     // Applique le seuil et on stocke le résultat dans la sortie
-    bool *output_lineptr = (bool *)(output + y * output_pitch);
+    bool *output_lineptr = (bool *)(output.buffer + y * output_pitch);
     output_lineptr[x] = in_val > threshold;
 }
 
 
-__global__ void hysteresis_kernel(std::byte *upper, std::byte *lower, int width, int height, int upper_pitch, int lower_pitch, bool *has_changed_global)
+__global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, int width, int height, int upper_pitch, int lower_pitch, bool *has_changed_global)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -53,8 +53,8 @@ __global__ void hysteresis_kernel(std::byte *upper, std::byte *lower, int width,
         has_changed = false;
         __syncthreads();
 
-        bool *upper_lineptr = (bool *)(upper + y * upper_pitch);
-        bool *lower_lineptr = (bool *)(lower + y * lower_pitch);
+        bool *upper_lineptr = (bool *)(upper.buffer + y * upper_pitch);
+        bool *lower_lineptr = (bool *)(lower.buffer + y * lower_pitch);
 
         // Si le pixel est déjà marqué dans l'image supérieure, on passe au suivant
         if (upper_lineptr[x])
@@ -67,8 +67,8 @@ __global__ void hysteresis_kernel(std::byte *upper, std::byte *lower, int width,
         // on vérifie les pixels voisins pour propager le marquage
         if ((x > 0 && upper_lineptr[x - 1]) ||
             (x < width - 1 && upper_lineptr[x + 1]) ||
-            (y > 0 && ((bool *)(upper + (y - 1) * upper_pitch))[x]) ||
-            (y < height - 1 && ((bool *)(upper + (y + 1) * upper_pitch))[x]))
+            (y > 0 && ((bool *)(upper.buffer + (y - 1) * upper_pitch))[x]) ||
+            (y < height - 1 && ((bool *)(upper.buffer + (y + 1) * upper_pitch))[x]))
         {
             upper_lineptr[x] = true;
             has_changed = true;
@@ -80,7 +80,7 @@ __global__ void hysteresis_kernel(std::byte *upper, std::byte *lower, int width,
     }
 }
 
-void hysteresis_cu(std::byte *opened_input, std::byte *hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
+void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
 {
     dim3 blockSize(32, 32);
     dim3 gridSize((width + (blockSize.x - 1)) / blockSize.x, (height + (blockSize.y - 1)) / blockSize.y);
