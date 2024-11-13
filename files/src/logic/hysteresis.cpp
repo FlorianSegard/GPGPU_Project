@@ -69,7 +69,7 @@ void hysteresis_cpp(ImageView<float> opened_input, ImageView<bool> hysteresis, i
         hysteresis_kernel_cpp(hysteresis, lower_threshold_input.data(), width, height, hysteresis_pitch, lower_threshold_pitch, has_changed_global);
     }
 } */
-void hysteresis_cpp(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
+void hysteresis_cpp(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, float lower_threshold, float upper_threshold)
 {
     return;
 }
@@ -83,11 +83,11 @@ extern "C" {
     g_params = *params;
   }
 
-  void hysteresis_process_frame(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
+  void hysteresis_process_frame(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, float lower_threshold, float upper_threshold)
   {
     if (g_params.device == e_device_t::CPU)
-      hysteresis_cpp(opened_input, hysteresis, width, height, opened_input_pitch, hysteresis_pitch, lower_threshold, upper_threshold);
+      hysteresis_cpp(opened_input, hysteresis, width, height, lower_threshold, upper_threshold);
     else if (g_params.device == e_device_t::GPU)
-      hysteresis_cu(opened_input, hysteresis, width, height, opened_input_pitch, hysteresis_pitch, lower_threshold, upper_threshold);
+      hysteresis_cu(opened_input, hysteresis, width, height, lower_threshold, upper_threshold);
   }
 }

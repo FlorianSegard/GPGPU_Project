@@ -21,7 +21,7 @@
 
 // -----------------------------------------------------------
 
-__global__ void hysteresis_thresholding(ImageView<float> input, ImageView<bool> output, int width, int height, size_t input_pitch, size_t output_pitch, float threshold)
+__global__ void hysteresis_thresholding(ImageView<float> input, ImageView<bool> output, int width, int height, float threshold)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -29,16 +29,16 @@ __global__ void hysteresis_thresholding(ImageView<float> input, ImageView<bool> 
     if (x >= width || y >= height)
         return;
 
-    float *input_lineptr = (float *)((std::byte*)input.buffer + y * input_pitch);
+    float *input_lineptr = (float *)((std::byte*)input.buffer + y * input.stride);
     float in_val = input_lineptr[x];
 
     // Applique le seuil et on stocke le résultat dans la sortie
-    bool *output_lineptr = (bool *)((std::byte*)output.buffer + y * output_pitch);
+    bool *output_lineptr = (bool *)((std::byte*)output.buffer + y * output.stride);
     output_lineptr[x] = in_val > threshold;
 }
 
 
-__global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, int width, int height, int upper_pitch, int lower_pitch, bool *has_changed_global)
+__global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, int width, int height, bool *has_changed_global)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -53,8 +53,8 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         has_changed = false;
         __syncthreads();
 
-        bool *upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper_pitch);
-        bool *lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower_pitch);
+        bool *upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
+        bool *lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
 
         // Si le pixel est déjà marqué dans l'image supérieure, on passe au suivant
         if (upper_lineptr[x])
@@ -80,18 +80,17 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     }
 }
 
-void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, int opened_input_pitch, int hysteresis_pitch, float lower_threshold, float upper_threshold)
+void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, float lower_threshold, float upper_threshold)
 {
     dim3 blockSize(32, 32);
     dim3 gridSize((width + (blockSize.x - 1)) / blockSize.x, (height + (blockSize.y - 1)) / blockSize.y);
 
-    size_t lower_threshold_pitch;
     Image<bool> lower_threshold_input(width, height, true);
 
     // seuil inf et sup
-    hysteresis_thresholding<<<gridSize, blockSize>>>(opened_input, lower_threshold_input, width, height, opened_input_pitch, lower_threshold_pitch, lower_threshold);
+    hysteresis_thresholding<<<gridSize, blockSize>>>(opened_input, lower_threshold_input, width, height, lower_threshold);
     CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-    hysteresis_thresholding<<<gridSize, blockSize>>>(opened_input, hysteresis, width, height, opened_input_pitch, hysteresis_pitch, upper_threshold);
+    hysteresis_thresholding<<<gridSize, blockSize>>>(opened_input, hysteresis, width, height, upper_threshold);
     CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
     bool h_has_changed = true;
@@ -106,7 +105,7 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
         CHECK_CUDA_ERROR(cudaMemset(d_has_changed, false, sizeof(bool)));
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
-        hysteresis_kernel<<<gridSize, blockSize>>>(hysteresis, lower_threshold_input, width, height, hysteresis_pitch, lower_threshold_pitch, d_has_changed);
+        hysteresis_kernel<<<gridSize, blockSize>>>(hysteresis, lower_threshold_input, width, height, d_has_changed);
 
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
