@@ -4,13 +4,6 @@
 #include "filter_erode_and_dilate.hpp"
 // Run with: nvcc filter_erode_and_dilate.cu -o filter_erode_and_dilate
 
-// Simple LAB color structure
-struct lab {
-    float L;
-    float a;
-    float b;
-};
-
 // Helper function to check CUDA errors
 #define CHECK_CUDA_ERROR(call) \
     do { \
