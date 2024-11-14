@@ -2,7 +2,7 @@
 #include <vector>
 
 
-void hysteresis_thresholding_cpp(ImageView<float> input, std::byte* output, int width, int height, int output_pitch, float threshold)
+void hysteresis_thresholding_cpp(ImageView<float> input, bool* output, int width, int height, int output_pitch, float threshold)
 {
     for (int y = 0; y < height; ++y)
     {
@@ -57,7 +57,7 @@ void hysteresis_cpp(ImageView<float> opened_input, ImageView<bool> hysteresis, i
     std::vector<std::byte> lower_threshold_input(width * height * sizeof(bool));
     int lower_threshold_pitch = width * sizeof(bool);
 
-    hysteresis_thresholding_cpp(opened_input, lower_threshold_input.data(), width, height, lower_threshold_pitch, lower_threshold);
+    hysteresis_thresholding_cpp(opened_input, reinterpret_cast<bool*>(lower_threshold_input.data()), width, height, lower_threshold_pitch, lower_threshold);
     hysteresis_thresholding_cpp(opened_input, hysteresis.buffer, width, height, hysteresis.stride, upper_threshold);
 
     bool has_changed_global = true;
