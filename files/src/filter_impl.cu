@@ -86,8 +86,9 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image) {
     CHECK_CUDA_ERROR(error);
 }
 
-// TODO: what to do when background_ref / candidate_background null?
 // TODO: is it possible to reuse buffers instead of always creating new ones?
+// TODO: use shared memory
+// TODO: parse gstfilter and give arguments
 // Check error after each initialization
 extern "C" {
 void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride)
