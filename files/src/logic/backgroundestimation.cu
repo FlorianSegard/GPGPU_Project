@@ -55,7 +55,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
     {
         averageLAB(currentpixel, currentpixel_background, &average);
         lineptr_lab_background[x] = average;
-        // lineptr_distance[x] = 0.0f;
+        lineptr_distance[x] = 0.0f; // opti for hysteresis because less useless distances
         lineptr_time[x] = 0;
     }
     
