@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 #define DEFAULT_TH_LOW 3
 #define DEFAULT_TH_HIGH 30
 #define DEFAULT_BG_SAMPLING_RATE 500
-#define DEFAULT_BG_NUMBER_FRAME 10
+#define DEFAULT_BG_NUMBER_FRAME 100
 
 typedef struct _GstMyFilter GstMyFilter;
 typedef struct _GstMyFilterClass GstMyFilterClass;
