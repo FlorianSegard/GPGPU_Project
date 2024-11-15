@@ -23,7 +23,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
             float distance;
             labDistance(currentpixel, currentpixel_background, &distance);
             lineptr_distance[x] = distance;
-            if (distance >= 25)
+            if (distance >= 5.0f)
             {
                 if (currentpixel_time == 0)
                 {
@@ -50,7 +50,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
                 averageLAB(currentpixel, currentpixel_background, &average);
                 lineptr_lab_background[x] = average;
                 lineptr_time[x] = 0;
-                lineptr_distance[x] = 0;
+                lineptr_distance[x] = 0.0f;
             }
         }
     }
