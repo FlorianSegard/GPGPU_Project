@@ -18,12 +18,20 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab>
         float g_normalized = currentpixel.g / 255.f;
         float b_normalized = currentpixel.b / 255.f;
 
-        float r_linear = get_linear(r_normalized);
-        float g_linear = get_linear(g_normalized);
-        float b_linear = get_linear(b_normalized);
-        
+        float r_result;
+        float g_result;
+        float b_result;
+        get_linear(r_normalized, &r_result);
+        get_linear(g_normalized, &g_result);
+        get_linear(b_normalized, &b_result);
+
+        float r_linear = r_result;
+        float g_linear = g_result;
+        float b_linear = b_result;
+
         float result[3];
         XYZ_color_space(r_linear, g_linear, b_linear, result);
+        //XYZ_color_space(r_normalized, g_normalized, b_normalized, result);
 
         float X = result[0];
         float Y = result[1];
@@ -33,9 +41,17 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab>
         float Y_n = Y / 1.0;
         float Z_n = Z / 1.08883;
 
-        float X_n_sqrt = f(X_n);
-        float Y_n_sqrt = f(Y_n);
-        float Z_n_sqrt = f(Z_n);
+
+        float X_n_result_f;
+        float Y_n_result_f;
+        float Z_n_result_f;
+        f(X_n, &X_n_result_f);
+        f(Y_n, &Y_n_result_f);
+        f(Z_n, &Z_n_result_f);
+
+        float X_n_sqrt = X_n_result_f;
+        float Y_n_sqrt = Y_n_result_f;
+        float Z_n_sqrt = Z_n_result_f;
 
         float L = 116 * Y_n_sqrt - 16;
         float a = 500 * (X_n_sqrt - Y_n_sqrt);

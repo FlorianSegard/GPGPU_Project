@@ -20,19 +20,22 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
             lab currentpixel_background = lineptr_lab_background[x];
             lab currentpixel_candidate = lineptr_lab_candidate[x];
             int currentpixel_time = lineptr_time[x];
-
-            float distance = labDistance(currentpixel, currentpixel_background);
+            float distance;
+            labDistance(currentpixel, currentpixel_background, &distance);
             lineptr_distance[x] = distance;
-            if (distance < 25)
+            if (distance >= 25)
             {
                 if (currentpixel_time == 0)
                 {
                     lineptr_lab_candidate[x] = currentpixel;
                     lineptr_time[x]++;
-                }   
+                }
                 else if (currentpixel_time < 100)
                 {
-                    lineptr_lab_candidate[x] = averageLAB(currentpixel, currentpixel_candidate);
+                    lab average;
+                    averageLAB(currentpixel, currentpixel_candidate, &average);
+
+                    lineptr_lab_candidate[x] = average;
                     lineptr_time[x]++;
                 }
                 else
@@ -43,8 +46,11 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
             }
             else
             {
-                lineptr_lab_background[x] = averageLAB(currentpixel, currentpixel_background);
+                lab average;
+                averageLAB(currentpixel, currentpixel_background, &average);
+                lineptr_lab_background[x] = average;
                 lineptr_time[x] = 0;
+                lineptr_distance[x] = 0;
             }
         }
     }

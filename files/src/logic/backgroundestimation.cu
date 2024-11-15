@@ -19,7 +19,8 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
         int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
         float* lineptr_distance = (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
 
-        float distance = labDistance(lineptr_lab_background[x], lineptr_lab[x]);
+        float distance = 0;
+        labDistance(lineptr_lab_background[x], lineptr_lab[x], &distance);
         lineptr_distance[x] = distance;
 
         int currentpixel_time = lineptr_time[x];
@@ -32,11 +33,13 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
             if (currentpixel_time == 0)
             {
                 lineptr_lab_candidate[x] = currentpixel;
-                lineptr_time[x]++;
-            }   
+                lineptr_time[x] = 1;
+            }
             else if (currentpixel_time < 100)
             {
-                lineptr_lab_candidate[x] = averageLAB(currentpixel, currentpixel_candidate);
+                lab average;
+                averageLAB(currentpixel, currentpixel_candidate, &average);
+                lineptr_lab_candidate[x] = average;
                 lineptr_time[x]++;
             }
             else
@@ -47,7 +50,10 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
         }
         else
         {
-            lineptr_lab_background[x] = averageLAB(currentpixel, currentpixel_background);
+            lab average;
+            averageLAB(currentpixel, currentpixel_background, &average);
+            lineptr_lab_background[x] = average;
+            lineptr_distance[x] = 0;
             lineptr_time[x] = 0;
         }
     }
@@ -60,7 +66,7 @@ void check_background_cu(ImageView<lab> in, ImageView<lab> currentBackground,
                             ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
                             ImageView<float> currentDistancePixels, int width, int height)
 {
-    dim3 threadsPerBlock(32, 32);
+    dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x, 
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
     check_background_kernel<<<blocksPerGrid, threadsPerBlock>>>(in, currentBackground, candidateBackground,

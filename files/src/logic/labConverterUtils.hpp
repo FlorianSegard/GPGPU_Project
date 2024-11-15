@@ -13,18 +13,18 @@ __device__ inline void XYZ_color_space(float r_linear, float g_linear, float b_l
 }
 
 // Function to convert sRGB to linear RGB.
-__device__ inline float get_linear(float r_g_b) {
+__device__ inline void get_linear(float r_g_b, float* result) {
     if (r_g_b <= 0.04045f) {
-        return r_g_b / 12.92f;
+        *result =  r_g_b / 12.92f;
     }
-    return powf((r_g_b + 0.055f) / 1.055f, 2.4f);
+    *result = powf((r_g_b + 0.055f) / 1.055f, 2.4f);
 }
 
 // Helper function for lab color space conversion.
-__device__ inline float f(float t) {
+__device__ inline void f(float t, float* result) {
     if (t > powf(6.0f/29.0f, 3.0f)) {
-        return powf(t, 1.0f/3.0f);
+        *result = powf(t, 1.0f/3.0f);
     } else {
-        return (1.0f/3.0f) * powf(29.0f/6.0f, 2.0f) * t + 4.0f/29.0f;
+        *result = (1.0f/3.0f) * powf(29.0f/6.0f, 2.0f) * t + 4.0f/29.0f;
     }
 }
