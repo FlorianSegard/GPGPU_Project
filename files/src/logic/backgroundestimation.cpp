@@ -3,7 +3,7 @@
 #include "backgroundUtils.hpp"
 
 void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
-                            ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
+                            ImageView<lab> candidateBackground, ImageView<uint8_t> currentTimePixels,
                             ImageView<float> currentDistancePixels, int width, int height)
 {
     for (int y = 0; y < width; y++)
@@ -68,7 +68,7 @@ extern "C" {
     }
 
     void background_process_frame(ImageView<lab> in, ImageView<lab> currentBackground,
-                        ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
+                        ImageView<lab> candidateBackground, ImageView<uint8_t> currentTimePixels,
                         ImageView<float> currentDistancePixels)
     {
         int width = in.width;
