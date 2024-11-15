@@ -113,11 +113,11 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
 
     // Allocate lab converted image buffer
-    labConv_init(&params);
+    lab_conv_init(&params);
     Image<lab> lab_image(width, height, true);
 
     // Convert RGB to LAB -> result stored inside lab_buffer
-    labConv_process_frame(rgb_image, lab_image);
+    lab_conv_process_frame(rgb_image, lab_image);
     cudaDeviceSynchronize();
     checkKernelLaunch();
     //std::cout << "labConv call succeeded" << std::endl;
