@@ -17,9 +17,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall")
 
 add_library(stb_image src/common/stb_image.h src/common/stb_image.c)
 add_library(Compute
-    src/Compute.cpp
-    src/Compute.cu
-    src/logo.c
+        src/Compute.cpp
         src/filters/filter_impl.hpp
         src/filters/filter_impl.cu
         src/logic/lab_converter/lab_converter.cpp
