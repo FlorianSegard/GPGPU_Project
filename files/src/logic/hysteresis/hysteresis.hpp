@@ -2,7 +2,7 @@
 
 #include <cstddef>
 #include "../../Image.hpp"
-#include "../../filter_impl.h"
+#include "../../filters/filter_impl.hpp"
 #include "../../Compute.hpp"
 
 #ifdef __cplusplus

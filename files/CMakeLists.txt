@@ -20,8 +20,8 @@ add_library(Compute
     src/Compute.cpp
     src/Compute.cu
     src/logo.c
-    src/filter_impl.h
-    src/filter_impl.cu
+        src/filters/filter_impl.hpp
+        src/filters/filter_impl.cu
         src/logic/lab_converter/lab_converter.cpp
         src/logic/lab_converter/lab_converter.hpp
         src/logic/lab_converter/lab_converter.cu
@@ -29,9 +29,9 @@ add_library(Compute
         src/logic/background/background_estimation.cpp
         src/logic/background/background_estimation.cu
         src/logic/background/background_estimation.hpp
-    src/logic/filter_erode_and_dilate.cpp
-    src/logic/filter_erode_and_dilate.cu
-    src/logic/filter_erode_and_dilate.hpp
+        src/filters/erode_and_dilate/filter_erode_and_dilate.cpp
+        src/filters/erode_and_dilate/filter_erode_and_dilate.cu
+        src/filters/erode_and_dilate/filter_erode_and_dilate.hpp
         src/logic/hysteresis/hysteresis.cpp
         src/logic/hysteresis/hysteresis.cu
         src/logic/hysteresis/hysteresis.hpp

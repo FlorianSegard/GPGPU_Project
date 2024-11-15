@@ -2,12 +2,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include "logic/lab_converter/lab_converter.hpp"
-#include "logic/background/background_estimation.hpp"
-#include "logic/filter_erode_and_dilate.hpp"
-#include "logic/hysteresis/hysteresis.hpp"
-#include "logic/red_mask/red_mask.hpp"
-#include "filter_impl.h"
+#include "../logic/lab_converter/lab_converter.hpp"
+#include "../logic/background/background_estimation.hpp"
+#include "erode_and_dilate/filter_erode_and_dilate.hpp"
+#include "../logic/hysteresis/hysteresis.hpp"
+#include "../logic/red_mask/red_mask.hpp"
+#include "filter_impl.hpp"
 
 // Cuda error checking macro
 #define CHECK_CUDA_ERROR(call) do { \

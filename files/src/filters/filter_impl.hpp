@@ -2,8 +2,8 @@
 
 #include <cuda_runtime.h>
 
-#include "stb_image.h"
-#include "Image.hpp"
+#include "../stb_image.h"
+#include "../Image.hpp"
 
 #ifdef __cplusplus
 extern "C" {

@@ -6,7 +6,7 @@
 #include <thread>
 
 
-#include "filter_impl.h"
+#include "filters/filter_impl.hpp"
 
 /// Your cpp version of the algorithm
 /// This function is called by cpt_process_frame for each frame
