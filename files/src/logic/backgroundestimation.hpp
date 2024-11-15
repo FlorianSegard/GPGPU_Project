@@ -14,11 +14,11 @@
 void background_init(Parameters* params);
 
 void background_process_frame(ImageView<lab> in, ImageView<lab> currentBackground,
-                ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
+                ImageView<lab> candidateBackground, ImageView<uint8_t> currentTimePixels,
                 ImageView<float> currentDistancePixels);
 
 void check_background_cu(ImageView<lab> in, ImageView<lab> currentBackground,
-                         ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
+                         ImageView<lab> candidateBackground, ImageView<uint8_t> currentTimePixels,
                          ImageView<float> currentDistancePixels, int width, int height);
 
 #ifdef __cplusplus

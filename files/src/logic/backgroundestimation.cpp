@@ -11,7 +11,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
         lab* lineptr_lab = (lab*)((std::byte*)in.buffer + y * in.stride);
         lab* lineptr_lab_background = (lab*)((std::byte*)currentBackground.buffer + y * currentBackground.stride);
         lab* lineptr_lab_candidate = (lab*)((std::byte*)candidateBackground.buffer + y * candidateBackground.stride);
-        int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
+        uint8_t* lineptr_time = (uint8_t*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
         float* lineptr_distance = (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
 
         for (int x = 0; x < height; x++)
@@ -19,7 +19,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
             lab currentpixel = lineptr_lab[x];
             lab currentpixel_background = lineptr_lab_background[x];
             lab currentpixel_candidate = lineptr_lab_candidate[x];
-            int currentpixel_time = lineptr_time[x];
+            uint8_t currentpixel_time = lineptr_time[x];
             float distance_squared;
             labDistanceSquared(currentpixel, currentpixel_background, &distance_squared);
             lineptr_distance[x] = distance_squared;

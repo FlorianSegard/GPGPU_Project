@@ -4,7 +4,7 @@
 
 //TODO: is lineptr_lab_candidate initialized with full 0??? (we need it)
 __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> currentBackground,
-                                            ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
+                                            ImageView<lab> candidateBackground, ImageView<uint8_t> currentTimePixels,
                                             ImageView<float> currentDistancePixels, int width, int height)
 {
 
@@ -17,11 +17,11 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
     lab* lineptr_lab = (lab*)((std::byte*)in.buffer + y * in.stride);
     lab* lineptr_lab_background = (lab*)((std::byte*)currentBackground.buffer + y * currentBackground.stride);
     lab* lineptr_lab_candidate = (lab*)((std::byte*)candidateBackground.buffer + y * candidateBackground.stride);
-    int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
+    uint8_t* lineptr_time = (uint8_t*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
     float* lineptr_distance = (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
 
 
-    int currentpixel_time = lineptr_time[x];
+    uint8_t currentpixel_time = lineptr_time[x];
     lab currentpixel = lineptr_lab[x];
     lab currentpixel_candidate = lineptr_lab_candidate[x];
     lab currentpixel_background = lineptr_lab_background[x];
