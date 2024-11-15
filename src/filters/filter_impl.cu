@@ -131,7 +131,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     background_init(&params);
     Image<float> residual_image(width, height, true);
 
-    background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, residual_image);
+    background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, residual_image, bg_number_frame);
 	cudaDeviceSynchronize();
     checkKernelLaunch();
     //std::cout << "background call succeeded" << std::endl;
