@@ -324,7 +324,7 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
   // TODO: this is the main process, we will call it later
   g_assert(pixel_stride == 3);
   g_print("before");
-  g_print((char*)cudafilter->bg_uri);
+  std::cout << "URI: " << cudafilter->bg_uri << std::endl;
   g_print("after");
   //g_print("IN FILTER CUDA\n");
   cpt_process_frame(pixels, width, height, plane_stride);
