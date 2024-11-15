@@ -76,7 +76,7 @@ extern "C" {
         if (b_params.device == e_device_t::CPU)
             check_background_cpp(in, currentBackground, 
                         candidateBackground, currentTimePixels, 
-                        currentDistancePixels, width, height);
+                        currentDistancePixels, width, height, bg_number_frame);
 
         else if (b_params.device == e_device_t::GPU)
             check_background_cu(in, currentBackground, 
