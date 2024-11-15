@@ -144,7 +144,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     erode_process_frame(
             residual_image, erode_image,
-            width, height, opening_size / 2
+            width, height, opening_size / 2 - 1
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
