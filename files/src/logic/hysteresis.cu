@@ -134,7 +134,7 @@ __global__ void hysteresis_thresholding_optimized(ImageView<float> input, ImageV
         return;
 
     // On charge la tuile
-    tile[ty][tx] = (float *)((std::byte*)input.buffer + y * input.stride);
+    tile[ty][tx] = *(float *)((std::byte*)input.buffer + y * input.stride);
 
     __syncthreads();
 
