@@ -1,5 +1,5 @@
 #include "Compute.hpp"
-#include "Image.hpp"
+#include "common/Image.hpp"
 #include "logo.h"
 
 #include <chrono>

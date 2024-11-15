@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall")
 
 
-add_library(stb_image src/stb_image.h src/stb_image.c)
+add_library(stb_image src/common/stb_image.h src/common/stb_image.c)
 add_library(Compute
     src/Compute.cpp
     src/Compute.cu

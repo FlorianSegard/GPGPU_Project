@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstddef>
-#include "../../Image.hpp"
+#include "../../common/Image.hpp"
 #include "../../filters/filter_impl.hpp"
 #include "../../Compute.hpp"
 

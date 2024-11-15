@@ -2,7 +2,7 @@
 
 
 #include <cmath>
-#include "../../Image.hpp"
+#include "../../common/Image.hpp"
 #include "../filter_impl.hpp"
 #include "../../Compute.hpp"
 // #include "labConverter.hpp"
