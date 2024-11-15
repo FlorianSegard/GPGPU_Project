@@ -32,6 +32,14 @@ G_BEGIN_DECLS
 #define GST_IS_MYFILTER(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MYFILTER))
 #define GST_IS_MYFILTER_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MYFILTER))
 
+// Modified: default properties
+#define DEFAULT_BG_URI ""
+#define DEFAULT_OPENING_SIZE 3
+#define DEFAULT_TH_LOW 3
+#define DEFAULT_TH_HIGH 30
+#define DEFAULT_BG_SAMPLING_RATE 500
+#define DEFAULT_BG_NUMBER_FRAME 10
+
 typedef struct _GstMyFilter GstMyFilter;
 typedef struct _GstMyFilterClass GstMyFilterClass;
 

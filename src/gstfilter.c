@@ -52,13 +52,6 @@ enum {
   PROP_BG_NUMBER_FRAME
 };
 
-// Modified: default properties
-#define DEFAULT_BG_URI ""
-#define DEFAULT_OPENING_SIZE 3
-#define DEFAULT_TH_LOW 3
-#define DEFAULT_TH_HIGH 30
-#define DEFAULT_BG_SAMPLING_RATE 500
-#define DEFAULT_BG_NUMBER_FRAME 10
 
 GST_DEBUG_CATEGORY_STATIC (gst_myfilter_debug_category);
 #define GST_CAT_DEFAULT gst_myfilter_debug_category
