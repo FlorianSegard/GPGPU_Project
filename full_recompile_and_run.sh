@@ -1,16 +1,12 @@
 #!/bin/sh
 
-# Ensure correct usage
-if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 <gpu/cpu> <video.mp4> [Debug/Release]"
-    exit 1
-fi
-
 # Set VERSION if not provided
-if [ "$#" -eq 2 ]; then
+if [ "$#" -eq 0 ]; then
     VERSION="Release"
+    echo "No args provided, compilation flag set to Release"
 else
     VERSION=$3
+    echo "Compilation flag set to $VERSION"
 fi
 
 # Capture the current project path
@@ -40,9 +36,5 @@ cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$VERSION"
 # Build the project
 cd "$BUILD_DIR" || exit 1
 make
-
-DEVICE=$1
-VIDEO=$2
-"$BUILD_DIR/stream" --mode=$DEVICE $VIDEO
 
 echo "$0 succeeded"
