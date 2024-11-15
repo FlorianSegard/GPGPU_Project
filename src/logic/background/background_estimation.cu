@@ -70,7 +70,7 @@ void check_background_cu(ImageView<lab> in, ImageView<lab> currentBackground,
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x, 
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
     check_background_kernel<<<blocksPerGrid, threadsPerBlock>>>(in, currentBackground, candidateBackground,
-                                                                currentTimePixels, currentDistancePixels, width, height);
+                                                                currentTimePixels, currentDistancePixels, width, height, opening_size);
 }
 
 
