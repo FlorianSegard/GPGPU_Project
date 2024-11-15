@@ -318,7 +318,7 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
 
   GST_DEBUG_OBJECT (cudafilter, "transform_frame_ip");
 
-
+  g_print(cudafilter->device);
 
   int width = GST_VIDEO_FRAME_COMP_WIDTH(frame, 0);
   int height = GST_VIDEO_FRAME_COMP_HEIGHT(frame, 0);
