@@ -4,7 +4,7 @@
 
 //TODO: is lineptr_lab_candidate initialized with full 0??? (we need it)
 __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> currentBackground,
-                                            ImageView<lab> candidateBackground, ImageView<uint8_t> currentTimePixels,
+                                            ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
                                             ImageView<float> currentDistancePixels, int width, int height)
 {
 
@@ -32,7 +32,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
 
     lab average;
 
-    if (distance_squared >= 100.0f)
+    if (distance_squared >= 25.0f)
     {
         if (currentpixel_time == 0)
         {
