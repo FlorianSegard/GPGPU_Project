@@ -11,8 +11,9 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x < width && y < height) 
-    {
+    if (x >= width || y >= height)
+        return;
+
         lab* lineptr_lab = (lab*)((std::byte*)in.buffer + y * in.stride);
         lab* lineptr_lab_background = (lab*)((std::byte*)currentBackground.buffer + y * currentBackground.stride);
         lab* lineptr_lab_candidate = (lab*)((std::byte*)candidateBackground.buffer + y * candidateBackground.stride);
@@ -56,7 +57,6 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
             lineptr_distance[x] = 0.0f;
             lineptr_time[x] = 0;
         }
-    }
 
 }
 
