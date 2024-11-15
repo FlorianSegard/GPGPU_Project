@@ -47,11 +47,11 @@ int main(int argc, char* argv[])
   auto output = cmdl({"-o", "--output"}, "").str();
 
   auto bg_uri = cmdl({"--bg-uri"}, "").str();
-  auto opening_size = std::stoi(cmdl({"--opening-size"}, "3"));
-  auto th_low = std::stoi(cmdl({"--th-low"}, "3"));
-  auto th_high = std::stoi(cmdl({"--th-high"}, "30"));
-  auto sampling_rate = std::stoi(cmdl({"--sampling-rate"}, "500"));
-  auto number_frame = std::stoi(cmdl({"--number-frame"}, "10"));
+  auto opening_size = std::stoi(cmdl({"--opening-size"}, "3").str());
+  auto th_low = std::stoi(cmdl({"--th-low"}, "3").str());
+  auto th_high = std::stoi(cmdl({"--th-high"}, "30").str());
+  auto sampling_rate = std::stoi(cmdl({"--sampling-rate"}, "500").str());
+  auto number_frame = std::stoi(cmdl({"--number-frame"}, "10").str());
 
 
   if (method == "cpu") {
