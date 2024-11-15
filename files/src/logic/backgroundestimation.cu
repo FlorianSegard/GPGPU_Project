@@ -32,7 +32,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
 
     lab average;
 
-    if (distance_squared >= 25.0f)
+    if (distance_squared >= 100.0f)
     {
         if (currentpixel_time == 0)
         {
