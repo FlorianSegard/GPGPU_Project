@@ -46,13 +46,6 @@ int main(int argc, char* argv[])
   auto filename = cmdl(1).str();
   auto output = cmdl({"-o", "--output"}, "").str();
 
-  auto uri = cmdl("uri").str();
-  //auto opening_size = std::stoi(cmdl("opening-size").str());
-  //auto th_low = std::stoi(cmdl("th-low").str());
-  //auto th_high = std::stoi(cmdl("th-high").str());
-  //auto sampling_rate = std::stoi(cmdl("sampling-rate").str());
-  //auto number_frame = std::stoi(cmdl("number-frame").str());
-
   if (method == "cpu") {
       params.device = e_device_t::CPU;
   }
@@ -91,14 +84,6 @@ int main(int argc, char* argv[])
   auto filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "fsrc");
   g_object_set (filesrc, "location", filename.c_str(), NULL);
   g_object_unref (filesrc);
-
-  auto filter = gst_bin_get_by_name(GST_BIN(pipeline), "filter");
-  g_object_set(filter, "uri", uri, NULL);
-  //g_object_set(filter, "opening_size", opening_size, NULL);
-  //g_object_set(filter, "th_low", th_low, NULL);
-  //g_object_set(filter, "th_high",th_high, NULL);
-  //g_object_set(filter, "sampling_rate", sampling_rate, NULL);
-  //g_object_set(filter, "number_frame", number_frame, NULL);
 
   g_object_unref(filter);
 
