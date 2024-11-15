@@ -22,22 +22,22 @@ add_library(Compute
     src/logo.c
     src/filter_impl.h
     src/filter_impl.cu
-        src/logic/lab_converter.cpp
-        src/logic/lab_converter.hpp
-        src/logic/lab_converter.cu
-        src/logic/lab_converter_utils.hpp
-        src/logic/background_estimation.cpp
-        src/logic/background_estimation.cu
-        src/logic/background_estimation.hpp
+        src/logic/lab_converter/lab_converter.cpp
+        src/logic/lab_converter/lab_converter.hpp
+        src/logic/lab_converter/lab_converter.cu
+        src/logic/lab_converter/lab_converter_utils.hpp
+        src/logic/background/background_estimation.cpp
+        src/logic/background/background_estimation.cu
+        src/logic/background/background_estimation.hpp
     src/logic/filter_erode_and_dilate.cpp
     src/logic/filter_erode_and_dilate.cu
     src/logic/filter_erode_and_dilate.hpp
-    src/logic/hysteresis.cpp
-    src/logic/hysteresis.cu
-    src/logic/hysteresis.hpp
-    src/logic/red_mask.cpp
-    src/logic/red_mask.cu
-    src/logic/red_mask.hpp
+        src/logic/hysteresis/hysteresis.cpp
+        src/logic/hysteresis/hysteresis.cu
+        src/logic/hysteresis/hysteresis.hpp
+        src/logic/red_mask/red_mask.cpp
+        src/logic/red_mask/red_mask.cu
+        src/logic/red_mask/red_mask.hpp
 )
 target_link_libraries(Compute PRIVATE CUDA::cudart)
 

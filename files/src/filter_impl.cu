@@ -2,11 +2,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include "logic/lab_converter.hpp"
-#include "logic/background_estimation.hpp"
+#include "logic/lab_converter/lab_converter.hpp"
+#include "logic/background/background_estimation.hpp"
 #include "logic/filter_erode_and_dilate.hpp"
-#include "logic/hysteresis.hpp"
-#include "logic/red_mask.hpp"
+#include "logic/hysteresis/hysteresis.hpp"
+#include "logic/red_mask/red_mask.hpp"
 #include "filter_impl.h"
 
 // Cuda error checking macro
