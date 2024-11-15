@@ -15,11 +15,7 @@
         } \
     } while (0)
 
-#define HYSTERESIS_TILE_WIDTH 34 // block size de 32 x 32 et on rajoute 2 pixels de padding
-#define LOWER_THRESHOLD 4.0
-#define UPPER_THRESHOLD 30.0
-
-// -----------------------------------------------------------
+// --------------------------- BASELINE --------------------------------
 
 __global__ void hysteresis_thresholding(ImageView<float> input, ImageView<bool> output, int width, int height, float threshold)
 {
@@ -106,6 +102,130 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
         hysteresis_kernel<<<gridSize, blockSize>>>(hysteresis, lower_threshold_input, width, height, d_has_changed);
+
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+
+        CHECK_CUDA_ERROR(cudaMemcpy(&h_has_changed, d_has_changed, sizeof(bool), cudaMemcpyDeviceToHost));
+    }
+
+    cudaFree(d_has_changed);
+}
+
+// --------------------------- OPTIMIZED VERSION --------------------------------
+
+#define HYSTERESIS_TILE_WIDTH 34 // block size de 32 x 32 et on rajoute 2 pixels de padding
+// #define LOWER_THRESHOLD 4.0
+// #define UPPER_THRESHOLD 30.0
+
+__global__ void hysteresis_thresholding_optimized(ImageView<float> input, ImageView<bool> output, int width, int height, float threshold)
+{
+    __shared__ float tile[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
+
+    int tx = threadIdx.x;
+    int ty = threadIdx.y;
+
+    int tile_x = blockIdx.x * blockDim.x;
+    int tile_y = blockIdx.y * blockDim.y;
+
+    int x = tile_x + tx;
+    int y = tile_y + ty;
+
+    if (x >= width || y >= height)
+        return;
+
+    // On charge la tuile
+    tile[ty][tx] = (float *)((std::byte*)input.buffer + y * input.stride);
+
+    __syncthreads();
+
+    // On applique le seuil
+    bool out_val = tile[ty][tx] > threshold;
+
+    // On stocke le résultat dans la sortie
+    bool *output_lineptr = (bool *)((std::byte*)output.buffer + y * output.stride);
+    output_lineptr[x] = out_val;
+}
+
+__global__ void hysteresis_kernel_optimized(ImageView<bool> upper, ImageView<bool> lower, int width, int height, bool *has_changed_global)
+{
+    __shared__ bool tile_upper[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
+    __shared__ bool tile_lower[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
+
+    int tx = threadIdx.x;
+    int ty = threadIdx.y;
+
+    int tile_x = blockIdx.x * blockDim.x;
+    int tile_y = blockIdx.y * blockDim.y;
+
+    int x = tile_x + tx;
+    int y = tile_y + ty;
+
+    if (x >= width || y >= height)
+        return;
+
+    bool has_changed = true;
+
+    while (has_changed)
+    {
+        has_changed = false;
+        __syncthreads();
+
+        // On charge les tuiles
+        tile_upper[ty][tx] = (float *)((std::byte*)upper.buffer + y * upper.stride);
+        tile_lower[ty][tx] = (float *)((std::byte*)lower.buffer + y * lower.stride);
+
+        __syncthreads();
+
+        // Si le pixel est déjà marqué dans l'image supérieure, on passe au suivant
+        if (tile_upper[ty][tx])
+            break;
+
+        // Si le pixel n'est pas marqué dans l'image inférieure, on passe au suivant
+        if (!tile_lower[ty][tx])
+            break;
+
+        // on vérifie les pixels voisins pour propager le marquage
+        if ((tx > 0 && tile_upper[ty][tx - 1]) ||
+            (tx < HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty][tx + 1]) ||
+            (ty > 0 && tile_upper[ty - 1][tx]) ||
+            (ty < HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty + 1][tx]))
+        {
+            tile_upper[ty][tx] = true;
+            has_changed = true;
+            *has_changed_global = true;
+            break;
+        }
+
+        __syncthreads();
+    }
+}
+
+
+void hysteresis_cu_optimized(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, float lower_threshold, float upper_threshold)
+{
+    dim3 blockSize(32, 32);
+    dim3 gridSize((width + (blockSize.x - 1)) / blockSize.x, (height + (blockSize.y - 1)) / blockSize.y);
+
+    Image<bool> lower_threshold_input(width, height, true);
+
+    // On applique nos kernels de thresholding (bas & haut)
+    hysteresis_thresholding_optimized<<<gridSize, blockSize>>>(opened_input, lower_threshold_input, width, height, lower_threshold);
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    hysteresis_thresholding_optimized<<<gridSize, blockSize>>>(opened_input, hysteresis, width, height, upper_threshold);
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+
+    bool h_has_changed = true;
+
+    bool *d_has_changed;
+    CHECK_CUDA_ERROR(cudaMalloc(&d_has_changed, sizeof(bool)));
+
+    // On propage le marquage sur toute l'image
+    while (h_has_changed)
+    {
+        CHECK_CUDA_ERROR(cudaMemset(d_has_changed, false, sizeof(bool)));
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+
+        hysteresis_kernel_optimized<<<gridSize, blockSize>>>(hysteresis, lower_threshold_input, width, height, d_has_changed);
 
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
