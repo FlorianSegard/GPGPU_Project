@@ -3,9 +3,9 @@
 
 // Shared function to convert RGB to XYZ color space.
 __device__ inline void XYZ_color_space(float r_linear, float g_linear, float b_linear, float* result) {
-    float matrix[9] = { 0.4124564, 0.3575761, 0.1804375,
-                        0.2126729, 0.7151522, 0.0721750,
-                        0.0193339, 0.1191920, 0.9503041 };
+    float matrix[9] = { 0.4124564f, 0.3575761f, 0.1804375f,
+                        0.2126729f, 0.7151522f, 0.0721750f,
+                        0.0193339f, 0.1191920f, 0.9503041f };
 
     result[0] = matrix[0] * r_linear + matrix[1] * g_linear + matrix[2] * b_linear;
     result[1] = matrix[3] * r_linear + matrix[4] * g_linear + matrix[5] * b_linear;

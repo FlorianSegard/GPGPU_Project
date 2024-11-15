@@ -37,9 +37,9 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab>
         float Y = result[1];
         float Z = result[2];
 
-        float X_n = X / 0.95047;
-        float Y_n = Y / 1.0;
-        float Z_n = Z / 1.08883;
+        float X_n = X / 0.95047f;
+        float Y_n = Y / 1.0f;
+        float Z_n = Z / 1.08883f;
 
 
         float X_n_result_f;
@@ -53,9 +53,9 @@ __global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab>
         float Y_n_sqrt = Y_n_result_f;
         float Z_n_sqrt = Z_n_result_f;
 
-        float L = 116 * Y_n_sqrt - 16;
-        float a = 500 * (X_n_sqrt - Y_n_sqrt);
-        float b = 200 * (Y_n_sqrt - Z_n_sqrt);
+        float L = 116.0f * Y_n_sqrt - 16.0f;
+        float a = 500.0f * (X_n_sqrt - Y_n_sqrt);
+        float b = 200.0f * (Y_n_sqrt - Z_n_sqrt);
 
         lab currentpixel_lab = {L, a, b};
         lineptr_lab[x] = currentpixel_lab;

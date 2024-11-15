@@ -19,7 +19,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
         int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
         float* lineptr_distance = (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
 
-        float distance = 0;
+        float distance = 0.0f;
         labDistance(lineptr_lab_background[x], lineptr_lab[x], &distance);
         lineptr_distance[x] = distance;
 
@@ -28,7 +28,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
         lab currentpixel_candidate = lineptr_lab_candidate[x];
         lab currentpixel_background = lineptr_lab_background[x];
 
-        if (distance >= 25)
+        if (distance >= 5.0f)
         {
             if (currentpixel_time == 0)
             {
@@ -53,7 +53,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
             lab average;
             averageLAB(currentpixel, currentpixel_background, &average);
             lineptr_lab_background[x] = average;
-            lineptr_distance[x] = 0;
+            lineptr_distance[x] = 0.0f;
             lineptr_time[x] = 0;
         }
     }
