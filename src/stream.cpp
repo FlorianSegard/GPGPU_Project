@@ -45,10 +45,12 @@ int main(int argc, char* argv[])
   auto method = cmdl("mode", "cpu").str();
   auto filename = cmdl(1).str();
   auto output = cmdl({"-o", "--output"}, "").str();
-  printf(method);
+
   if (method == "cpu")
+    printf("cpu");
     params.device = e_device_t::CPU;
   else if (method == "gpu")
+    printf("gpu");
     params.device = e_device_t::GPU;
   else
   {
