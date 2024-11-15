@@ -28,7 +28,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
                 if (currentpixel_time == 0)
                 {
                     lineptr_lab_candidate[x] = currentpixel;
-                    lineptr_time[x]++;
+                    lineptr_time[x] = 1;
                 }
                 else if (currentpixel_time < 100)
                 {
@@ -41,7 +41,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
                 else
                 {
                     lineptr_lab_background[x] = currentpixel_candidate;
-                    lineptr_time[x]++;
+                    lineptr_time[x] = 0;
                 }
             }
             else
