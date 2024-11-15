@@ -15,8 +15,8 @@ void erode_cpp(const ImageView<float> input, ImageView<float> output, int width,
             lab min_val = lineptr[x];
             
             // Kernel size 3x3
-            for (int dy = -1; dy <= 1; ++dy) {
-                for (int dx = -1; dx <= 1; ++dx) {
+            for (int dy = -opening_size; dy <= opening_size; ++dy) {
+                for (int dx = -opening_size; dx <= opening_size; ++dx) {
                     int nx = x + dx;
                     int ny = y + dy;
                     
@@ -42,8 +42,8 @@ void dilate_cpp(const ImageView<float> input, ImageView<float> output, int width
             lab max_val = lineptr[x];
             
             // Kernel size 3x3
-            for (int dy = -1; dy <= 1; ++dy) {
-                for (int dx = -1; dx <= 1; ++dx) {
+            for (int dy = -opening_size; dy <= opening_size; ++dy) {
+                for (int dx = -opening_size; dx <= opening_size; ++dx) {
                     int nx = x + dx;
                     int ny = y + dy;
                     

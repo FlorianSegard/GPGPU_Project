@@ -24,8 +24,8 @@ __global__ void erode(ImageView<float> input, ImageView<float> output, int width
         float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
 
         float min_val = lineptr[x];
-        for (int dy = -1; dy <= 1; ++dy) {
-            for (int dx = -1; dx <= 1; ++dx) {
+        for (int dy = -opening_size; dy <= opening_size; ++dy) {
+            for (int dx = -opening_size; dx <= opening_size; ++dx) {
                 int nx = x + dx;
                 int ny = y + dy;
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
@@ -47,8 +47,8 @@ __global__ void dilate(ImageView<float> input, ImageView<float> output, int widt
         float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
 
         float max_val = lineptr[x];
-        for (int dy = -1; dy <= 1; ++dy) {
-            for (int dx = -1; dx <= 1; ++dx) {
+        for (int dy = -opening_size; dy <= opening_size; ++dy) {
+            for (int dx = -opening_size; dx <= opening_size; ++dx) {
                 int nx = x + dx;
                 int ny = y + dy;
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
