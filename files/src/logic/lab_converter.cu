@@ -1,6 +1,6 @@
 #include <iostream>
-#include "labConverter.hpp"
-#include "labConverterUtils.hpp"
+#include "lab_converter.hpp"
+#include "lab_converter_utils.hpp"
 
 __global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab> backgroundLAB, int width, int height)
 {

@@ -22,13 +22,13 @@ add_library(Compute
     src/logo.c
     src/filter_impl.h
     src/filter_impl.cu
-    src/logic/labConverter.cpp
-    src/logic/labConverter.hpp
-    src/logic/labConverter.cu
-    src/logic/labConverterUtils.hpp
-    src/logic/backgroundestimation.cpp
-    src/logic/backgroundestimation.cu
-    src/logic/backgroundestimation.hpp
+        src/logic/lab_converter.cpp
+        src/logic/lab_converter.hpp
+        src/logic/lab_converter.cu
+        src/logic/lab_converter_utils.hpp
+        src/logic/background_estimation.cpp
+        src/logic/background_estimation.cu
+        src/logic/background_estimation.hpp
     src/logic/filter_erode_and_dilate.cpp
     src/logic/filter_erode_and_dilate.cu
     src/logic/filter_erode_and_dilate.hpp

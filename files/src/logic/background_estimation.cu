@@ -1,6 +1,6 @@
 #include <iostream>
-#include "backgroundestimation.hpp"
-#include "backgroundUtils.hpp"
+#include "background_estimation.hpp"
+#include "background_utils.hpp"
 
 //TODO: is lineptr_lab_candidate initialized with full 0??? (we need it)
 __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> currentBackground,

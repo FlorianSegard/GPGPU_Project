@@ -1,6 +1,6 @@
 #include <iostream>
-#include "labConverter.hpp"
-#include "labConverterUtils.hpp"
+#include "lab_converter.hpp"
+#include "lab_converter_utils.hpp"
 
 ImageView<lab> rgbtolab_converter_cpp(ImageView<rgb8> rgb_image, ImageView<lab> lab_image, int width, int height)
 {

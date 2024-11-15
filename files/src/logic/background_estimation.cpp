@@ -1,6 +1,6 @@
 #include <iostream>
-#include "backgroundestimation.hpp"
-#include "backgroundUtils.hpp"
+#include "background_estimation.hpp"
+#include "background_utils.hpp"
 
 void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
                             ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
