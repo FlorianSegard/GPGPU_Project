@@ -12,9 +12,9 @@ __device__ inline void averageLAB(lab p1, lab p2, lab* result) {
 
 
 // Shared Euclidean distance
-__device__ inline void labDistance(lab p1, lab p2, float* result) {
+__device__ inline void labDistanceSquared(lab p1, lab p2, float* result) {
     float dL = p1.L - p2.L;
     float da = p1.a - p2.a;
     float db = p1.b - p2.b;
-    *result = sqrtf(dL * dL + da * da + db * db);
+    *result = dL * dL + da * da + db * db;
 }

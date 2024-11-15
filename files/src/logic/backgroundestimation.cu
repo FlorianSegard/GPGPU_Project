@@ -14,50 +14,51 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
     if (x >= width || y >= height)
         return;
 
-        lab* lineptr_lab = (lab*)((std::byte*)in.buffer + y * in.stride);
-        lab* lineptr_lab_background = (lab*)((std::byte*)currentBackground.buffer + y * currentBackground.stride);
-        lab* lineptr_lab_candidate = (lab*)((std::byte*)candidateBackground.buffer + y * candidateBackground.stride);
-        int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
-        float* lineptr_distance = (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
+    lab* lineptr_lab = (lab*)((std::byte*)in.buffer + y * in.stride);
+    lab* lineptr_lab_background = (lab*)((std::byte*)currentBackground.buffer + y * currentBackground.stride);
+    lab* lineptr_lab_candidate = (lab*)((std::byte*)candidateBackground.buffer + y * candidateBackground.stride);
+    int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
+    float* lineptr_distance = (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
 
-        float distance = 0.0f;
-        labDistance(lineptr_lab_background[x], lineptr_lab[x], &distance);
-        lineptr_distance[x] = distance;
 
-        int currentpixel_time = lineptr_time[x];
-        lab currentpixel = lineptr_lab[x];
-        lab currentpixel_candidate = lineptr_lab_candidate[x];
-        lab currentpixel_background = lineptr_lab_background[x];
+    int currentpixel_time = lineptr_time[x];
+    lab currentpixel = lineptr_lab[x];
+    lab currentpixel_candidate = lineptr_lab_candidate[x];
+    lab currentpixel_background = lineptr_lab_background[x];
 
-        if (distance >= 5.0f)
+    float distance_squared = 0.0f;
+    labDistanceSquared(currentpixel_background, currentpixel, &distance_squared);
+    lineptr_distance[x] = distance_squared;
+
+    lab average;
+
+    if (distance_squared >= 25.0f)
+    {
+        if (currentpixel_time == 0)
         {
-            if (currentpixel_time == 0)
-            {
-                lineptr_lab_candidate[x] = currentpixel;
-                lineptr_time[x] = 1;
-            }
-            else if (currentpixel_time < 100)
-            {
-                lab average;
-                averageLAB(currentpixel, currentpixel_candidate, &average);
-                lineptr_lab_candidate[x] = average;
-                lineptr_time[x]++;
-            }
-            else
-            {
-                lineptr_lab_background[x] = currentpixel_candidate;
-                lineptr_time[x] = 0;
-            }
+            lineptr_lab_candidate[x] = currentpixel;
+            lineptr_time[x] = 1;
+        }
+        else if (currentpixel_time < 100)
+        {
+            averageLAB(currentpixel, currentpixel_candidate, &average);
+            lineptr_lab_candidate[x] = average;
+            lineptr_time[x]++;
         }
         else
         {
-            lab average;
-            averageLAB(currentpixel, currentpixel_background, &average);
-            lineptr_lab_background[x] = average;
-            lineptr_distance[x] = 0.0f;
+            lineptr_lab_background[x] = currentpixel_candidate;
             lineptr_time[x] = 0;
         }
-
+    }
+    else
+    {
+        averageLAB(currentpixel, currentpixel_background, &average);
+        lineptr_lab_background[x] = average;
+        lineptr_distance[x] = 0.0f;
+        lineptr_time[x] = 0;
+    }
+    
 }
 
 
