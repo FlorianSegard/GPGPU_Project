@@ -22,7 +22,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
             int currentpixel_time = lineptr_time[x];
             float distance_squared;
             labDistanceSquared(currentpixel, currentpixel_background, &distance_squared);
-            lineptr_distance[x] = distance;
+            lineptr_distance[x] = distance_squared;
             if (distance_squared >= 25.0f)
             {
                 if (currentpixel_time == 0)
