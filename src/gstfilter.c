@@ -337,7 +337,7 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
   Parameters params;
   params.device = cudafilter->device);
 
-  cpt_init(params);
+  cpt_init(&params);
   cpt_process_frame(pixels, width, height, plane_stride);
   //g_print("OUT FILTER CUDA\n");
 
