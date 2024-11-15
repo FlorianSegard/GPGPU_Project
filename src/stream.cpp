@@ -46,14 +46,6 @@ int main(int argc, char* argv[])
   auto filename = cmdl(1).str();
   auto output = cmdl({"-o", "--output"}, "").str();
 
-  auto bg_uri = cmdl({"--bg-uri"}, "").str();
-  auto opening_size = std::stoi(cmdl({"--opening-size"}, "3").str());
-  auto th_low = std::stoi(cmdl({"--th-low"}, "3").str());
-  auto th_high = std::stoi(cmdl({"--th-high"}, "30").str());
-  auto sampling_rate = std::stoi(cmdl({"--sampling-rate"}, "500").str());
-  auto number_frame = std::stoi(cmdl({"--number-frame"}, "10").str());
-
-
   if (method == "cpu") {
       params.device = e_device_t::CPU;
   }
@@ -98,19 +90,6 @@ int main(int argc, char* argv[])
     g_object_set (filesink, "location", output.c_str(), NULL);
     g_object_unref (filesink);
   }
-
-  auto filter = gst_bin_get_by_name(GST_BIN(pipeline), "myfilter");
-
-  g_print("URI: %s\n", bg_uri.c_str());
-  if (!bg_uri.empty())
-      g_object_set(filter, "uri", bg_uri.c_str(), NULL);
-  g_object_set(filter, "opening_size", opening_size, NULL);
-  g_object_set(filter, "th_low", th_low, NULL);
-  g_object_set(filter, "th_high", th_high, NULL);
-  g_object_set(filter, "sampling_rate", sampling_rate, NULL);
-  g_object_set(filter, "number_frame", number_frame, NULL);
-  g_object_unref(filter);
-
 
   // Start the pipeline
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
