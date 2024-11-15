@@ -91,7 +91,7 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image) {
 // TODO: parse gstfilter and give arguments
 // Check error after each initialization
 extern "C" {
-void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride, const char* bg_uri
+void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride, const char* bg_uri,
                     int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame)
 {
     // Init device and global variables
@@ -144,7 +144,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     erode_process_frame(
             residual_image, erode_image,
-            width, height
+            width, height, opening_size / 2
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
@@ -157,7 +157,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     dilate_process_frame(
             erode_image, dilate_image,
-            width, height
+            width, height, opening_size / 2
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
@@ -173,7 +173,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     //TODO: retrieve threshold values
     hysteresis_process_frame(
             dilate_image, hysteresis_image,
-            width, height, 3, 30
+            width, height, th_low, th_high
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();

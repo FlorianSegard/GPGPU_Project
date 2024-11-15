@@ -6,7 +6,7 @@
 #include "filter_erode_and_dilate.hpp"
 
 
-void erode_cpp(const ImageView<float> input, ImageView<float> output, int width, int height) {
+void erode_cpp(const ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
     for (int y = 0; y < height; ++y) {
         const lab* lineptr = (const lab*)((const std::byte*)input.buffer + y * input.stride);
         lab* lineptr_out = (lab*)((std::byte*)output.buffer + y * output.stride);
@@ -33,7 +33,7 @@ void erode_cpp(const ImageView<float> input, ImageView<float> output, int width,
     }
 }
 
-void dilate_cpp(const ImageView<float> input, ImageView<float> output, int width, int height) {
+void dilate_cpp(const ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
     for (int y = 0; y < height; ++y) {
         const lab* lineptr = (const lab*)((const std::byte*)input.buffer + y * input.stride);
         lab* lineptr_out = (lab*)((std::byte*)output.buffer + y * output.stride);
@@ -69,20 +69,20 @@ void filter_init(Parameters *params) {
     b_params = *params;
 }
 
-void erode_process_frame(ImageView<float> input, ImageView<float> output, int width, int height) {
+void erode_process_frame(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
     if (b_params.device == e_device_t::CPU)
-        erode_cpp(input, output, width, height);
+        erode_cpp(input, output, width, height, opening_size);
 
     else if (b_params.device == e_device_t::GPU)
-        erode_cu(input, output, width, height);
+        erode_cu(input, output, width, height, opening_size);
 }
 
-void dilate_process_frame(ImageView<float> input, ImageView<float> output, int width, int height) {
+void dilate_process_frame(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
     if (b_params.device == e_device_t::CPU)
-        dilate_cpp(input, output, width, height);
+        dilate_cpp(input, output, width, height, opening_size);
 
     else if (b_params.device == e_device_t::GPU)
-        dilate_cu(input, output, width, height);
+        dilate_cu(input, output, width, height, opening_size);
 }
 
 }

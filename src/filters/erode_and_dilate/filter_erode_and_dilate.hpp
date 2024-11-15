@@ -11,15 +11,15 @@
 extern "C" {
 #endif
 
-void erode_cpp(const ImageView<float> input, lab* output, int width, int height);
-void dilate_cpp(const ImageView<float> input, lab* output, int width, int height);
+void erode_cpp(const ImageView<float> input, lab* output, int width, int height, int opening_size);
+void dilate_cpp(const ImageView<float> input, lab* output, int width, int height, int opening_size);
 
-void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height);
-void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height);
+void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size);
+void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size);
 
 void filter_init(Parameters *params);
-void erode_process_frame(ImageView<float> input, ImageView<float> output, int width, int height);
-void dilate_process_frame(ImageView<float> input, ImageView<float> output, int width, int height);
+void erode_process_frame(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size);
+void dilate_process_frame(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size);
 
 #ifdef __cplusplus
 }

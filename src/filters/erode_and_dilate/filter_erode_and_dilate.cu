@@ -15,7 +15,7 @@
         } \
     } while (0)
 
-__global__ void erode(ImageView<float> input, ImageView<float> output, int width, int height) {
+__global__ void erode(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -38,7 +38,7 @@ __global__ void erode(ImageView<float> input, ImageView<float> output, int width
     }
 }
 
-__global__ void dilate(ImageView<float> input, ImageView<float> output, int width, int height) {
+__global__ void dilate(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -62,20 +62,20 @@ __global__ void dilate(ImageView<float> input, ImageView<float> output, int widt
 }
 
 
-void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height)
+void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
     dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    erode<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height);
+    erode<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, opening_size);
 }
 
-void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height)
+void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
     dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    dilate<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height);
+    dilate<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, opening_size);
 }
 
 /*

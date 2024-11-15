@@ -4,7 +4,7 @@
 
 void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
                             ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
-                            ImageView<float> currentDistancePixels, int width, int height)
+                            ImageView<float> currentDistancePixels, int width, int height, int bg_number_frame)
 {
     for (int y = 0; y < width; y++)
     {
@@ -30,7 +30,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
                     lineptr_lab_candidate[x] = currentpixel;
                     lineptr_time[x] = 1;
                 }
-                else if (currentpixel_time < 100)
+                else if (currentpixel_time < bg_number_frame)
                 {
                     lab average;
                     averageLAB(currentpixel, currentpixel_candidate, &average);
@@ -69,7 +69,7 @@ extern "C" {
 
     void background_process_frame(ImageView<lab> in, ImageView<lab> currentBackground,
                         ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
-                        ImageView<float> currentDistancePixels)
+                        ImageView<float> currentDistancePixels, int bg_number_frame)
     {
         int width = in.width;
         int height = in.height;

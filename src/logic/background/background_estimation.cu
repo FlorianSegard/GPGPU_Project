@@ -5,7 +5,7 @@
 //TODO: is lineptr_lab_candidate initialized with full 0??? (we need it)
 __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> currentBackground,
                                             ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
-                                            ImageView<float> currentDistancePixels, int width, int height)
+                                            ImageView<float> currentDistancePixels, int width, int height, int bg_number_frame)
 {
 
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -35,7 +35,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
                 lineptr_lab_candidate[x] = currentpixel;
                 lineptr_time[x] = 1;
             }
-            else if (currentpixel_time < 100)
+            else if (currentpixel_time < bg_number_frame)
             {
                 lab average;
                 averageLAB(currentpixel, currentpixel_candidate, &average);
@@ -64,7 +64,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
 
 void check_background_cu(ImageView<lab> in, ImageView<lab> currentBackground,
                             ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
-                            ImageView<float> currentDistancePixels, int width, int height)
+                            ImageView<float> currentDistancePixels, int width, int height, int bg_number_frame)
 {
     dim3 threadsPerBlock(32, 32);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x, 
