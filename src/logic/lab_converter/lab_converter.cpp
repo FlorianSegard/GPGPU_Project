@@ -69,12 +69,12 @@ extern "C" {
 
     static Parameters l_params;
 
-    void labConv_init(Parameters* params)
+    void lab_conv_init(Parameters* params)
     {
         l_params = *params;
     }
 
-    void labConv_process_frame(ImageView<rgb8> rgb_image, ImageView<lab> lab_image)
+    void lab_conv_process_frame(ImageView<rgb8> rgb_image, ImageView<lab> lab_image)
     {
         int width = rgb_image.width;
         int height = rgb_image.height;

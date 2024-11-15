@@ -2,7 +2,7 @@
 #include "lab_converter.hpp"
 #include "lab_converter_utils.hpp"
 
-__global__ void rgbtolab_converter_GPU(ImageView<rgb8> rgb_image, ImageView<lab> backgroundLAB, int width, int height)
+__global__ void rgbtolab_converter_kernel(ImageView<rgb8> rgb_image, ImageView<lab> backgroundLAB, int width, int height)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -69,7 +69,7 @@ void rgbtolab_converter_cu(ImageView<rgb8> rgb_image, ImageView<lab> backgroundL
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x, 
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
-    rgbtolab_converter_GPU<<<blocksPerGrid, threadsPerBlock>>>(rgb_image, backgroundLAB, width, height);
+    rgbtolab_converter_kernel<<<blocksPerGrid, threadsPerBlock>>>(rgb_image, backgroundLAB, width, height);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {

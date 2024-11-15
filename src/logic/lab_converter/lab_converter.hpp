@@ -10,9 +10,9 @@
 #endif
 
 
-void labConv_init(Parameters* params);
+void lab_conv_init(Parameters* params);
 
-void labConv_process_frame(ImageView<rgb8> rgb_image, ImageView<lab> lab_image);
+void lab_conv_process_frame(ImageView<rgb8> rgb_image, ImageView<lab> lab_image);
 
 void rgbtolab_converter_cu(ImageView<rgb8> rgb_image, ImageView<lab> backgroundLAB, int width, int height);
 
