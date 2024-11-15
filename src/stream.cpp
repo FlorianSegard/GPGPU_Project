@@ -100,17 +100,17 @@ int main(int argc, char* argv[])
   }
 
   auto filter = gst_bin_get_by_name(GST_BIN(pipeline), "myfilter");
-  if (filter) {
-      g_print("URI: %s\n", bg_uri.c_str());
-      if (!bg_uri.empty())
-          g_object_set(filter, "uri", bg_uri.c_str(), NULL);
-      g_object_set(filter, "opening_size", opening_size, NULL);
-      g_object_set(filter, "th_low", th_low, NULL);
-      g_object_set(filter, "th_high", th_high, NULL);
-      g_object_set(filter, "sampling_rate", sampling_rate, NULL);
-      g_object_set(filter, "number_frame", number_frame, NULL);
-      g_object_unref(filter);
-  }
+
+  g_print("URI: %s\n", bg_uri.c_str());
+  if (!bg_uri.empty())
+      g_object_set(filter, "uri", bg_uri.c_str(), NULL);
+  g_object_set(filter, "opening_size", opening_size, NULL);
+  g_object_set(filter, "th_low", th_low, NULL);
+  g_object_set(filter, "th_high", th_high, NULL);
+  g_object_set(filter, "sampling_rate", sampling_rate, NULL);
+  g_object_set(filter, "number_frame", number_frame, NULL);
+  g_object_unref(filter);
+
 
   // Start the pipeline
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
