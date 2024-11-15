@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cstddef>
-#include "../Image.hpp"
-#include "../filter_impl.h"
-#include "../Compute.hpp"
+#include "../../Image.hpp"
+#include "../../filter_impl.h"
+#include "../../Compute.hpp"
 
 #ifdef __cplusplus
 extern "C" {
