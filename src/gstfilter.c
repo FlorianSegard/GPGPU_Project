@@ -318,8 +318,6 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
 
   GST_DEBUG_OBJECT (cudafilter, "transform_frame_ip");
 
-  g_print(cudafilter->device == e_device_t::CPU);
-
   int width = GST_VIDEO_FRAME_COMP_WIDTH(frame, 0);
   int height = GST_VIDEO_FRAME_COMP_HEIGHT(frame, 0);
 
@@ -334,9 +332,6 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
   g_assert(pixel_stride == 3);
 
   //g_print("IN FILTER CUDA\n");
-  Parameters params;
-  params.device = cudafilter->device;
-
   cpt_init(&params);
   cpt_process_frame(pixels, width, height, plane_stride);
   //g_print("OUT FILTER CUDA\n");
