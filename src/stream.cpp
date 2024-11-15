@@ -93,12 +93,12 @@ int main(int argc, char* argv[])
   g_object_unref (filesrc);
 
   auto filter = gst_bin_get_by_name(GST_BIN(pipeline), "filter");
-  g_object_set(filter, "uri", cmdl("uri").str().c_str(), NULL);
-  g_object_set(filter, "opening_size", std::stoi(cmdl("opening-size").str()), NULL);
-  g_object_set(filter, "th_low", std::stoi(cmdl("th-low").str()), NULL);
-  g_object_set(filter, "th_high", std::stoi(cmdl("th-high").str()), NULL);
-  g_object_set(filter, "sampling_rate", std::stoi(cmdl("sampling-rate").str()), NULL);
-  g_object_set(filter, "number_frame", std::stoi(cmdl("number-frame").str()), NULL);
+  g_object_set(filter, "uri", uri, NULL);
+  g_object_set(filter, "opening_size", opening_size, NULL);
+  g_object_set(filter, "th_low", th_low NULL);
+  g_object_set(filter, "th_high",th_high, NULL);
+  g_object_set(filter, "sampling_rate", sampling_rate, NULL);
+  g_object_set(filter, "number_frame", number_frame, NULL);
 
   g_object_unref(filter);
 
