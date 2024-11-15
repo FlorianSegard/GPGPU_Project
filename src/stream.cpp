@@ -85,8 +85,6 @@ int main(int argc, char* argv[])
   g_object_set (filesrc, "location", filename.c_str(), NULL);
   g_object_unref (filesrc);
 
-  g_object_unref(filter);
-
   if (!output.empty())
   {
     auto filesink = gst_bin_get_by_name (GST_BIN (pipeline), "fdst");
