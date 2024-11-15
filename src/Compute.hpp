@@ -23,7 +23,8 @@ typedef struct  {
 void cpt_init(Parameters* params);
 
 /// Function called by gstreamer to process the incoming frame
-void cpt_process_frame(uint8_t* buffer, int width, int height, int stride);
+void cpt_process_frame(uint8_t* buffer, int width, int height, int stride, const char* bg_uri,
+                       int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame);
     
 
 #ifdef __cplusplus

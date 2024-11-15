@@ -91,7 +91,8 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image) {
 // TODO: parse gstfilter and give arguments
 // Check error after each initialization
 extern "C" {
-void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride)
+void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride, const char* bg_uri
+                    int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame)
 {
     // Init device and global variables
     Parameters params;

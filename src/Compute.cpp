@@ -57,13 +57,14 @@ extern "C" {
     g_params = *params;
   }
 
-  void cpt_process_frame(uint8_t* buffer, int width, int height, int stride)
+  void cpt_process_frame(uint8_t* buffer, int width, int height, int stride, const char* bg_uri,
+                         int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame)
   {
     // ImageView<rgb8> img = ImageView<rgb8>{(rgb8*)buffer, width, height, stride};
     if (g_params.device == e_device_t::CPU)
       filter_impl_cpp(buffer, width, height, stride);
     else if (g_params.device == e_device_t::GPU)
-      filter_impl_cu(buffer, width, height, stride);
+      filter_impl_cu(buffer, width, height, stride, bg_uri, opening_size, h_low, th_high, bg_sampling_rate, bg_number_frame);
       // compute_cu(img);
   }
 

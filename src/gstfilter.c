@@ -324,10 +324,15 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
   // TODO: this is the main process, we will call it later
   g_assert(pixel_stride == 3);
   //g_print("IN FILTER CUDA\n");
-  g_print("opening_size: %d\n", cudafilter->opening_size);
-  cpt_process_frame(pixels, width, height, plane_stride);
+  cpt_process_frame(pixels, width, height, plane_stride,
+    g_strdup(cudafilter->bg_uri),
+    cudafilter->opening_size,
+    cudafilter->th_low,
+    cudafilter->th_high,
+    cudafilter->bg_sampling_rate,
+    cudafilter->bg_number_frame
+  );
   //g_print("OUT FILTER CUDA\n");
-
 
   return GST_FLOW_OK;
 }
