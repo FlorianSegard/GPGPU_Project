@@ -25,6 +25,8 @@ struct lab {
 
 void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride);
 
+void filter_impl_cpp(uint8_t* pixels_buffer, int width, int height, int plane_stride);
+
 #ifdef __cplusplus
 }
 #endif
