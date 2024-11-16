@@ -113,6 +113,7 @@ extern "C" {
         params.device = device;
         bool is_gpu = params.device == e_device_t::GPU;
 
+        cudaError_t error;
         lab_conv_init(&params);
         background_init(&params);
         filter_init(&params);
