@@ -115,14 +115,13 @@ extern "C" {
         params.device = device;
         bool is_gpu = params.device == e_device_t::GPU;
 
-
         cudaError_t error;
         lab_conv_init(&params);
         background_init(&params);
         filter_init(&params);
         hysteresis_init(&params);
         mask_init(&params);
-
+        std::cout << "1" << std::endl;
 
         // Clone pixels_buffer inside new allocated rgb_buffer
         Image<rgb8> rgb_image(width, height, is_gpu);
@@ -136,14 +135,14 @@ extern "C" {
             memcpy(rgb_image.buffer, pixels_buffer, height * width * plane_stride);
         }
 
-
+        std::cout << "2" << std::endl;
         // Allocate lab converted image buffer
         Image<lab> lab_image(width, height, is_gpu);
 
         // Convert RGB to LAB -> result stored inside lab_buffer
         lab_conv_process_frame(rgb_image, lab_image);
         checkKernelLaunch(is_gpu);
-
+        std::cout << "3" << std::endl;
 
         if (!isInitialized)
             initializeGlobals(width, height, lab_image, is_gpu);
