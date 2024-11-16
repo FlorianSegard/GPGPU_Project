@@ -57,9 +57,9 @@ extern "C" {
     g_params = *params;
   }
 
-  void cpt_process_frame(uint8_t* buffer, int width, int height, int stride, e_device_t device, const char* bg_uri,
+  void cpt_process_frame(uint8_t* buffer, int width, int height, int stride, const char* bg_uri,
                          int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame)
   {
-      filter_impl(buffer, width, height, stride, device, bg_uri, opening_size, th_low, th_high, bg_sampling_rate, bg_number_frame);
+      filter_impl(buffer, width, height, stride, g_params.device, bg_uri, opening_size, th_low, th_high, bg_sampling_rate, bg_number_frame);
   }
 }

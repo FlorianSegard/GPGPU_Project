@@ -329,7 +329,6 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
     g_print("TEST CPU\n");
 
   cpt_process_frame(pixels, width, height, plane_stride,
-    cudafilter->device,
     g_strdup(cudafilter->bg_uri),
     cudafilter->opening_size,
     cudafilter->th_low,
