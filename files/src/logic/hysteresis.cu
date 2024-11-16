@@ -95,17 +95,6 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         *has_changed_global = true;
     }
 
-
-
-    if ((x > 0 && upper_lineptr[x - 1]) ||
-            (x < width - 1 && upper_lineptr[x + 1]) ||
-            (y > 0 && upper_prev_lineptr[x]) ||
-            (y < height - 1 && upper_next_lineptr[x]))
-    {
-            upper_lineptr[x] = true;
-            *has_changed_global = true;
-    }
-
 }
 
 
