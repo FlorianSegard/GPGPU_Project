@@ -6,6 +6,21 @@
 #include "../logic/red_mask/red_mask.hpp"
 #include "filter_impl.hpp"
 
+Image<lab> current_background;
+Image<lab> candidate_background;
+Image<int> current_time_pixels;
+bool isInitialized = false;
+
+void initializeGlobals(int width, int height, ImageView<lab> lab_image) {
+    current_background = Image<lab>(width, height, false);
+    candidate_background = Image<lab>(width, height, false);
+    current_time_pixels = Image<int>(width, height, false);
+    isInitialized = true;
+
+    memcpy(current_background.buffer, lab_image.buffer, height * width * sizeof(lab));
+    memcpy(candidate_background.buffer, lab_image.buffer, height * width * sizeof(lab));
+}
+
 void filter_impl_cpp(uint8_t* pixels_buffer, int width, int height, int plane_stride, const char* bg_uri,
                      int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame)
 {
