@@ -8,11 +8,11 @@
 
 void erode_cpp(const ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
     for (int y = 0; y < height; ++y) {
-        const lab* lineptr = (const lab*)((const std::byte*)input.buffer + y * input.stride);
-        lab* lineptr_out = (lab*)((std::byte*)output.buffer + y * output.stride);
+        const float* lineptr = (const float*)((const std::byte*)input.buffer + y * input.stride);
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
         
         for (int x = 0; x < width; ++x) {
-            lab min_val = lineptr[x];
+            float min_val = lineptr[x];
             
             // Kernel size 3x3
             for (int dy = -opening_size; dy <= opening_size; ++dy) {
@@ -21,10 +21,8 @@ void erode_cpp(const ImageView<float> input, ImageView<float> output, int width,
                     int ny = y + dy;
                     
                     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                        const lab* neighbor = (const lab*)((const std::byte*)input.buffer + ny * input.stride);
-                        min_val.L = std::min(min_val.L, neighbor[nx].L);
-                        min_val.a = std::min(min_val.a, neighbor[nx].a);
-                        min_val.b = std::min(min_val.b, neighbor[nx].b);
+                        const float* neighbor = (const float*)((const std::byte*)input.buffer + ny * input.stride);
+                        min_val = std::min(min_val, neighbor[nx]);
                     }
                 }
             }
@@ -35,11 +33,11 @@ void erode_cpp(const ImageView<float> input, ImageView<float> output, int width,
 
 void dilate_cpp(const ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
     for (int y = 0; y < height; ++y) {
-        const lab* lineptr = (const lab*)((const std::byte*)input.buffer + y * input.stride);
-        lab* lineptr_out = (lab*)((std::byte*)output.buffer + y * output.stride);
+        const float* lineptr = (const float*)((const std::byte*)input.buffer + y * input.stride);
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
         
         for (int x = 0; x < width; ++x) {
-            lab max_val = lineptr[x];
+            float max_val = lineptr[x];
             
             // Kernel size 3x3
             for (int dy = -opening_size; dy <= opening_size; ++dy) {
@@ -48,10 +46,8 @@ void dilate_cpp(const ImageView<float> input, ImageView<float> output, int width
                     int ny = y + dy;
                     
                     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                        const lab* neighbor = (const lab*)((const std::byte*)input.buffer + ny * input.stride);
-                        max_val.L = std::max(max_val.L, neighbor[nx].L);
-                        max_val.a = std::max(max_val.a, neighbor[nx].a);
-                        max_val.b = std::max(max_val.b, neighbor[nx].b);
+                        const float* neighbor = (const float*)((const std::byte*)input.buffer + ny * input.stride);
+                        max_val = std::max(min_val, neighbor[nx]);
                     }
                 }
             }
