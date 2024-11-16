@@ -211,5 +211,7 @@ extern "C" {
                         (char*)rgb_image.buffer + y * rgb_image.stride,
                          rgb_image.width * sizeof(uint8_t));
         }
+
+        std::cout << "---------------" << std::endl;
     }
 }
