@@ -323,10 +323,6 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
 
   // TODO: this is the main process, we will call it later
   g_assert(pixel_stride == 3);
-  if (cudafilter->device == GPU)
-    g_print("TEST GPU\n");
-  else
-    g_print("TEST CPU\n");
 
   cpt_process_frame(pixels, width, height, plane_stride,
     g_strdup(cudafilter->bg_uri),
