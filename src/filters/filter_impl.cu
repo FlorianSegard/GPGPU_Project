@@ -124,6 +124,7 @@ extern "C" {
         hysteresis_init(&params);
         mask_init(&params);
 
+
         // Clone pixels_buffer inside new allocated rgb_buffer
         Image<rgb8> rgb_image(width, height, is_gpu);
         if (is_gpu) {
@@ -132,7 +133,10 @@ extern "C" {
             CHECK_CUDA_ERROR(error);
         }
         else {
-            memcpy(rgb_image.buffer, pixels_buffer, height * plane_stride);
+            for (int y = 0; y < rgb_image.height; ++y)
+                std::memcpy((char*)rgb_image.buffer + y * rgb_image.stride,
+                            (char*)pixels_buffer + y * plane_stride,
+                            plane_stride.width * sizeof(rgb8));
         }
 
 
@@ -196,7 +200,10 @@ extern "C" {
             CHECK_CUDA_ERROR(error);
         }
         else {
-            memcpy(pixels_buffer, rgb_image.buffer, height * width * plane_stride);
+            for (int y = 0; y < rgb_image.height; ++y)
+                std::memcpy((char*)pixels_buffer + y * plane_stride,
+                           (char*)rgb_image.buffer + y * rgb_image.stride,
+                            rgb_image.width * sizeof(uint8_t));
         }
     }
 }
