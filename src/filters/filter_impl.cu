@@ -88,6 +88,7 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image, bool is_
     isInitialized = true;
 
     if (is_gpu) {
+        std::cout << "1.6"<< std::endl;
         cudaError_t error;
         error = cudaMemcpy2D(current_background.buffer, current_background.stride, lab_image.buffer, lab_image.stride,
                              width * sizeof(lab), height, cudaMemcpyDefault);
@@ -99,6 +100,7 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image, bool is_
         std::cout << "Running on GPU" << std::endl;
     }
     else {
+        std::cout << "1.6"<< std::endl;
         memcpy(current_background.buffer, lab_image.buffer, height * width * sizeof(lab));
         memcpy(candidate_background.buffer, lab_image.buffer, height * width * sizeof(lab));
         std::cout << "Running on CPU" << std::endl;
@@ -121,11 +123,11 @@ extern "C" {
         filter_init(&params);
         hysteresis_init(&params);
         mask_init(&params);
-        std::cout << "1" << std::endl;
+        std::cout << "1" << is_gpu << std::endl;
 
         // Clone pixels_buffer inside new allocated rgb_buffer
         Image<rgb8> rgb_image(width, height, is_gpu);
-
+        std::cout << "1.5"<< std::endl;
         if (is_gpu) {
             error = cudaMemcpy2D(rgb_image.buffer, rgb_image.stride, pixels_buffer, plane_stride,
                                  width * sizeof(rgb8), height, cudaMemcpyDefault);
