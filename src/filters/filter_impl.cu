@@ -245,7 +245,7 @@ extern "C" {
         mask_process_frame(hysteresis_image, rgb_image, width, height);
         checkKernelLaunch(is_gpu);
 
-
+        */
         // Copy result back to pixels_buffer
         if (is_gpu) {
             error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
@@ -258,6 +258,6 @@ extern "C" {
                         (char*)rgb_image.buffer + y * rgb_image.stride,
                          rgb_image.width * sizeof(uint8_t));
         }
-         */
+
     }
 }
