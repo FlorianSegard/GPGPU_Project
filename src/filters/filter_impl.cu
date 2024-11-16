@@ -97,7 +97,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     // Init device and global variables
     Parameters params;
     params.device = GPU;
-
+    std::cout << "GPU implem" << std::endl;
 
     // GPU properties for kernel calls
     cudaError_t error;

@@ -27,7 +27,8 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
                     const char* bg_uri, int opening_size, int th_low, int th_high, int bg_sampling_rate,
                     int bg_number_frame);
 
-void filter_impl_cpp(uint8_t* pixels_buffer, int width, int height, int plane_stride);
+void filter_impl_cpp(uint8_t* pixels_buffer, int width, int height, int plane_stride, const char* bg_uri,
+                     int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame);
 
 #ifdef __cplusplus
 }

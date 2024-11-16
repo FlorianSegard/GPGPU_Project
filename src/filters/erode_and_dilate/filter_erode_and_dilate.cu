@@ -64,7 +64,7 @@ __global__ void dilate(ImageView<float> input, ImageView<float> output, int widt
 
 void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
-    dim3 threadsPerBlock(16, 16);
+    dim3 threadsPerBlock(32, 32);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
     erode<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, opening_size);
@@ -72,7 +72,7 @@ void erode_cu(ImageView<float> input, ImageView<float> output, int width, int he
 
 void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
-    dim3 threadsPerBlock(16, 16);
+    dim3 threadsPerBlock(32, 32);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
     dilate<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, opening_size);
