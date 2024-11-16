@@ -211,6 +211,7 @@ extern "C" {
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
         debug_float_function(residual_image, rgb_image, width, height);
 
+        /*
         // Alloc and perform eroding operation
         Image<float> erode_image(width, height, is_gpu);
         erode_process_frame(
@@ -257,5 +258,6 @@ extern "C" {
                         (char*)rgb_image.buffer + y * rgb_image.stride,
                          rgb_image.width * sizeof(uint8_t));
         }
+         */
     }
 }
