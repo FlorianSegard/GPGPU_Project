@@ -122,14 +122,15 @@ extern "C" {
         Parameters params;
         params.device = device;
         bool is_gpu = device == GPU;
-        std::cout << "----2222---------" << std::endl;
+        std::cout << "1-----------------" << std::endl;
+
         cudaError_t error;
         lab_conv_init(&params);
         background_init(&params);
         filter_init(&params);
         hysteresis_init(&params);
         mask_init(&params);
-
+        std::cout << "2-----------------" << std::endl;
 
         // Clone pixels_buffer inside new allocated rgb_buffer
         Image<rgb8> rgb_image(width, height, is_gpu);
@@ -144,7 +145,7 @@ extern "C" {
                         pixels_buffer + y * plane_stride,
                          rgb_image.width * sizeof(rgb8));
         }
-
+        std::cout << "3-----------------" << std::endl;
 
         // Allocate lab converted image buffer
         Image<lab> lab_image(width, height, is_gpu);
@@ -152,10 +153,10 @@ extern "C" {
         // Convert RGB to LAB -> result stored inside lab_buffer
         lab_conv_process_frame(rgb_image, lab_image);
         checkKernelLaunch(is_gpu);
-
+        std::cout << "4-----------------" << std::endl;
         if (!isInitialized)
             initializeGlobals(width, height, lab_image, is_gpu);
-
+        std::cout << "5-----------------" << std::endl;
         // Update background and get residual image
         Image<float> residual_image(width, height, is_gpu);
 
@@ -163,7 +164,7 @@ extern "C" {
                                  current_time_pixels, residual_image, bg_number_frame);
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
-
+        std::cout << "6-----------------" << std::endl;
 
         // Alloc and perform eroding operation
         Image<float> erode_image(width, height, is_gpu);
@@ -173,7 +174,7 @@ extern "C" {
         );
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
-
+        std::cout << "7-----------------" << std::endl;
 
         // Keep old residual_image alloc and perform dilatation operation
         dilate_process_frame(
@@ -182,7 +183,7 @@ extern "C" {
         );
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
-
+        std::cout << "8-----------------" << std::endl;
 
         // Alloc and perform hysteresis operation
         Image<bool> hysteresis_image(width, height, is_gpu);
@@ -192,13 +193,13 @@ extern "C" {
         );
         checkKernelLaunch(is_gpu);
         //debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height);
-
+        std::cout << "9-----------------" << std::endl;
 
         // Alloc and red mask operation
         mask_process_frame(hysteresis_image, rgb_image, width, height);
         checkKernelLaunch(is_gpu);
 
-
+        std::cout << "10-----------------" << std::endl;
         // Copy result back to pixels_buffer
         if (is_gpu) {
             error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
@@ -211,7 +212,6 @@ extern "C" {
                         (char*)rgb_image.buffer + y * rgb_image.stride,
                          rgb_image.width * sizeof(uint8_t));
         }
-
         std::cout << "---------------" << std::endl;
     }
 }

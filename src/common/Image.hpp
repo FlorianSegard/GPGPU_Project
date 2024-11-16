@@ -93,6 +93,7 @@ Image<T>& Image<T>::operator=(Image&& other) noexcept
   return *this;
 }
 
+/*
 template <class T>
 Image<T> Image<T>::clone() const
 {
@@ -103,3 +104,4 @@ Image<T> Image<T>::clone() const
                 this->width * sizeof(T));
   return out;
 }
+*/
