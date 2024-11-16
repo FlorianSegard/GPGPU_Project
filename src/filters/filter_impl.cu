@@ -254,9 +254,9 @@ extern "C" {
         }
         else {
             for (int y = 0; y < rgb_image.height; ++y)
-                memcpy(pixels_buffer + y * plane_stride,
+                memcpy((char*)pixels_buffer + y * plane_stride,
                         (char*)rgb_image.buffer + y * rgb_image.stride,
-                         rgb_image.width * sizeof(uint8_t));
+                         rgb_image.width * sizeof(rgb8));
         }
 
     }
