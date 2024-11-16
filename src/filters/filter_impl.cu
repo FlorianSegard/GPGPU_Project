@@ -121,7 +121,6 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     lab_conv_process_frame(rgb_image, lab_image);
     cudaDeviceSynchronize();
     checkKernelLaunch();
-    //std::cout << "labConv call succeeded" << std::endl;
 
 
     if (!isInitialized)
@@ -134,7 +133,6 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, residual_image, bg_number_frame);
 	cudaDeviceSynchronize();
     checkKernelLaunch();
-    //std::cout << "background call succeeded" << std::endl;
 
     //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
 
@@ -148,7 +146,6 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
-    //std::cout << "erode call succeeded" << std::endl;
 
     //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
 
@@ -161,7 +158,6 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
-    //std::cout << "dilate call succeeded" << std::endl;
 
     //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
 
@@ -177,7 +173,6 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
-    //std::cout << "hysteresis call succeeded" << std::endl;
 
     //debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height);
 
@@ -187,23 +182,14 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     mask_process_frame(hysteresis_image, rgb_image, width, height);
     cudaDeviceSynchronize();
     checkKernelLaunch();
-    //std::cout << "red mask call succeeded" << std::endl;
 
 
 
-
-
-    // // Copy result back to pixels_buffer
+    // Copy result back to pixels_buffer
     error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
                          width * sizeof(rgb8), height, cudaMemcpyDeviceToHost);
     CHECK_CUDA_ERROR(error);
-    //std::cout << "copy back to pixels_buffer" << std::endl;
 
-    // // Clean up temporary buffers
-    // cudaFree(rgb_buffer);
-    // cudaFree(lab_buffer);
-    // cudaFree(residual_buffer);
-    // cudaFree(eroded_buffer);
-    // cudaFree(dilated_buffer);
+    // Clean up temporary buffers
 }
 }
