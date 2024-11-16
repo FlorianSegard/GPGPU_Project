@@ -12,7 +12,7 @@ Image<lab> candidate_background;
 Image<int> current_time_pixels;
 bool isInitialized = false;
 
-void initializeGlobals(int width, int height, ImageView<lab> lab_image) {
+void initialize_globals_cpp(int width, int height, ImageView<lab> lab_image) {
     current_background = Image<lab>(width, height, false);
     candidate_background = Image<lab>(width, height, false);
     current_time_pixels = Image<int>(width, height, false);
@@ -45,7 +45,7 @@ void filter_impl_cpp(uint8_t* pixels_buffer, int width, int height, int plane_st
 
 
     if (!isInitialized)
-        initializeGlobals(width, height, lab_image);
+        initialize_globals_cpp(width, height, lab_image);
 
     // Update background and get residual image
     background_init(&params);
