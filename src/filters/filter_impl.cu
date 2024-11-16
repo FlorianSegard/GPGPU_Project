@@ -133,8 +133,8 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, residual_image, bg_number_frame);
 	cudaDeviceSynchronize();
     checkKernelLaunch();
-
     //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
+
 
     // Alloc and perform eroding operation
     filter_init(&params);
@@ -146,11 +146,11 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
-
     //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
 
-    // Alloc and perform eroding operation
-    Image<float> dilate_image(width, height, true);
+
+    // Keep old residual_image alloc and perform dilatation operation
+    Image<float> dilate_image = residual_image;
 
     dilate_process_frame(
             erode_image, dilate_image,
@@ -158,7 +158,6 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
-
     //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
 
 
@@ -173,7 +172,6 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
     );
     cudaDeviceSynchronize();
     checkKernelLaunch();
-
     //debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height);
 
 
