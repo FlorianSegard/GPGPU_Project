@@ -6,7 +6,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
                             ImageView<lab> candidateBackground, ImageView<int> currentTimePixels,
                             ImageView<float> currentDistancePixels, int width, int height, int bg_number_frame)
 {
-    for (int y = 0; y < width; y++)
+    for (int y = 0; y < height; y++)
     {
         lab* lineptr_lab = (lab*)((std::byte*)in.buffer + y * in.stride);
         lab* lineptr_lab_background = (lab*)((std::byte*)currentBackground.buffer + y * currentBackground.stride);
@@ -14,7 +14,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
         int* lineptr_time = (int*)((std::byte*)currentTimePixels.buffer + y * currentTimePixels.stride);
         float* lineptr_distance = (float*)((std::byte*)currentDistancePixels.buffer + y * currentDistancePixels.stride);
 
-        for (int x = 0; x < height; x++)
+        for (int x = 0; x < width; x++)
         {
             lab currentpixel = lineptr_lab[x];
             lab currentpixel_background = lineptr_lab_background[x];
