@@ -47,7 +47,7 @@ void dilate_cpp(const ImageView<float> input, ImageView<float> output, int width
                     
                     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
                         const float* neighbor = (const float*)((const std::byte*)input.buffer + ny * input.stride);
-                        max_val = std::max(min_val, neighbor[nx]);
+                        max_val = std::max(max_val, neighbor[nx]);
                     }
                 }
             }
