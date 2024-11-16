@@ -122,7 +122,7 @@ extern "C" {
         Parameters params;
         params.device = device;
         bool is_gpu = device == GPU;
-
+        std::cout << "----2222---------" << std::endl;
         cudaError_t error;
         lab_conv_init(&params);
         background_init(&params);
