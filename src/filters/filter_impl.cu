@@ -88,7 +88,6 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image, bool is_
     isInitialized = true;
 
     if (is_gpu) {
-        std::cout << "1.6"<< std::endl;
         cudaError_t error;
         error = cudaMemcpy2D(current_background.buffer, current_background.stride, lab_image.buffer, lab_image.stride,
                              width * sizeof(lab), height, cudaMemcpyDefault);
@@ -100,9 +99,16 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image, bool is_
         std::cout << "Running on GPU" << std::endl;
     }
     else {
-        std::cout << "1.6"<< std::endl;
-        memcpy(current_background.buffer, lab_image.buffer, height * width * sizeof(lab));
-        memcpy(candidate_background.buffer, lab_image.buffer, height * width * sizeof(lab));
+        for (int y = 0; y < lab_image.height; ++y)
+            memcpy((char*)current_background.buffer + y * current_background.stride,
+                   (char*)lab_image.buffer + y * lab_image.stride,
+                   lab_image.width * sizeof(lab));
+
+        for (int y = 0; y < lab_image.height; ++y)
+            memcpy((char*)candidate_background.buffer + y * candidate_background.stride,
+                   (char*)lab_image.buffer + y * lab_image.stride,
+                   lab_image.width * sizeof(lab));
+
         std::cout << "Running on CPU" << std::endl;
     }
 }
@@ -134,9 +140,9 @@ extern "C" {
         }
         else {
             for (int y = 0; y < rgb_image.height; ++y)
-                std::memcpy((char*)rgb_image.buffer + y * rgb_image.stride,
-                            (char*)pixels_buffer + y * plane_stride,
-                            plane_stride.width * sizeof(rgb8));
+                memcpy((char*)rgb_image.buffer + y * rgb_image.stride,
+                        (char*)pixels_buffer + y * plane_stride,
+                        rgb_image.width * sizeof(rgb8));
         }
 
 
@@ -201,9 +207,9 @@ extern "C" {
         }
         else {
             for (int y = 0; y < rgb_image.height; ++y)
-                std::memcpy((char*)pixels_buffer + y * plane_stride,
-                           (char*)rgb_image.buffer + y * rgb_image.stride,
-                            rgb_image.width * sizeof(uint8_t));
+                memcpy((char*)pixels_buffer + y * plane_stride,
+                       (char*)rgb_image.buffer + y * rgb_image.stride,
+                       rgb_image.width * sizeof(uint8_t));
         }
     }
 }
