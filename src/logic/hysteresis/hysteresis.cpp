@@ -2,12 +2,12 @@
 #include <vector>
 
 
-void hysteresis_thresholding_cpp(ImageView<float> input, bool* output, int width, int height, int output_pitch, float threshold)
+void hysteresis_thresholding_cpp(ImageView<float> input, ImageView<bool> output, int width, int height, float threshold)
 {
     for (int y = 0; y < height; ++y)
     {
-        float *input_lineptr = reinterpret_cast<float *>(input.buffer + y * input.stride);
-        bool *output_lineptr = reinterpret_cast<bool *>(output + y * output_pitch);
+        float* input_lineptr = (float *)((std::byte*)input.buffer + y * input.stride);
+        bool* output_lineptr = (bool *)((std::byte*)output.buffer  + y * output.stride);
 
         for (int x = 0; x < width; ++x)
         {
@@ -17,7 +17,7 @@ void hysteresis_thresholding_cpp(ImageView<float> input, bool* output, int width
     }
 }
 
-void hysteresis_kernel_cpp(ImageView<bool> upper, std::byte* lower, int width, int height, int lower_pitch, bool &has_changed_global)
+void hysteresis_kernel_cpp(ImageView<bool> upper, ImageView<bool> lower, int width, int height, bool &has_changed_global)
 {
     bool has_changed = true;
 
@@ -27,8 +27,8 @@ void hysteresis_kernel_cpp(ImageView<bool> upper, std::byte* lower, int width, i
 
         for (int y = 0; y < height; ++y)
         {
-            bool *upper_lineptr = reinterpret_cast<bool *>(upper.buffer + y * upper.stride);
-            bool *lower_lineptr = reinterpret_cast<bool *>(lower + y * lower_pitch);
+            bool* upper_lineptr = (bool*)((std::byte*)upper.buffer + y * upper.stride);
+            bool* lower_lineptr = (bool*)((std::byte*)lower.buffer + y * lower.stride);
 
             for (int x = 0; x < width; ++x)
             {
@@ -40,8 +40,8 @@ void hysteresis_kernel_cpp(ImageView<bool> upper, std::byte* lower, int width, i
 
                 if ((x > 0 && upper_lineptr[x - 1]) ||
                     (x < width - 1 && upper_lineptr[x + 1]) ||
-                    (y > 0 && reinterpret_cast<bool *>(upper.buffer + (y - 1) * upper.stride)[x]) ||
-                    (y < height - 1 && reinterpret_cast<bool *>(upper.buffer + (y + 1) * upper.stride)[x]))
+                    (y > 0 && (bool*)((std::byte*)upper.buffer + (y - 1) * upper.stride)[x]) ||
+                    (y < height - 1 && (bool*)((std::byte*)upper.buffer + (y + 1) * upper.stride)[x]))
                 {
                     upper_lineptr[x] = true;
                     has_changed = true;
@@ -54,18 +54,17 @@ void hysteresis_kernel_cpp(ImageView<bool> upper, std::byte* lower, int width, i
 
 void hysteresis_cpp(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, float lower_threshold, float upper_threshold)
 {
-    std::vector<std::byte> lower_threshold_input(width * height * sizeof(bool));
-    int lower_threshold_pitch = width * sizeof(bool);
+    Image<bool> lower_threshold_input(width, height, false);
 
-    hysteresis_thresholding_cpp(opened_input, reinterpret_cast<bool*>(lower_threshold_input.data()), width, height, lower_threshold_pitch, lower_threshold);
-    hysteresis_thresholding_cpp(opened_input, hysteresis.buffer, width, height, hysteresis.stride, upper_threshold);
+    hysteresis_thresholding_cpp(opened_input, lower_threshold_input, width, height, lower_threshold);
+    hysteresis_thresholding_cpp(opened_input, hysteresis, width, height, upper_threshold);
 
     bool has_changed_global = true;
 
     while (has_changed_global)
     {
         has_changed_global = false;
-        hysteresis_kernel_cpp(hysteresis, lower_threshold_input.data(), width, height, lower_threshold_pitch, has_changed_global);
+        hysteresis_kernel_cpp(hysteresis, lower_threshold_input, width, height, has_changed_global);
     }
 }
 
