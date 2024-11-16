@@ -105,7 +105,7 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image, bool is_
 
 
 extern "C" {
-    void filter_impl(Parameters params, uint8_t* pixels_buffer, int width, int height, int plane_stride, e_device_t device,
+    void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride, e_device_t device,
                         const char* bg_uri, int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame)
     {
         // Init device and device variables
@@ -192,6 +192,7 @@ extern "C" {
             error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
                                  width * sizeof(rgb8), height, cudaMemcpyDeviceToHost);
             CHECK_CUDA_ERROR(error);
+        }
         else {
             memcpy(pixels_buffer, rgb_image.buffer, height * width * plane_stride);
         }
