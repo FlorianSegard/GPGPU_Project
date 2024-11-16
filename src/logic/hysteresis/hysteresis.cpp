@@ -17,36 +17,28 @@ void hysteresis_thresholding_cpp(ImageView<float> input, ImageView<bool> output,
     }
 }
 
-void hysteresis_kernel_cpp(ImageView<bool> upper, ImageView<bool> lower, int width, int height, bool &has_changed_global)
+void hysteresis_kernel_cpp(ImageView<bool> upper, ImageView<bool> lower, int width, int height, bool* has_changed_global)
 {
-    bool has_changed = true;
-
-    while (has_changed)
+    for (int y = 0; y < height; ++y)
     {
-        has_changed = false;
+        bool* upper_lineptr = (bool*)((std::byte*)upper.buffer + y * upper.stride);
+        bool* lower_lineptr = (bool*)((std::byte*)lower.buffer + y * lower.stride);
 
-        for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
         {
-            bool* upper_lineptr = (bool*)((std::byte*)upper.buffer + y * upper.stride);
-            bool* lower_lineptr = (bool*)((std::byte*)lower.buffer + y * lower.stride);
+            if (upper_lineptr[x])
+                continue;
 
-            for (int x = 0; x < width; ++x)
+            if (!lower_lineptr[x])
+                continue;
+
+            if ((x > 0 && upper_lineptr[x - 1]) ||
+                (x < width - 1 && upper_lineptr[x + 1]) ||
+                (y > 0 && (bool*)((std::byte*)upper.buffer + (y - 1) * upper.stride)[x]) ||
+                (y < height - 1 && (bool*)((std::byte*)upper.buffer + (y + 1) * upper.stride)[x]))
             {
-                if (upper_lineptr[x])
-                    continue;
-
-                if (!lower_lineptr[x])
-                    continue;
-
-                if ((x > 0 && upper_lineptr[x - 1]) ||
-                    (x < width - 1 && upper_lineptr[x + 1]) ||
-                    (y > 0 && (bool*)((std::byte*)upper.buffer + (y - 1) * upper.stride)[x]) ||
-                    (y < height - 1 && (bool*)((std::byte*)upper.buffer + (y + 1) * upper.stride)[x]))
-                {
-                    upper_lineptr[x] = true;
-                    has_changed = true;
-                    has_changed_global = true;
-                }
+                upper_lineptr[x] = true;
+                *has_changed_global = true;
             }
         }
     }
@@ -64,7 +56,7 @@ void hysteresis_cpp(ImageView<float> opened_input, ImageView<bool> hysteresis, i
     while (has_changed_global)
     {
         has_changed_global = false;
-        hysteresis_kernel_cpp(hysteresis, lower_threshold_input, width, height, has_changed_global);
+        hysteresis_kernel_cpp(hysteresis, lower_threshold_input, width, height, &has_changed_global);
     }
 }
 
