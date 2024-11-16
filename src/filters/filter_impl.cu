@@ -96,10 +96,12 @@ void initializeGlobals(int width, int height, ImageView<lab> lab_image, bool is_
                              lab_image.stride,
                              width * sizeof(lab), height, cudaMemcpyDefault);
         CHECK_CUDA_ERROR(error);
+        std::cout << "Running on GPU" << std::endl;
     }
     else {
         memcpy(current_background.buffer, lab_image.buffer, height * width * sizeof(lab));
         memcpy(candidate_background.buffer, lab_image.buffer, height * width * sizeof(lab));
+        std::cout << "Running on CPU" << std::endl;
     }
 }
 
@@ -112,7 +114,7 @@ extern "C" {
         Parameters params;
         params.device = device;
         bool is_gpu = params.device == e_device_t::GPU;
-        std::cout << "Device is GPU? " << is_gpu << std::endl;
+
 
         cudaError_t error;
         lab_conv_init(&params);
