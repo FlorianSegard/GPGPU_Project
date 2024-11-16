@@ -150,10 +150,8 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
 
     // Keep old residual_image alloc and perform dilatation operation
-    Image<float> dilate_image = residual_image;
-
     dilate_process_frame(
-            erode_image, dilate_image,
+            erode_image, residual_image,
             width, height, opening_size / 2
     );
     cudaDeviceSynchronize();
@@ -167,7 +165,7 @@ void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_str
 
     //TODO: retrieve threshold values
     hysteresis_process_frame(
-            dilate_image, hysteresis_image,
+            residual_image, hysteresis_image,
             width, height, th_low, th_high
     );
     cudaDeviceSynchronize();
