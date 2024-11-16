@@ -115,7 +115,7 @@ extern "C" {
         // Init device and device variables
         Parameters params;
         params.device = device;
-        bool is_gpu = params.device == e_device_t::GPU;
+        bool is_gpu = device == GPU;
 
         cudaError_t error;
         lab_conv_init(&params);
