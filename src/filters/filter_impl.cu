@@ -141,8 +141,8 @@ extern "C" {
         else {
             for (int y = 0; y < rgb_image.height; ++y)
                 memcpy((char*)rgb_image.buffer + y * rgb_image.stride,
-                        (char*)pixels_buffer + y * plane_stride,
-                        rgb_image.width * sizeof(rgb8));
+                        pixels_buffer + y * plane_stride,
+                         rgb_image.width * sizeof(rgb8));
         }
 
 
@@ -209,8 +209,8 @@ extern "C" {
         else {
             for (int y = 0; y < rgb_image.height; ++y)
                 memcpy(pixels_buffer + y * plane_stride,
-                       (char*)rgb_image.buffer + y * rgb_image.stride,
-                       rgb_image.width * sizeof(rgb8));
+                        (char*)rgb_image.buffer + y * rgb_image.stride,
+                         rgb_image.width * sizeof(rgb8));
         }
     }
 }
