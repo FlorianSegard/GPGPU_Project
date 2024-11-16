@@ -212,5 +212,6 @@ extern "C" {
                         (char*)rgb_image.buffer + y * rgb_image.stride,
                          rgb_image.width * sizeof(rgb8));
         }
+        std::cout << "Running on 6" << std::endl;
     }
 }
