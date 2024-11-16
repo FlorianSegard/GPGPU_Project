@@ -5,6 +5,7 @@
 #include "../logic/hysteresis/hysteresis.hpp"
 #include "../logic/red_mask/red_mask.hpp"
 #include "filter_impl.hpp"
+#include <cstring>
 
 Image<lab> current_background;
 Image<lab> candidate_background;
