@@ -185,7 +185,7 @@ extern "C" {
         else {
             for (int y = 0; y < rgb_image.height; ++y)
                 memcpy((char*)rgb_image.buffer + y * rgb_image.stride,
-                        pixels_buffer + y * plane_stride,
+                        (char*)pixels_buffer + y * plane_stride,
                          rgb_image.width * sizeof(rgb8));
         }
 
@@ -209,9 +209,9 @@ extern "C" {
                                  current_time_pixels, residual_image, bg_number_frame);
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
-        debug_float_function(residual_image, rgb_image, width, height);
+        //debug_float_function(residual_image, rgb_image, width, height);
 
-        /*
+
         // Alloc and perform eroding operation
         Image<float> erode_image(width, height, is_gpu);
         erode_process_frame(
@@ -245,7 +245,7 @@ extern "C" {
         mask_process_frame(hysteresis_image, rgb_image, width, height);
         checkKernelLaunch(is_gpu);
 
-        */
+
         // Copy result back to pixels_buffer
         if (is_gpu) {
             error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
