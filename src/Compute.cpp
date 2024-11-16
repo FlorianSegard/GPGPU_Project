@@ -62,7 +62,7 @@ extern "C" {
   {
     // ImageView<rgb8> img = ImageView<rgb8>{(rgb8*)buffer, width, height, stride};
     if (g_params.device == e_device_t::CPU)
-      filter_impl_cpp(buffer, width, height, stride);
+      filter_impl_cpp(buffer, width, height, stride, bg_uri, opening_size, th_low, th_high, bg_sampling_rate, bg_number_frame);
     else if (g_params.device == e_device_t::GPU)
       filter_impl_cu(buffer, width, height, stride, bg_uri, opening_size, th_low, th_high, bg_sampling_rate, bg_number_frame);
       // compute_cu(img);
