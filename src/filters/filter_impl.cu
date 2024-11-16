@@ -173,6 +173,7 @@ extern "C" {
         );
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
+        std::cout << "Running on 2" << std::endl;
 
 
         // Keep old residual_image alloc and perform dilatation operation
@@ -182,6 +183,7 @@ extern "C" {
         );
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
+        std::cout << "Running on 3" << std::endl;
 
 
         // Alloc and perform hysteresis operation
@@ -192,11 +194,13 @@ extern "C" {
         );
         checkKernelLaunch(is_gpu);
         //debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height);
+        std::cout << "Running on 4" << std::endl;
 
 
         // Alloc and red mask operation
         mask_process_frame(hysteresis_image, rgb_image, width, height);
         checkKernelLaunch(is_gpu);
+        std::cout << "Running on 5" << std::endl;
 
 
         // Copy result back to pixels_buffer
