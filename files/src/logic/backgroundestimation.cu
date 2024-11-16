@@ -27,12 +27,14 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
     lab currentpixel_background = lineptr_lab_background[x];
 
     float distance_squared = 0.0f;
-    labDistanceSquared(currentpixel_background, currentpixel, &distance_squared);
-    lineptr_distance[x] = distance_squared;
+    //labDistanceSquared(currentpixel_background, currentpixel, &distance_squared);
+
+    labDistance(currentpixel_background, currentpixel, &distance_squared);
 
     lab average;
+    lineptr_distance[x] = distance_squared;
 
-    if (distance_squared >= 25.0f)
+    if (distance_squared >= 5.0f)
     {
         if (currentpixel_time == 0)
         {
@@ -58,7 +60,7 @@ __global__ void check_background_kernel(ImageView<lab> in, ImageView<lab> curren
         lineptr_distance[x] = 0.0f; // opti for hysteresis because less useless distances
         lineptr_time[x] = 0;
     }
-    
+
 }
 
 
