@@ -197,7 +197,6 @@ extern "C" {
         // Alloc and red mask operation
         mask_process_frame(hysteresis_image, rgb_image, width, height);
         checkKernelLaunch(is_gpu);
-        std::cout << "Running on 5" << std::endl;
 
 
         // Copy result back to pixels_buffer
@@ -210,8 +209,7 @@ extern "C" {
             for (int y = 0; y < rgb_image.height; ++y)
                 memcpy(pixels_buffer + y * plane_stride,
                         (char*)rgb_image.buffer + y * rgb_image.stride,
-                         rgb_image.width * sizeof(rgb8));
+                         rgb_image.width * sizeof(uint8_t));
         }
-        std::cout << "Running on 6" << std::endl;
     }
 }
