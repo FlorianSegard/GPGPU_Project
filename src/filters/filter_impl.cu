@@ -74,6 +74,50 @@ __global__ void debug_float_kernel(ImageView<float> bf, ImageView<rgb8> rgb_buff
     rgb_value[x].b = (uint8_t) round(fminf((bl[x]), 255.0));
 }
 
+void debug_bool_function(const ImageView<bool> bf, ImageView<rgb8> rgb_buffer, int width, int height) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            // Access the boolean value
+            const bool* bool_row = reinterpret_cast<const bool*>(
+                    reinterpret_cast<const std::byte*>(bf.buffer) + y * bf.stride
+            );
+            bool bl = bool_row[x];
+
+            // Access the RGB value
+            rgb8* rgb_row = reinterpret_cast<rgb8*>(
+                    reinterpret_cast<std::byte*>(rgb_buffer.buffer) + y * rgb_buffer.stride
+            );
+
+            // Modify the RGB value
+            rgb_row[x].r = bl ? 255 : 0;
+            rgb_row[x].g = bl ? 255 : 0;
+            rgb_row[x].b = bl ? 255 : 0;
+        }
+    }
+}
+
+void debug_float_function(const ImageView<float> bf, ImageView<rgb8> rgb_buffer, int width, int height) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            // Access the float value
+            const float* float_row = reinterpret_cast<const float*>(
+                    reinterpret_cast<const std::byte*>(bf.buffer) + y * bf.stride
+            );
+
+            // Access the RGB value
+            rgb8* rgb_row = reinterpret_cast<rgb8*>(
+                    reinterpret_cast<std::byte*>(rgb_buffer.buffer) + y * rgb_buffer.stride
+            );
+
+            // Modify the RGB value
+            uint8_t color_value = static_cast<uint8_t>(std::round(std::min(float_row[x], 255.0f)));
+            rgb_row[x].r = color_value;
+            rgb_row[x].g = color_value;
+            rgb_row[x].b = color_value;
+        }
+    }
+}
+
 // ============== MAIN IMAGE PROCESSING ==============
 
 Image<lab> current_background;
@@ -165,7 +209,7 @@ extern "C" {
                                  current_time_pixels, residual_image, bg_number_frame);
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
-
+        debug_bool_function(residual_image, rgb_image, width, height);
 
         // Alloc and perform eroding operation
         Image<float> erode_image(width, height, is_gpu);
