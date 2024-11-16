@@ -123,7 +123,7 @@ extern "C" {
         filter_init(&params);
         hysteresis_init(&params);
         mask_init(&params);
-        std::cout << "1" << is_gpu << std::endl;
+        std::cout << "bool " << is_gpu << std::endl;
 
         // Clone pixels_buffer inside new allocated rgb_buffer
         Image<rgb8> rgb_image(width, height, is_gpu);
@@ -134,7 +134,7 @@ extern "C" {
             CHECK_CUDA_ERROR(error);
         }
         else {
-            memcpy(rgb_image.buffer, pixels_buffer, height * width * plane_stride);
+            memcpy(rgb_image.buffer, pixels_buffer, height * plane_stride);
         }
 
         std::cout << "2" << std::endl;
