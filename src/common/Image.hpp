@@ -98,7 +98,7 @@ Image<T> Image<T>::clone() const
 {
   Image<T> out(this->width, this->height);
   for (int y = 0; y < this->height; ++y)
-    std::memcpy((char*)out.buffer + y * out.stride, //
+    memcpy((char*)out.buffer + y * out.stride, //
                 (char*)this->buffer + y * this->stride, //
                 this->width * sizeof(T));
   return out;
