@@ -20,7 +20,6 @@ add_library(Compute
         src/Compute.cpp
         src/filters/filter_impl.hpp
         src/filters/filter_impl.cu
-        src/filters/filter_impl.cpp
         src/logic/lab_converter/lab_converter.cpp
         src/logic/lab_converter/lab_converter.hpp
         src/logic/lab_converter/lab_converter.cu

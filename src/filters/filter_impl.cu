@@ -19,7 +19,10 @@
 } while(0)
 
 // Separate kernel launch error checking function
-inline void checkKernelLaunch() {
+inline void checkKernelLaunch(bool is_gpu) {
+    if (!is_gpu)
+        return;
+
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("Kernel launch error: %s\n", cudaGetErrorString(err));
@@ -32,7 +35,13 @@ inline void checkKernelLaunch() {
     }
 }
 
-// ============== CUDA FUNCTIONS ==============
+// ============== CUDA FUNCTIONS FOR DEBUG ==============
+
+// GPU properties for cuda debug purpose kernel calls
+//cudaError_t error;
+//dim3 threadsPerBlock(32, 32);
+//dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+//                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
 __global__ void debug_bool_kernel(ImageView<bool> bf, ImageView<rgb8> rgb_buffer, int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -65,127 +74,126 @@ __global__ void debug_float_kernel(ImageView<float> bf, ImageView<rgb8> rgb_buff
     rgb_value[x].b = (uint8_t) round(fminf((bl[x]), 255.0));
 }
 
+// ============== MAIN IMAGE PROCESSING ==============
 
 Image<lab> current_background;
 Image<lab> candidate_background;
 Image<int> current_time_pixels;
 bool isInitialized = false;
 
-void initializeGlobals(int width, int height, ImageView<lab> lab_image) {
-    current_background = Image<lab>(width, height, true);
-    candidate_background = Image<lab>(width, height, true);
-    current_time_pixels = Image<int>(width, height, true);
+void initializeGlobals(int width, int height, ImageView<lab> lab_image, bool is_gpu) {
+    current_background = Image<lab>(width, height, is_gpu);
+    candidate_background = Image<lab>(width, height, is_gpu);
+    current_time_pixels = Image<int>(width, height, is_gpu);
     isInitialized = true;
 
-    cudaError_t error;
-    error = cudaMemcpy2D(current_background.buffer, current_background.stride, lab_image.buffer, lab_image.stride,
-                         width * sizeof(lab), height, cudaMemcpyDefault);
-    CHECK_CUDA_ERROR(error);
-    error = cudaMemcpy2D(candidate_background.buffer, candidate_background.stride, lab_image.buffer, lab_image.stride,
-                         width * sizeof(lab), height, cudaMemcpyDefault);
-    CHECK_CUDA_ERROR(error);
+    if (is_gpu) {
+        cudaError_t error;
+        error = cudaMemcpy2D(current_background.buffer, current_background.stride, lab_image.buffer, lab_image.stride,
+                             width * sizeof(lab), height, cudaMemcpyDefault);
+        CHECK_CUDA_ERROR(error);
+        error = cudaMemcpy2D(candidate_background.buffer, candidate_background.stride, lab_image.buffer,
+                             lab_image.stride,
+                             width * sizeof(lab), height, cudaMemcpyDefault);
+        CHECK_CUDA_ERROR(error);
+    }
+    else {
+        memcpy(current_background.buffer, lab_image.buffer, height * width * sizeof(lab));
+        memcpy(candidate_background.buffer, lab_image.buffer, height * width * sizeof(lab));
+    }
 }
 
-// TODO: is it possible to reuse buffers instead of always creating new ones?
-// TODO: use shared memory
-// TODO: parse gstfilter and give arguments
-// Check error after each initialization
+
 extern "C" {
-void filter_impl_cu(uint8_t* pixels_buffer, int width, int height, int plane_stride, const char* bg_uri,
-                    int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame)
-{
-    // Init device and global variables
-    Parameters params;
-    params.device = GPU;
-    std::cout << "GPU implem" << std::endl;
+    void filter_impl(Parameters params, uint8_t* pixels_buffer, int width, int height, int plane_stride, e_device_t device,
+                        const char* bg_uri, int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame)
+    {
+        // Init device and device variables
+        Parameters params;
+        params.device = device;
+        bool is_gpu = params.device == e_device_t::GPU;
 
-    // GPU properties for kernel calls
-    cudaError_t error;
-    dim3 threadsPerBlock(32, 32);
-    dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                       (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-
-    // Clone pixels_buffer inside new allocated rgb_buffer
-    Image<rgb8> rgb_image(width, height, true);
-    error = cudaMemcpy2D(rgb_image.buffer, rgb_image.stride, pixels_buffer, plane_stride,
-                         width * sizeof(rgb8), height, cudaMemcpyDefault);
-    CHECK_CUDA_ERROR(error);
+        lab_conv_init(&params);
+        background_init(&params);
+        filter_init(&params);
+        hysteresis_init(&params);
+        mask_init(&params);
 
 
+        // Clone pixels_buffer inside new allocated rgb_buffer
+        Image<rgb8> rgb_image(width, height, is_gpu);
 
-    // Allocate lab converted image buffer
-    lab_conv_init(&params);
-    Image<lab> lab_image(width, height, true);
-
-    // Convert RGB to LAB -> result stored inside lab_buffer
-    lab_conv_process_frame(rgb_image, lab_image);
-    cudaDeviceSynchronize();
-    checkKernelLaunch();
-
-
-    if (!isInitialized)
-        initializeGlobals(width, height, lab_image);
-
-    // Update background and get residual image
-    background_init(&params);
-    Image<float> residual_image(width, height, true);
-
-    background_process_frame(lab_image, current_background, candidate_background, current_time_pixels, residual_image, bg_number_frame);
-	cudaDeviceSynchronize();
-    checkKernelLaunch();
-    //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
+        if (is_gpu) {
+            error = cudaMemcpy2D(rgb_image.buffer, rgb_image.stride, pixels_buffer, plane_stride,
+                                 width * sizeof(rgb8), height, cudaMemcpyDefault);
+            CHECK_CUDA_ERROR(error);
+        }
+        else {
+            memcpy(rgb_image.buffer, pixels_buffer, height * width * plane_stride);
+        }
 
 
-    // Alloc and perform eroding operation
-    filter_init(&params);
-    Image<float> erode_image(width, height, true);
+        // Allocate lab converted image buffer
+        Image<lab> lab_image(width, height, is_gpu);
 
-    erode_process_frame(
-            residual_image, erode_image,
-            width, height, opening_size / 2
-    );
-    cudaDeviceSynchronize();
-    checkKernelLaunch();
-    //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
+        // Convert RGB to LAB -> result stored inside lab_buffer
+        lab_conv_process_frame(rgb_image, lab_image);
+        checkKernelLaunch(is_gpu);
 
 
-    // Keep old residual_image alloc and perform dilatation operation
-    dilate_process_frame(
-            erode_image, residual_image,
-            width, height, opening_size / 2
-    );
-    cudaDeviceSynchronize();
-    checkKernelLaunch();
-    //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
+        if (!isInitialized)
+            initializeGlobals(width, height, lab_image, is_gpu);
+
+        // Update background and get residual image
+        Image<float> residual_image(width, height, is_gpu);
+
+        background_process_frame(lab_image, current_background, candidate_background,
+                                 current_time_pixels, residual_image, bg_number_frame);
+        checkKernelLaunch(is_gpu);
+        //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
 
 
-    // Alloc and perform hysteresis operation
-    hysteresis_init(&params);
-    Image<bool> hysteresis_image(width, height, true);
-
-    //TODO: retrieve threshold values
-    hysteresis_process_frame(
-            residual_image, hysteresis_image,
-            width, height, th_low, th_high
-    );
-    cudaDeviceSynchronize();
-    checkKernelLaunch();
-    //debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height);
+        // Alloc and perform eroding operation
+        Image<float> erode_image(width, height, is_gpu);
+        erode_process_frame(
+                residual_image, erode_image,
+                width, height, opening_size / 2
+        );
+        checkKernelLaunch(is_gpu);
+        //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
 
 
-    // Alloc and red mask operation
-    mask_init(&params);
-    mask_process_frame(hysteresis_image, rgb_image, width, height);
-    cudaDeviceSynchronize();
-    checkKernelLaunch();
+        // Keep old residual_image alloc and perform dilatation operation
+        dilate_process_frame(
+                erode_image, residual_image,
+                width, height, opening_size / 2
+        );
+        checkKernelLaunch(is_gpu);
+        //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
 
 
+        // Alloc and perform hysteresis operation
+        Image<bool> hysteresis_image(width, height, is_gpu);
+        hysteresis_process_frame(
+                residual_image, hysteresis_image,
+                width, height, th_low, th_high
+        );
+        checkKernelLaunch(is_gpu);
+        //debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height);
 
-    // Copy result back to pixels_buffer
-    error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
-                         width * sizeof(rgb8), height, cudaMemcpyDeviceToHost);
-    CHECK_CUDA_ERROR(error);
 
-    // Clean up temporary buffers
-}
+        // Alloc and red mask operation
+        mask_process_frame(hysteresis_image, rgb_image, width, height);
+        checkKernelLaunch(is_gpu);
+
+
+        // Copy result back to pixels_buffer
+        if (is_gpu) {
+            error = cudaMemcpy2D(pixels_buffer, plane_stride, rgb_image.buffer, rgb_image.stride,
+                                 width * sizeof(rgb8), height, cudaMemcpyDeviceToHost);
+            CHECK_CUDA_ERROR(error);
+        else {
+            memcpy(pixels_buffer, rgb_image.buffer, height * width * plane_stride);
+        }
+    }
 }

@@ -73,16 +73,20 @@ void erode_process_frame(ImageView<float> input, ImageView<float> output, int wi
     if (b_params.device == e_device_t::CPU)
         erode_cpp(input, output, width, height, opening_size);
 
-    else if (b_params.device == e_device_t::GPU)
+    else if (b_params.device == e_device_t::GPU) {
         erode_cu(input, output, width, height, opening_size);
+        cudaDeviceSynchronize();
+    }
 }
 
 void dilate_process_frame(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
     if (b_params.device == e_device_t::CPU)
         dilate_cpp(input, output, width, height, opening_size);
 
-    else if (b_params.device == e_device_t::GPU)
+    else if (b_params.device == e_device_t::GPU) {
         dilate_cu(input, output, width, height, opening_size);
+        cudaDeviceSynchronize();
+    }
 }
 
 }

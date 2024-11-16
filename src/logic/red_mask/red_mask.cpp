@@ -19,9 +19,10 @@ void mask_process_frame(ImageView<bool> hysteresis_buffer, ImageView<rgb8> rgb_b
     if (b_params.device == e_device_t::CPU)
         red_mask_cpp(hysteresis_buffer, rgb_buffer, width, height);
 
-    else if (b_params.device == e_device_t::GPU)
+    else if (b_params.device == e_device_t::GPU) {
         red_mask_cu(hysteresis_buffer, rgb_buffer, width, height);
-
+        cudaDeviceSynchronize();
+    }
 }
 
 }

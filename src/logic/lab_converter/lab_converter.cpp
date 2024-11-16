@@ -80,8 +80,10 @@ extern "C" {
         int height = rgb_image.height;
         if (l_params.device == e_device_t::CPU)
             rgbtolab_converter_cpp(rgb_image, lab_image, width, height);
-        else if (l_params.device == e_device_t::GPU)
+        else if (l_params.device == e_device_t::GPU) {
             rgbtolab_converter_cu(rgb_image, lab_image, width, height);
+            cudaDeviceSynchronize();
+        }
     }
 
 }

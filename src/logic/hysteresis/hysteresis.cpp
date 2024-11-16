@@ -82,7 +82,9 @@ extern "C" {
   {
     if (g_params.device == e_device_t::CPU)
       hysteresis_cpp(opened_input, hysteresis, width, height, lower_threshold, upper_threshold);
-    else if (g_params.device == e_device_t::GPU)
-      hysteresis_cu(opened_input, hysteresis, width, height, lower_threshold, upper_threshold);
+    else if (g_params.device == e_device_t::GPU) {
+        hysteresis_cu(opened_input, hysteresis, width, height, lower_threshold, upper_threshold);
+        cudaDeviceSynchronize();
+    }
   }
 }
