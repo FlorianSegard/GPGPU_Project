@@ -115,22 +115,18 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     if (upper_lineptr[x - 1])
     {
         upper_lineptr[x] = true;
-        *has_changed_global = true;
     }
-    if (upper_lineptr[x - 1])
+    if (upper_lineptr[x + 1])
     {
         upper_lineptr[x] = true;
-        *has_changed_global = true;
     }
     if ((bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride)[x])
     {
         upper_lineptr[x] = true;
-        *has_changed_global = true;
     }
     if ((bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride)[x])
     {
         upper_lineptr[x] = true;
-        *has_changed_global = true;
     }
 
 }
