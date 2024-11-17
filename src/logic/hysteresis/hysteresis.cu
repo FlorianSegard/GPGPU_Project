@@ -62,11 +62,11 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     bool upper_value = false;
     bool lower_value = true;
     
-    bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
+    bool* upper_lineptr = (bool *)((std::char*)upper.buffer + y * upper.stride);
 
     if (x >= 0 && x < width && y >= 0 && y < height)
     {
-        bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
+        bool* lower_lineptr = (bool *)((std::char*)lower.buffer + y * lower.stride);
         upper_value = upper_lineptr[x];
         lower_value = lower_lineptr[x];
     }
@@ -122,12 +122,12 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
-    if ((bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride)[x])
+    if ((bool *)((std::char*)upper.buffer + (y - 1) * upper.stride)[x])
     {
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
-    if ((bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride)[x])
+    if ((bool *)((std::char*)upper.buffer + (y + 1) * upper.stride)[x])
     {
         upper_lineptr[x] = true;
         *has_changed_global = true;
