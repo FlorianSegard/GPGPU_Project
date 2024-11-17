@@ -59,14 +59,14 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     int y = blockIdx.y * BLOCK_SIZE + ty - 1;
 
     // Load data into shared memory with boundary checks
-    bool upper_value = true;
+    bool upper_value = false;
     bool lower_value = true;
     
     bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
-    bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
 
     if (x >= 0 && x < width && y >= 0 && y < height)
     {
+        bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
         upper_value = upper_lineptr[x];
         lower_value = lower_lineptr[x];
     }
@@ -77,10 +77,10 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     if (x >= width || y >= height)
         return;
 
-    if (upper_lineptr[x])
+    if (tile_upper[ty][tx])
         return;
 
-    if (!lower_lineptr[x])
+    if (!tile_lower[ty][tx])
         return;
 
     __syncthreads();
