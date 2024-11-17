@@ -31,10 +31,12 @@ __global__ void erode_shared(ImageView<float> input, ImageView<float> output, in
 
     // Load shared memory with coalesced access
     for (int y = smem_y; y < smem_height; y += blockDim.y) {
+  //      printf("loop y");
         int global_y = base_y + y;
         bool valid_y = (global_y >= 0) && (global_y < height);
 
         for (int x = smem_x; x < smem_width; x += blockDim.x) {
+//            printf("loop x");
             int global_x = base_x + x;
             bool valid_x = (global_x >= 0) && (global_x < width);
 
@@ -46,6 +48,7 @@ __global__ void erode_shared(ImageView<float> input, ImageView<float> output, in
             smem[y * smem_width + x] = value;
         }
     }
+    //printf("--- end loop ---");
 
     __syncthreads();
 
@@ -63,6 +66,7 @@ __global__ void erode_shared(ImageView<float> input, ImageView<float> output, in
             #pragma unroll
             for (int dx = -opening_size; dx <= opening_size; ++dx) {
                 int idx = (smem_y + dy) * smem_width + (smem_x + dx);
+                //float val = 0.0;
                 float val = smem[idx];
                 min_val = fminf(min_val, val);
             }
@@ -122,6 +126,7 @@ __global__ void dilate_shared(ImageView<float> input, ImageView<float> output, i
             #pragma unroll
             for (int dx = -opening_size; dx <= opening_size; ++dx) {
                 int idx = (smem_y + dy) * smem_width + (smem_x + dx);
+                //float val = 0.0;
                 float val = smem[idx];
                 max_val = fmaxf(max_val, val);
             }
@@ -136,7 +141,9 @@ void erode_cu(ImageView<float> input, ImageView<float> output, int width, int he
     dim3 threadsPerBlock(32, 32); // Adjusted thread block size
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    int smem_size = (threadsPerBlock.x + 2 * opening_size) * (threadsPerBlock.y + 2 * opening_size) * sizeof(float);
+
+    int smem_size = (threadsPerBlock.x + 2 * (opening_size + opening_size - 1)) * (threadsPerBlock.y + 2 * (opening_size + opening_size - 1)) * sizeof(float);
+
 
     // Instantiate the kernel with the specific opening size
     switch (opening_size) {
@@ -145,6 +152,18 @@ void erode_cu(ImageView<float> input, ImageView<float> output, int width, int he
             break;
         case 2:
             erode_shared<2><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 3:
+            erode_shared<3><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 4:
+            erode_shared<4><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 5:
+            dilate_shared<5><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 10:
+            dilate_shared<10><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
             break;
         // Add more cases as needed
         default:
@@ -160,7 +179,9 @@ void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int h
     dim3 threadsPerBlock(32, 32); // Adjusted thread block size
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    int smem_size = (threadsPerBlock.x + 2 * opening_size) * (threadsPerBlock.y + 2 * opening_size) * sizeof(float);
+
+    int smem_size = (threadsPerBlock.x + 2 * (opening_size + opening_size - 1)) * (threadsPerBlock.y + 2 * (opening_size + opening_size - 1)) * sizeof(float);
+
 
     // Instantiate the kernel with the specific opening size
     switch (opening_size) {
@@ -169,6 +190,18 @@ void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int h
             break;
         case 2:
             dilate_shared<2><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 3:
+            dilate_shared<3><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 4:
+            dilate_shared<4><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 5:
+            dilate_shared<5><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 10:
+            dilate_shared<10><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
             break;
         // Add more cases as needed
         default:
