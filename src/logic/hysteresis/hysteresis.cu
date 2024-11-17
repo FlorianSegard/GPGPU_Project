@@ -160,8 +160,6 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
     bool *d_has_changed;
     CHECK_CUDA_ERROR(cudaMalloc(&d_has_changed, sizeof(bool)));
 
-    dim3 hysteresisBlockSize(HYSTERESIS_TILE_WIDTH, HYSTERESIS_TILE_WIDTH);
-    dim3 hysteresisGridSize((width + BLOCK_SIZE - 1) / BLOCK_SIZE, (height + BLOCK_SIZE - 1) / BLOCK_SIZE);
 
     // on propage sur l'image.
     while (h_has_changed)
@@ -169,7 +167,7 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
         CHECK_CUDA_ERROR(cudaMemset(d_has_changed, false, sizeof(bool)));
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
-        hysteresis_kernel<<<hysteresisGridSize, hysteresisBlockSize>>>(hysteresis, lower_threshold_input, width, height, d_has_changed);
+        hysteresis_kernel<<<gridSize, blockSize>>>(hysteresis, lower_threshold_input, width, height, d_has_changed);
 
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
