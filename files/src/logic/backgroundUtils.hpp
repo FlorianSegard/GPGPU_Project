@@ -62,11 +62,11 @@ inline void averageLAB(lab p1, lab p2, lab* result) {
     result->b = (p1.b + p2.b) / 2.0f;
 }
 
- inline void labDistanceSquared(lab p1, lab p2, float* result) {
+ inline void labDistance(lab p1, lab p2, float* result) {
     float dL = p1.L - p2.L;
     float da = p1.a - p2.a;
     float db = p1.b - p2.b;
-    *result = dL * dL + da * da + db * db;
+    *result = sqrt(dL * dL + da * da + db * db);
  }
 #endif // __CUDACC__
 
