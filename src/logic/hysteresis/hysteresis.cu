@@ -110,8 +110,9 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
             upper_lineptr[x] = true;
             *has_changed_global = true;
         }
+        return;
     }
-
+    upper_lineptr[x] = true;
 
 }
 
