@@ -43,7 +43,6 @@
 /* properties */
 enum {
   // Modified: properties
-  PROP_DEVICE,
   PROP_BG_URI,
   PROP_OPENING_SIZE,
   PROP_TH_LOW,
@@ -170,9 +169,6 @@ gst_myfilter_set_property (GObject * object, guint property_id,
 
   // Modified: set properties method
   switch (property_id) {
-    case PROP_DEVICE:
-      cudafilter->device = g_value_get_int(value);
-      break;
     case PROP_BG_URI:
       cudafilter->bg_uri = g_value_get_string(value);
       break;
@@ -207,9 +203,6 @@ gst_myfilter_get_property (GObject * object, guint property_id,
 
   // Modified: get properties method
   switch (property_id) {
-    case PROP_DEVICE:
-      g_value_set_int(value, cudafilter->device);
-      break;
     case PROP_BG_URI:
       g_value_set_string(value, cudafilter->bg_uri);
       break;
@@ -332,6 +325,8 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
     cudafilter->bg_sampling_rate,
     cudafilter->bg_number_frame
   );
+
+  g_print("ZIZOU %d\n", (int)cudafilter->opening_size);
 
   return GST_FLOW_OK;
 }

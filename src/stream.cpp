@@ -110,8 +110,7 @@ int main(int argc, char* argv[])
   // Set myfilter properties
   auto filter = gst_bin_get_by_name(GST_BIN(pipeline), "mfter");
   if (filter) {
-      g_print("filter: ACTIVATED\n");
-      if (!bg_uri.empty()) g_object_set(filter, "uri", bg_uri.c_str(), NULL);
+      g_object_set(filter, "uri", bg_uri.c_str(), NULL);
       g_object_set(filter, "opening_size", opening_size, NULL);
       g_object_set(filter, "th_low", th_low, NULL);
       g_object_set(filter, "th_high", th_high, NULL);
