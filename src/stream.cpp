@@ -52,6 +52,12 @@ int main(int argc, char* argv[])
   auto th_high = std::stoi(cmdl({"--th-high"}, "30").str());
   auto number_frame = std::stoi(cmdl({"--number-frame"}, "100").str());
 
+  g_print("===== Args =====\n");
+  g_print("opening_size: %d\n", opening_size);
+  g_print("th_low: %d\n", th_low);
+  g_print("th_high: %d\n", th_high);
+  g_print("number_frame: %d\n\n", number_frame);
+
   if (method == "cpu") {
       params.device = e_device_t::CPU;
   }

@@ -42,6 +42,7 @@
 
 /* properties */
 enum {
+  PROP_0,
   // Modified: properties
   PROP_BG_URI,
   PROP_OPENING_SIZE,
@@ -326,11 +327,7 @@ gst_myfilter_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
     cudafilter->bg_number_frame
   );
 
-    g_print("===== Args =====\n");
-    g_print("opening_size: %d\n", (int) cudafilter->opening_size);
-    g_print("th_low: %d\n", (int) cudafilter->th_low);
-    g_print("th_high: %d\n", (int) cudafilter->th_high);
-    g_print("number_frame: %d\n\n", (int) cudafilter->bg_number_frame);
+
 
   return GST_FLOW_OK;
 }
