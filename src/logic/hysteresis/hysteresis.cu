@@ -112,27 +112,27 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         }
         return;
     }
-    // if (upper_lineptr[x - 1])
-    // {
-    //     upper_lineptr[x] = true;
-    //     *has_changed_global = true;
-    // }
-    // if (upper_lineptr[x - 1])
-    // {
-    //     upper_lineptr[x] = true;
-    //     *has_changed_global = true;
-    // }
-    // if ((bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride)[x])
-    // {
-    //     upper_lineptr[x] = true;
-    //     *has_changed_global = true;
-    // }
+    if (upper_lineptr[x - 1])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
+    if (upper_lineptr[x - 1])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
+    if ((bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride)[x])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
 
-    // if ((bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride)[x])
-    // {
-    //     upper_lineptr[x] = true;
-    //     *has_changed_global = true;
-    // }
+    if ((bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride)[x])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
 
     // bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
     // upper_lineptr[x] = true;
