@@ -109,6 +109,13 @@ int main(int argc, char* argv[])
       g_object_set(filter, "sampling_rate", sampling_rate, NULL);
       g_object_set(filter, "number_frame", number_frame, NULL);
       g_object_unref(filter);
+
+      g_print("bg_uri: %s\n", bg_uri.c_str());
+      g_print("opening_size: %d\n", opening_size);
+      g_print("th_low: %d\n", th_low);
+      g_print("th_high: %d\n", th_high);
+      g_print("sampling_rate: %d\n", sampling_rate);
+      g_print("number_frame: %d\n", number_frame);
   }
 
   // Start the pipeline
