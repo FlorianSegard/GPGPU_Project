@@ -86,7 +86,7 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     __syncthreads();
 
     // Only process inner pixels
-    if (tx >= 0 && tx <= HYSTERESIS_TILE_WIDTH - 1 && ty >= 0 && ty <= HYSTERESIS_TILE_WIDTH - 1)
+    if (tx > 0 && tx < HYSTERESIS_TILE_WIDTH - 1 && ty > 0 && ty < HYSTERESIS_TILE_WIDTH - 1)
     {
 
         if (tile_upper[ty][tx - 1])
@@ -110,8 +110,31 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
             upper_lineptr[x] = true;
             *has_changed_global = true;
         }
-        // return;
+        return;
     }
+    if (upper_lineptr[x - 1])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
+        if (upper_lineptr[x - 1])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
+    if ((bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride)[x])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
+
+    if ((bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride)[x])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
+
+    // bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
     // upper_lineptr[x] = true;
 
 }
