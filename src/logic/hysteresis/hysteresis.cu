@@ -59,8 +59,8 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     int y = blockIdx.y * BLOCK_SIZE + ty - 1;
 
     // Load data into shared memory with boundary checks
-    bool upper_value = false;
-    bool lower_value = false;
+    bool upper_value = true;
+    bool lower_value = true;
     if (x >= 0 && x < width && y >= 0 && y < height)
     {
         bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
