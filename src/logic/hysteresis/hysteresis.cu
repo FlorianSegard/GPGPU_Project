@@ -61,9 +61,11 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     // Load data into shared memory with boundary checks
     bool upper_value = true;
     bool lower_value = true;
+    
+    bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
+
     if (x >= 0 && x < width && y >= 0 && y < height)
     {
-        bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
         bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
         upper_value = upper_lineptr[x];
         lower_value = lower_lineptr[x];
@@ -72,30 +74,39 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     tile_upper[ty][tx] = upper_value;
     tile_lower[ty][tx] = lower_value;
 
+    if (x >= width || y >= height)
+        return;
+
+    if (tile_upper[ty][tx])
+        return;
+
+    if (!tile_lower[ty][tx])
+        return;
+
     __syncthreads();
 
     // Only process inner pixels
     if (tx > 0 && tx < HYSTERESIS_TILE_WIDTH - 1 && ty > 0 && ty < HYSTERESIS_TILE_WIDTH - 1)
     {
-        // Recalculate global coordinates for inner threads
-        int x = blockIdx.x * BLOCK_SIZE + tx - 1;
-        int y = blockIdx.y * BLOCK_SIZE + ty - 1;
 
-        if (x >= width || y >= height)
-            return;
-
-        if (tile_upper[ty][tx])
-            return;
-
-        if (!tile_lower[ty][tx])
-            return;
-
-        // Check neighboring pixels
-        if (tile_upper[ty][tx - 1] || tile_upper[ty][tx + 1] ||
-            tile_upper[ty - 1][tx] || tile_upper[ty + 1][tx])
+        if (tile_upper[ty][tx - 1])
         {
-            // Set the output pixel
-            bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
+            upper_lineptr[x] = true;
+            *has_changed_global = true;
+        }
+
+        if (tile_upper[ty][tx + 1])
+        {
+            upper_lineptr[x] = true;
+            *has_changed_global = true;
+        }
+        if (tile_upper[ty - 1][tx])
+        {
+            upper_lineptr[x] = true;
+            *has_changed_global = true;
+        }
+        if (tile_upper[ty + 1][tx])
+        {
             upper_lineptr[x] = true;
             *has_changed_global = true;
         }
