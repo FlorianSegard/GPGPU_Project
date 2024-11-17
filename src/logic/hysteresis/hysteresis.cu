@@ -15,11 +15,7 @@
         } \
     } while (0)
 
-#define BLOCK_SIZE_X 32
-#define BLOCK_SIZE_Y 32
-#define RADIUS 1 // For a 1-pixel halo
-#define TILE_SIZE_X (BLOCK_SIZE_X + 2 * RADIUS)
-#define TILE_SIZE_Y (BLOCK_SIZE_Y + 2 * RADIUS)
+#define HYSTERESIS_TILE_WIDTH 32 // block size de 32 x 32 et on rajoute 2 pixels de padding
 #define LOWER_THRESHOLD 4.0
 #define UPPER_THRESHOLD 30.0
 
@@ -51,140 +47,57 @@ __global__ void hysteresis_thresholding(ImageView<float> input, ImageView<bool> 
 
 __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, int width, int height, bool *has_changed_global)
 {
-    __shared__ bool tile_upper[TILE_SIZE_Y][TILE_SIZE_X];
-    __shared__ bool tile_lower[TILE_SIZE_Y][TILE_SIZE_X];
+    __shared__ bool tile_upper[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
+    __shared__ bool tile_lower[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
 
     int tx = threadIdx.x;
     int ty = threadIdx.y;
 
-    int x = blockIdx.x * BLOCK_SIZE_X + tx;
-    int y = blockIdx.y * BLOCK_SIZE_Y + ty;
+    int tile_x = blockIdx.x * blockDim.x;
+    int tile_y = blockIdx.y * blockDim.y;
 
-    int smem_x = tx + RADIUS;
-    int smem_y = ty + RADIUS;
+    int x = tile_x + tx;
+    int y = tile_y + ty;
 
-    // Initialize shared memory with zeros
-    tile_upper[smem_y][smem_x] = false;
-    tile_lower[smem_y][smem_x] = false;
-
-    // Load central data
-    if (x < width && y < height)
-    {
-        bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
-        bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
-        tile_upper[smem_y][smem_x] = upper_lineptr[x];
-        tile_lower[smem_y][smem_x] = lower_lineptr[x];
-    }
-
-    // Load halo regions
-    // Left and right halos
-    if (tx < RADIUS)
-    {
-        int halo_x_left = x - RADIUS;
-        int halo_x_right = x + BLOCK_SIZE_X;
-
-        if (halo_x_left >= 0 && y < height)
-        {
-            tile_upper[smem_y][smem_x - RADIUS] = upper.buffer[y * upper.stride + halo_x_left];
-            tile_lower[smem_y][smem_x - RADIUS] = lower.buffer[y * lower.stride + halo_x_left];
-        }
-        if (halo_x_right < width && y < height)
-        {
-            tile_upper[smem_y][smem_x + BLOCK_SIZE_X] = upper.buffer[y * upper.stride + halo_x_right];
-            tile_lower[smem_y][smem_x + BLOCK_SIZE_X] = lower.buffer[y * lower.stride + halo_x_right];
-        }
-    }
-
-    // Top and bottom halos
-    if (ty < RADIUS)
-    {
-        int halo_y_top = y - RADIUS;
-        int halo_y_bottom = y + BLOCK_SIZE_Y;
-
-        if (halo_y_top >= 0 && x < width)
-        {
-            tile_upper[smem_y - RADIUS][smem_x] = upper.buffer[halo_y_top * upper.stride + x];
-            tile_lower[smem_y - RADIUS][smem_x] = lower.buffer[halo_y_top * lower.stride + x];
-        }
-        if (halo_y_bottom < height && x < width)
-        {
-            tile_upper[smem_y + BLOCK_SIZE_Y][smem_x] = upper.buffer[halo_y_bottom * upper.stride + x];
-            tile_lower[smem_y + BLOCK_SIZE_Y][smem_x] = lower.buffer[halo_y_bottom * lower.stride + x];
-        }
-    }
-
-    // Load corner halos
-    if (tx < RADIUS && ty < RADIUS)
-    {
-        // Top-left corner
-        int halo_x = x - RADIUS;
-        int halo_y = y - RADIUS;
-        if (halo_x >= 0 && halo_y >= 0)
-        {
-            tile_upper[smem_y - RADIUS][smem_x - RADIUS] = upper.buffer[halo_y * upper.stride + halo_x];
-            tile_lower[smem_y - RADIUS][smem_x - RADIUS] = lower.buffer[halo_y * lower.stride + halo_x];
-        }
-        // Bottom-right corner
-        halo_x = x + BLOCK_SIZE_X;
-        halo_y = y + BLOCK_SIZE_Y;
-        if (halo_x < width && halo_y < height)
-        {
-            tile_upper[smem_y + BLOCK_SIZE_Y][smem_x + BLOCK_SIZE_X] = upper.buffer[halo_y * upper.stride + halo_x];
-            tile_lower[smem_y + BLOCK_SIZE_Y][smem_x + BLOCK_SIZE_X] = lower.buffer[halo_y * lower.stride + halo_x];
-        }
-        // Top-right corner
-        halo_x = x + BLOCK_SIZE_X;
-        halo_y = y - RADIUS;
-        if (halo_x < width && halo_y >= 0)
-        {
-            tile_upper[smem_y - RADIUS][smem_x + BLOCK_SIZE_X] = upper.buffer[halo_y * upper.stride + halo_x];
-            tile_lower[smem_y - RADIUS][smem_x + BLOCK_SIZE_X] = lower.buffer[halo_y * lower.stride + halo_x];
-        }
-        // Bottom-left corner
-        halo_x = x - RADIUS;
-        halo_y = y + BLOCK_SIZE_Y;
-        if (halo_x >= 0 && halo_y < height)
-        {
-            tile_upper[smem_y + BLOCK_SIZE_Y][smem_x - RADIUS] = upper.buffer[halo_y * upper.stride + halo_x];
-            tile_lower[smem_y + BLOCK_SIZE_Y][smem_x - RADIUS] = lower.buffer[halo_y * lower.stride + halo_x];
-        }
-    }
-
-    __syncthreads();
-
-    // Proceed only if within image bounds
     if (x >= width || y >= height)
         return;
 
-    // Proceed only if the current pixel is not already marked in upper
-    if (tile_upper[smem_y][smem_x])
+    bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
+    bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
+
+    tile_upper[ty][tx] = upper_lineptr[x];
+    tile_lower[ty][tx] = lower_lineptr[x];
+
+    __syncthreads();
+
+
+    if (tile_upper[ty][tx])
         return;
 
-    // Proceed only if the current pixel is marked in lower
-    if (!tile_lower[smem_y][smem_x])
+        // Si le pixel n'est pas marqué dans l'image inférieure, on passe au suivant
+    if (!tile_lower[ty][tx])
         return;
 
-    // Check neighboring pixels
-    if (tile_upper[smem_y][smem_x - 1])
-    {
-        upper.buffer[y * upper.stride + x] = true;
+    if (tx > 0 && tile_upper[ty][tx - 1]) {
+        upper_lineptr[x] = true;
         *has_changed_global = true;
     }
-    if (tile_upper[smem_y][smem_x + 1])
-    {
-        upper.buffer[y * upper.stride + x] = true;
+
+    if (tx < HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty][tx + 1]) {
+        upper_lineptr[x] = true;
         *has_changed_global = true;
     }
-    if (tile_upper[smem_y - 1][smem_x])
-    {
-        upper.buffer[y * upper.stride + x] = true;
+
+    if (ty > 0 && tile_upper[ty - 1][tx]) {
+        upper_lineptr[x] = true;
         *has_changed_global = true;
     }
-    if (tile_upper[smem_y + 1][smem_x])
-    {
-        upper.buffer[y * upper.stride + x] = true;
+
+    if (ty < HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty + 1][tx]) {
+        upper_lineptr[x] = true;
         *has_changed_global = true;
     }
+
 }
 
 
