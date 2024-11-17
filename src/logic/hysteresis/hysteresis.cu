@@ -15,7 +15,8 @@
         } \
     } while (0)
 
-#define HYSTERESIS_TILE_WIDTH 34 // block size de 32 x 32 et on rajoute 2 pixels de padding
+#define BLOCK_SIZE 32
+#define HYSTERESIS_TILE_WIDTH (BLOCK_SIZE + 2)
 #define LOWER_THRESHOLD 4.0
 #define UPPER_THRESHOLD 30.0
 
@@ -47,53 +48,71 @@ __global__ void hysteresis_thresholding(ImageView<float> input, ImageView<bool> 
 
 __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, int width, int height, bool *has_changed_global)
 {
-    //__shared__ bool tile_upper[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
-    //__shared__ bool tile_lower[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
+    __shared__ bool tile_upper[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
+    __shared__ bool tile_lower[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
 
     int tx = threadIdx.x;
     int ty = threadIdx.y;
 
-    int tile_x = blockIdx.x * blockDim.x;
-    int tile_y = blockIdx.y * blockDim.y;
+    // Calculate global coordinates adjusted for halo
+    int x = blockIdx.x * BLOCK_SIZE + tx - 1;
+    int y = blockIdx.y * BLOCK_SIZE + ty - 1;
 
-    int x = tile_x + tx;
-    int y = tile_y + ty;
+    // Load data into shared memory with boundary checks
+    bool upper_value = false;
+    bool lower_value = true;
+    
+    bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
+
+    if (x >= 0 && x < width && y >= 0 && y < height)
+    {
+        bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
+        upper_value = upper_lineptr[x];
+        lower_value = lower_lineptr[x];
+    }
+
+    tile_upper[ty][tx] = upper_value;
+    tile_lower[ty][tx] = lower_value;
 
     if (x >= width || y >= height)
         return;
 
-    bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
-    bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
-
-
-    if (upper_lineptr[x])
+    if (tile_upper[ty][tx])
         return;
 
-        // Si le pixel n'est pas marqué dans l'image inférieure, on passe au suivant
-    if (!lower_lineptr[x])
+    if (!tile_lower[ty][tx])
         return;
 
-    bool* upper_prev_lineptr = (bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride);
-    bool* upper_next_lineptr = (bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride);
-    if (x > 0 && upper_lineptr[x - 1]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
+    __syncthreads();
 
-    if (x < width - 1 && upper_lineptr[x + 1]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
+    // Only process inner pixels
+    if (tx > 0 && tx < HYSTERESIS_TILE_WIDTH - 1 && ty > 0 && ty < HYSTERESIS_TILE_WIDTH - 1)
+    {
 
-    if (y > 0 && upper_prev_lineptr[x]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
+        if (tile_upper[ty][tx - 1])
+        {
+            upper_lineptr[x] = true;
+            *has_changed_global = true;
+        }
 
-    if (y < height - 1 && upper_next_lineptr[x]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
+        if (tile_upper[ty][tx + 1])
+        {
+            upper_lineptr[x] = true;
+            *has_changed_global = true;
+        }
+        if (tile_upper[ty - 1][tx])
+        {
+            upper_lineptr[x] = true;
+            *has_changed_global = true;
+        }
+        if (tile_upper[ty + 1][tx])
+        {
+            upper_lineptr[x] = true;
+            *has_changed_global = true;
+        }
+        return;
     }
+    upper_lineptr[x] = true;
 
 }
 
