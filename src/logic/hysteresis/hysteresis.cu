@@ -15,7 +15,7 @@
         } \
     } while (0)
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 30
 #define HYSTERESIS_TILE_WIDTH (BLOCK_SIZE + 2)
 #define LOWER_THRESHOLD 4.0
 #define UPPER_THRESHOLD 30.0
@@ -117,7 +117,7 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
-        if (upper_lineptr[x - 1])
+    if (upper_lineptr[x - 1])
     {
         upper_lineptr[x] = true;
         *has_changed_global = true;
