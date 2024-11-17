@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
   g_print("th_low: %d\n", th_low);
   g_print("th_high: %d\n", th_high);
   g_print("sampling_rate: %d\n", sampling_rate);
-  g_print("number_frame: %d\n", number_frame);
+  g_print("number_frame: %d\n\n", number_frame);
 
   if (method == "cpu") {
       params.device = e_device_t::CPU;
