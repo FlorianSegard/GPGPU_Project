@@ -165,13 +165,26 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         return;
 
     // Check neighboring pixels
-    if (tile_upper[smem_y][smem_x - 1] || tile_upper[smem_y][smem_x + 1] ||
-        tile_upper[smem_y - 1][smem_x] || tile_upper[smem_y + 1][smem_x])
+    if (tile_upper[smem_y][smem_x - 1])
     {
         upper.buffer[y * upper.stride + x] = true;
         *has_changed_global = true;
     }
-
+    if (tile_upper[smem_y][smem_x + 1])
+    {
+        upper.buffer[y * upper.stride + x] = true;
+        *has_changed_global = true;
+    }
+    if (tile_upper[smem_y - 1][smem_x])
+    {
+        upper.buffer[y * upper.stride + x] = true;
+        *has_changed_global = true;
+    }
+    if (tile_upper[smem_y + 1][smem_x])
+    {
+        upper.buffer[y * upper.stride + x] = true;
+        *has_changed_global = true;
+    }
 }
 
 
