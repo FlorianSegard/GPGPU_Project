@@ -78,22 +78,22 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     if (!tile_lower[ty][tx])
         return;
 
-    if (tx >= 0 && tile_upper[ty][tx - 1]) {
+    if (tx > 0 && tile_upper[ty][tx - 1]) {
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
 
-    if (tx <= HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty][tx + 1]) {
+    if (tx < HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty][tx + 1]) {
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
 
-    if (ty >= 0 && tile_upper[ty - 1][tx]) {
+    if (ty > 0 && tile_upper[ty - 1][tx]) {
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
 
-    if (ty <= HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty + 1][tx]) {
+    if (ty < HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty + 1][tx]) {
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
