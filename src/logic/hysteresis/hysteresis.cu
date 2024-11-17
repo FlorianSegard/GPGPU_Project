@@ -15,7 +15,7 @@
         } \
     } while (0)
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 30
 #define HYSTERESIS_TILE_WIDTH (BLOCK_SIZE + 2)
 #define LOWER_THRESHOLD 4.0
 #define UPPER_THRESHOLD 30.0
@@ -74,7 +74,7 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     tile_upper[ty][tx] = upper_value;
     tile_lower[ty][tx] = lower_value;
 
-    if (x >= width || y >= height)
+    if (x >= width - 1 || y >= height - 1 || x == 0 || y == 0)
         return;
 
     if (tile_upper[ty][tx])
@@ -112,7 +112,26 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
         }
         return;
     }
-    upper_lineptr[x] = true;
+    if (upper_lineptr[x - 1])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
+    if (upper_lineptr[x - 1])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
+    if ((bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride)[x])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
+    if ((bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride)[x])
+    {
+        upper_lineptr[x] = true;
+        *has_changed_global = true;
+    }
 
 }
 
