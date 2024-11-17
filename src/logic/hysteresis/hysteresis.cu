@@ -77,10 +77,10 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     if (x >= width || y >= height)
         return;
 
-    if (tile_upper[ty][tx])
+    if (upper_lineptr[x])
         return;
 
-    if (!tile_lower[ty][tx])
+    if (!lower_lineptr[x])
         return;
 
     __syncthreads();
