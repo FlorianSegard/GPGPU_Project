@@ -1,7 +1,9 @@
 #include <iostream>
 #include <cuda_runtime.h>
 #include <chrono>
+#include <cfloat> // For FLT_MAX and FLT_MIN
 #include "filter_erode_and_dilate.hpp"
+
 // Run with: nvcc filter_erode_and_dilate.cu -o filter_erode_and_dilate
 
 // Helper function to check CUDA errors
@@ -15,59 +17,123 @@
         } \
     } while (0)
 
-__global__ void erode(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
+__global__ void erode_shared(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
+    extern __shared__ float smem[];
+
+    int smem_width = blockDim.x + 2 * opening_size;
+    int smem_height = blockDim.y + 2 * opening_size;
+    int smem_size = smem_width * smem_height;
+
+    int num_threads = blockDim.x * blockDim.y;
+    int thread_id = threadIdx.y * blockDim.x + threadIdx.x;
+
+    // Compute starting global x and y indices for shared memory
+    int base_x = blockIdx.x * blockDim.x - opening_size;
+    int base_y = blockIdx.y * blockDim.y - opening_size;
+
+    // Load shared memory
+    for (int i = thread_id; i < smem_size; i += num_threads) {
+        int smem_x = i % smem_width;
+        int smem_y = i / smem_width;
+
+        int global_x = base_x + smem_x;
+        int global_y = base_y + smem_y;
+
+        float value;
+        if (global_x >= 0 && global_x < width && global_y >= 0 && global_y < height) {
+            float* lineptr = (float*)((std::byte*)input.buffer + global_y * input.stride);
+            value = lineptr[global_x];
+        } else {
+            value = FLT_MAX; // For erosion
+        }
+        smem[smem_y * smem_width + smem_x] = value;
+    }
+
+    __syncthreads();
+
+    // Now perform erosion using shared memory
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        float* lineptr = (float*)((std::byte*)input.buffer + y * input.stride);
-        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
+        int smem_x = threadIdx.x + opening_size;
+        int smem_y = threadIdx.y + opening_size;
 
-        float min_val = lineptr[x];
+        float min_val = FLT_MAX;
         for (int dy = -opening_size; dy <= opening_size; ++dy) {
             for (int dx = -opening_size; dx <= opening_size; ++dx) {
-                int nx = x + dx;
-                int ny = y + dy;
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    float* neighbor = (float*)((std::byte*)input.buffer + ny * input.stride);
-                    min_val = fminf(min_val, neighbor[nx]);
-                }
+                int idx = (smem_y + dy) * smem_width + (smem_x + dx);
+                float val = smem[idx];
+                min_val = fminf(min_val, val);
             }
         }
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
         lineptr_out[x] = min_val;
     }
 }
 
-__global__ void dilate(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
+__global__ void dilate_shared(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
+    extern __shared__ float smem[];
+
+    int smem_width = blockDim.x + 2 * opening_size;
+    int smem_height = blockDim.y + 2 * opening_size;
+    int smem_size = smem_width * smem_height;
+
+    int num_threads = blockDim.x * blockDim.y;
+    int thread_id = threadIdx.y * blockDim.x + threadIdx.x;
+
+    // Compute starting global x and y indices for shared memory
+    int base_x = blockIdx.x * blockDim.x - opening_size;
+    int base_y = blockIdx.y * blockDim.y - opening_size;
+
+    // Load shared memory
+    for (int i = thread_id; i < smem_size; i += num_threads) {
+        int smem_x = i % smem_width;
+        int smem_y = i / smem_width;
+
+        int global_x = base_x + smem_x;
+        int global_y = base_y + smem_y;
+
+        float value;
+        if (global_x >= 0 && global_x < width && global_y >= 0 && global_y < height) {
+            float* lineptr = (float*)((std::byte*)input.buffer + global_y * input.stride);
+            value = lineptr[global_x];
+        } else {
+            value = FLT_MIN; // For dilation
+        }
+        smem[smem_y * smem_width + smem_x] = value;
+    }
+
+    __syncthreads();
+
+    // Now perform dilation using shared memory
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        float* lineptr = (float*)((std::byte*)input.buffer + y * input.stride);
-        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
+        int smem_x = threadIdx.x + opening_size;
+        int smem_y = threadIdx.y + opening_size;
 
-        float max_val = lineptr[x];
+        float max_val = FLT_MIN;
         for (int dy = -opening_size; dy <= opening_size; ++dy) {
             for (int dx = -opening_size; dx <= opening_size; ++dx) {
-                int nx = x + dx;
-                int ny = y + dy;
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    float* neighbor = (float*)((std::byte*)input.buffer + ny * input.stride);
-                    max_val = fmaxf(max_val, neighbor[nx]);
-                }
+                int idx = (smem_y + dy) * smem_width + (smem_x + dx);
+                float val = smem[idx];
+                max_val = fmaxf(max_val, val);
             }
         }
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
         lineptr_out[x] = max_val;
     }
 }
-
 
 void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
     dim3 threadsPerBlock(32, 32);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    erode<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, opening_size);
+    int smem_size = (threadsPerBlock.x + 2 * opening_size) * (threadsPerBlock.y + 2 * opening_size) * sizeof(float);
+    erode_shared<<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height, opening_size);
 }
 
 void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
@@ -75,7 +141,8 @@ void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int h
     dim3 threadsPerBlock(32, 32);
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    dilate<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, opening_size);
+    int smem_size = (threadsPerBlock.x + 2 * opening_size) * (threadsPerBlock.y + 2 * opening_size) * sizeof(float);
+    dilate_shared<<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height, opening_size);
 }
 
 /*
