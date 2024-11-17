@@ -74,7 +74,7 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     tile_upper[ty][tx] = upper_value;
     tile_lower[ty][tx] = lower_value;
 
-    if (x >= width || y >= height)
+    if (x >= width - 1 || y >= height - 1 || x == 0 || y == 0)
         return;
 
     if (tile_upper[ty][tx])
@@ -86,7 +86,7 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     __syncthreads();
 
     // Only process inner pixels
-    if (tx > 0 && tx < HYSTERESIS_TILE_WIDTH - 1 && ty > 0 && ty < HYSTERESIS_TILE_WIDTH - 1)
+    if (tx >= 0 && tx <= HYSTERESIS_TILE_WIDTH - 1 && ty >= 0 && ty <= HYSTERESIS_TILE_WIDTH - 1)
     {
 
         if (tile_upper[ty][tx - 1])
@@ -110,9 +110,9 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
             upper_lineptr[x] = true;
             *has_changed_global = true;
         }
-        return;
+        // return;
     }
-    upper_lineptr[x] = true;
+    // upper_lineptr[x] = true;
 
 }
 
