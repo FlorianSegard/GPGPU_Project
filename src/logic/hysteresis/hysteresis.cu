@@ -63,10 +63,10 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     bool lower_value = true;
     
     bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
+    bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
 
     if (x >= 0 && x < width && y >= 0 && y < height)
     {
-        bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
         upper_value = upper_lineptr[x];
         lower_value = lower_lineptr[x];
     }
