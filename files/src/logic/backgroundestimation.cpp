@@ -20,10 +20,10 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
             lab currentpixel_background = lineptr_lab_background[x];
             lab currentpixel_candidate = lineptr_lab_candidate[x];
             int currentpixel_time = lineptr_time[x];
-            float distance_squared;
-            labDistanceSquared(currentpixel, currentpixel_background, &distance_squared);
-            lineptr_distance[x] = distance_squared;
-            if (distance_squared >= 25.0f)
+            float distance;
+            labDistance(currentpixel, currentpixel_background, &distance);
+            lineptr_distance[x] = distance;
+            if (distance >= 5.0f)
             {
                 if (currentpixel_time == 0)
                 {
