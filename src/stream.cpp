@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
   auto sampling_rate = std::stoi(cmdl({"--sampling-rate"}, "500").str());
   auto number_frame = std::stoi(cmdl({"--number-frame"}, "100").str());
 
+  g_print("Args:\ndevice: %s\n", method);
   g_print("bg_uri: %s\n", bg_uri.c_str());
   g_print("opening_size: %d\n", opening_size);
   g_print("th_low: %d\n", th_low);
@@ -82,9 +83,9 @@ int main(int argc, char* argv[])
   const char* pipe_str;
   g_print("Output: %s\n", output.c_str());
   if (output.empty())
-    pipe_str = "filesrc name=fsrc ! decodebin ! videoconvert ! video/x-raw, format=(string)RGB ! myfilter ! videoconvert ! fpsdisplaysink sync=false";
+    pipe_str = "filesrc name=fsrc ! decodebin ! videoconvert ! video/x-raw, format=(string)RGB ! myfilter name=mfter ! videoconvert ! fpsdisplaysink sync=false";
   else
-    pipe_str = "filesrc name=fsrc ! decodebin ! videoconvert ! video/x-raw, format=(string)RGB ! myfilter ! videoconvert ! video/x-raw, format=I420 ! x264enc ! mp4mux ! filesink name=fdst";
+    pipe_str = "filesrc name=fsrc ! decodebin ! videoconvert ! video/x-raw, format=(string)RGB ! myfilter name=mfter ! videoconvert ! video/x-raw, format=I420 ! x264enc ! mp4mux ! filesink name=fdst";
 
 
   GError *error = NULL;
@@ -107,7 +108,7 @@ int main(int argc, char* argv[])
   }
 
   // Set myfilter properties
-  auto filter = gst_bin_get_by_name(GST_BIN(pipeline), "myfilter");
+  auto filter = gst_bin_get_by_name(GST_BIN(pipeline), "mfter");
   if (filter) {
       if (!bg_uri.empty()) g_object_set(filter, "uri", bg_uri.c_str(), NULL);
       g_object_set(filter, "opening_size", opening_size, NULL);
