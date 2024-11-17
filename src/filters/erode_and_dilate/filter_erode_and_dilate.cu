@@ -38,12 +38,10 @@ __global__ void erode_shared(ImageView<float> input, ImageView<float> output, in
             int global_x = base_x + x;
             bool valid_x = (global_x >= 0) && (global_x < width);
 
-            float value;
+            float value = FLT_MAX;
             if (valid_x && valid_y) {
-                float* lineptr = (float*)((char*)input.buffer + global_y * input.stride);
+                float* lineptr = (float*)((std::byte*)input.buffer + global_y * input.stride);
                 value = lineptr[global_x];
-            } else {
-                value = FLT_MAX; // For erosion
             }
             smem[y * smem_width + x] = value;
         }
@@ -69,7 +67,7 @@ __global__ void erode_shared(ImageView<float> input, ImageView<float> output, in
                 min_val = fminf(min_val, val);
             }
         }
-        float* lineptr_out = (float*)((char*)output.buffer + y * output.stride);
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
         lineptr_out[x] = min_val;
     }
 }
@@ -97,13 +95,13 @@ __global__ void dilate_shared(ImageView<float> input, ImageView<float> output, i
             int global_x = base_x + x;
             bool valid_x = (global_x >= 0) && (global_x < width);
 
-            float value;
+            float value = -FLT_MAX;
+
             if (valid_x && valid_y) {
-                float* lineptr = (float*)((char*)input.buffer + global_y * input.stride);
+                float* lineptr = (float*)((std::byte*)input.buffer + global_y * input.stride);
                 value = lineptr[global_x];
-            } else {
-                value = -FLT_MAX; // For dilation
             }
+
             smem[y * smem_width + x] = value;
         }
     }
@@ -128,7 +126,7 @@ __global__ void dilate_shared(ImageView<float> input, ImageView<float> output, i
                 max_val = fmaxf(max_val, val);
             }
         }
-        float* lineptr_out = (float*)((char*)output.buffer + y * output.stride);
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
         lineptr_out[x] = max_val;
     }
 }
