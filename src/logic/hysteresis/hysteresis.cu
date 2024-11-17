@@ -152,31 +152,23 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
 
     __syncthreads();
 
+    // Proceed only if within image bounds
+    if (x >= width || y >= height)
+        return;
 
+    // Proceed only if the current pixel is not already marked in upper
     if (tile_upper[smem_y][smem_x])
         return;
 
-        // Si le pixel n'est pas marqué dans l'image inférieure, on passe au suivant
+    // Proceed only if the current pixel is marked in lower
     if (!tile_lower[smem_y][smem_x])
         return;
 
-    if (tx > 0 && tile_upper[smem_y][smem_x - 1]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
-
-    if (tx < HYSTERESIS_TILE_WIDTH - 1 && tile_upper[smem_y][smem_x + 1]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
-
-    if (ty > 0 && tile_upper[smem_y - 1][smem_x]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
-
-    if (ty < HYSTERESIS_TILE_WIDTH - 1 && tile_upper[smem_y + 1][smem_x]) {
-        upper_lineptr[x] = true;
+    // Check neighboring pixels
+    if (tile_upper[smem_y][smem_x - 1] || tile_upper[smem_y][smem_x + 1] ||
+        tile_upper[smem_y - 1][smem_x] || tile_upper[smem_y + 1][smem_x])
+    {
+        upper.buffer[y * upper.stride + x] = true;
         *has_changed_global = true;
     }
 
