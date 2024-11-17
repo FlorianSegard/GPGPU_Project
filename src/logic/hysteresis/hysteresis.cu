@@ -15,7 +15,7 @@
         } \
     } while (0)
 
-#define HYSTERESIS_TILE_WIDTH 32 // block size de 32 x 32 et on rajoute 2 pixels de padding
+#define HYSTERESIS_TILE_WIDTH 16 // block size de 32 x 32 et on rajoute 2 pixels de padding
 #define LOWER_THRESHOLD 4.0
 #define UPPER_THRESHOLD 30.0
 
@@ -103,7 +103,7 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
 
 void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, float lower_threshold, float upper_threshold)
 {
-    dim3 blockSize(32, 32);
+    dim3 blockSize(16, 16);
     dim3 gridSize((width + (blockSize.x - 1)) / blockSize.x, (height + (blockSize.y - 1)) / blockSize.y);
 
     Image<bool> lower_threshold_input(width, height, true);
