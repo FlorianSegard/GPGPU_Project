@@ -15,7 +15,7 @@
         } \
     } while (0)
 
-#define BLOCK_SIZE 30
+#define BLOCK_SIZE 32
 #define HYSTERESIS_TILE_WIDTH (BLOCK_SIZE + 2)
 #define LOWER_THRESHOLD 4.0
 #define UPPER_THRESHOLD 30.0
@@ -143,7 +143,7 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
 
 void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, float lower_threshold, float upper_threshold)
 {
-    dim3 blockSize(34, 34);
+    dim3 blockSize(32, 32);
     dim3 gridSize((width + (blockSize.x - 1)) / blockSize.x, (height + (blockSize.y - 1)) / blockSize.y);
 
     Image<bool> lower_threshold_input(width, height, true);
@@ -160,13 +160,16 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
     bool *d_has_changed;
     CHECK_CUDA_ERROR(cudaMalloc(&d_has_changed, sizeof(bool)));
 
+    dim3 hysteresisBlockSize(HYSTERESIS_TILE_WIDTH, HYSTERESIS_TILE_WIDTH);
+    dim3 hysteresisGridSize((width + BLOCK_SIZE - 1) / BLOCK_SIZE, (height + BLOCK_SIZE - 1) / BLOCK_SIZE);
+
     // on propage sur l'image.
     while (h_has_changed)
     {
         CHECK_CUDA_ERROR(cudaMemset(d_has_changed, false, sizeof(bool)));
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
-        hysteresis_kernel<<<gridSize, blockSize>>>(hysteresis, lower_threshold_input, width, height, d_has_changed);
+        hysteresis_kernel<<<hysteresisGridSize, hysteresisBlockSize>>>(hysteresis, lower_threshold_input, width, height, d_has_changed);
 
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
