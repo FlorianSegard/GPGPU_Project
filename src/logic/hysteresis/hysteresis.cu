@@ -117,58 +117,6 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
 }
 
 
-__global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, int width, int height, bool *has_changed_global)
-{
-    //__shared__ bool tile_upper[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
-    //__shared__ bool tile_lower[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
-
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
-
-    int tile_x = blockIdx.x * blockDim.x;
-    int tile_y = blockIdx.y * blockDim.y;
-
-    int x = tile_x + tx;
-    int y = tile_y + ty;
-
-    if (x >= width || y >= height)
-        return;
-
-    bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
-    bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
-
-
-    if (upper_lineptr[x])
-        return;
-
-        // Si le pixel n'est pas marqué dans l'image inférieure, on passe au suivant
-    if (!lower_lineptr[x])
-        return;
-
-    bool* upper_prev_lineptr = (bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride);
-    bool* upper_next_lineptr = (bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride);
-    if (x > 0 && upper_lineptr[x - 1]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
-
-    if (x < width - 1 && upper_lineptr[x + 1]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
-
-    if (y > 0 && upper_prev_lineptr[x]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
-
-    if (y < height - 1 && upper_next_lineptr[x]) {
-        upper_lineptr[x] = true;
-        *has_changed_global = true;
-    }
-
-}
-
 
 void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, int width, int height, float lower_threshold, float upper_threshold)
 {
