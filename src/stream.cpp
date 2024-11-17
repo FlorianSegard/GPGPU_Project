@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
   auto sampling_rate = std::stoi(cmdl({"--sampling-rate"}, "500").str());
   auto number_frame = std::stoi(cmdl({"--number-frame"}, "100").str());
 
-  g_print("Args:\ndevice: %s\n", method);
+  g_print("Args:\ndevice: %s\n", method.c_str());
   g_print("bg_uri: %s\n", bg_uri.c_str());
   g_print("opening_size: %d\n", opening_size);
   g_print("th_low: %d\n", th_low);
