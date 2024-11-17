@@ -117,7 +117,6 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
     bool *d_has_changed;
     CHECK_CUDA_ERROR(cudaMalloc(&d_has_changed, sizeof(bool)));
 
-    int i = 0;
     // on propage sur l'image.
     while (h_has_changed)
     {
@@ -129,7 +128,6 @@ void hysteresis_cu(ImageView<float> opened_input, ImageView<bool> hysteresis, in
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
         CHECK_CUDA_ERROR(cudaMemcpy(&h_has_changed, d_has_changed, sizeof(bool), cudaMemcpyDeviceToHost));
-        //i++;
     }
 
     //printf("%d\n", i);
