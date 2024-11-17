@@ -47,8 +47,8 @@ __global__ void hysteresis_thresholding(ImageView<float> input, ImageView<bool> 
 
 __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, int width, int height, bool *has_changed_global)
 {
-    //__shared__ bool tile_upper[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
-    //__shared__ bool tile_lower[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
+    __shared__ bool tile_upper[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
+    __shared__ bool tile_lower[HYSTERESIS_TILE_WIDTH][HYSTERESIS_TILE_WIDTH];
 
     int tx = threadIdx.x;
     int ty = threadIdx.y;
@@ -65,32 +65,35 @@ __global__ void hysteresis_kernel(ImageView<bool> upper, ImageView<bool> lower, 
     bool* upper_lineptr = (bool *)((std::byte*)upper.buffer + y * upper.stride);
     bool* lower_lineptr = (bool *)((std::byte*)lower.buffer + y * lower.stride);
 
+    tile_upper[ty][tx] = upper_lineptr[x];
+    tile_lower[ty][tx] = lower_lineptr[x];
 
-    if (upper_lineptr[x])
+    __syncthreads();
+
+
+    if (tile_upper[ty][tx])
         return;
 
         // Si le pixel n'est pas marqué dans l'image inférieure, on passe au suivant
-    if (!lower_lineptr[x])
+    if (!tile_lower[ty][tx])
         return;
 
-    bool* upper_prev_lineptr = (bool *)((std::byte*)upper.buffer + (y - 1) * upper.stride);
-    bool* upper_next_lineptr = (bool *)((std::byte*)upper.buffer + (y + 1) * upper.stride);
-    if (x > 0 && upper_lineptr[x - 1]) {
+    if (tx >= 0 && tile_upper[ty][tx - 1]) {
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
 
-    if (x < width - 1 && upper_lineptr[x + 1]) {
+    if (tx =< HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty][tx + 1]) {
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
 
-    if (y > 0 && upper_prev_lineptr[x]) {
+    if (y >= 0 && tile_upper[ty - 1][tx]) {
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
 
-    if (y < height - 1 && upper_next_lineptr[x]) {
+    if (y =< HYSTERESIS_TILE_WIDTH - 1 && tile_upper[ty + 1][tx]) {
         upper_lineptr[x] = true;
         *has_changed_global = true;
     }
