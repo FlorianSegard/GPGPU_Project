@@ -1,402 +1,182 @@
 #include <iostream>
 #include <cuda_runtime.h>
+#include <chrono>
 #include <cfloat> // For FLT_MAX and FLT_MIN
 #include "filter_erode_and_dilate.hpp"
 
 // Helper function to check CUDA errors
-#define CHECK_CUDA_ERROR(call) \
-    do { \
-        cudaError_t err = call; \
-        if (err != cudaSuccess) { \
-            printf("CUDA error at %s %d: %s\n", __FILE__, __LINE__, \
-                   cudaGetErrorString(err)); \
-            exit(EXIT_FAILURE); \
-        } \
+#define CHECK_CUDA_ERROR(call)                                              \
+    do {                                                                    \
+        cudaError_t err = call;                                             \
+        if (err != cudaSuccess) {                                           \
+            printf("CUDA error at %s %d: %s\n", __FILE__, __LINE__,         \
+                   cudaGetErrorString(err));                                \
+            exit(EXIT_FAILURE);                                             \
+        }                                                                   \
     } while (0)
 
-// Erosion kernel using shared memory
-__global__ void erode_shared(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
-    extern __shared__ float sdata[];
+template <int opening_size>
+__global__ void erode_shared(ImageView<float> input, ImageView<float> output, int width, int height) {
+    extern __shared__ float smem[];
 
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
-    int bx = blockIdx.x * blockDim.x;
-    int by = blockIdx.y * blockDim.y;
+    const int smem_width = blockDim.x + 2 * opening_size;
+    const int smem_height = blockDim.y + 2 * opening_size;
 
-    // Compute shared memory dimensions
-    int smem_width = blockDim.x + 2 * opening_size;
-    int smem_height = blockDim.y + 2 * opening_size;
+    // Compute base global indices for the shared memory tile
+    int base_x = blockIdx.x * blockDim.x - opening_size;
+    int base_y = blockIdx.y * blockDim.y - opening_size;
 
-    // Compute global coordinates
-    int x_global = bx + tx - opening_size;
-    int y_global = by + ty - opening_size;
+    int smem_x = threadIdx.x;
+    int smem_y = threadIdx.y;
 
-    // Compute shared memory coordinates
-    int x_shared = tx + opening_size;
-    int y_shared = ty + opening_size;
+    // Load shared memory with coalesced access
+    for (int y = smem_y; y < smem_height; y += blockDim.y) {
+        int global_y = base_y + y;
+        bool valid_y = (global_y >= 0) && (global_y < height);
 
-    // Load data into shared memory with boundary checks
-    float value = FLT_MAX;
-    if (x_global >= 0 && x_global < width && y_global >= 0 && y_global < height) {
-        float* lineptr = (float*)((std::byte*)input.buffer + y_global * input.stride);
-        value = lineptr[x_global];
-    }
-    sdata[y_shared * smem_width + x_shared] = value;
+        for (int x = smem_x; x < smem_width; x += blockDim.x) {
+            int global_x = base_x + x;
+            bool valid_x = (global_x >= 0) && (global_x < width);
 
-    // Load halo regions (top, bottom, left, right)
-    // Load top halo
-    if (ty < opening_size) {
-        for (int i = -opening_size; i < blockDim.x + opening_size; ++i) {
-            int x_halo = bx + i;
-            int y_halo = by + ty - opening_size;
-            int x_s = tx + i + opening_size;
-            int y_s = ty;
-
-            float halo_value = FLT_MAX;
-            if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-                float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-                halo_value = lineptr[x_halo];
+            float value;
+            if (valid_x && valid_y) {
+                float* lineptr = (float*)((char*)input.buffer + global_y * input.stride);
+                value = lineptr[global_x];
+            } else {
+                value = FLT_MAX; // For erosion
             }
-            sdata[y_s * smem_width + x_s] = halo_value;
+            smem[y * smem_width + x] = value;
         }
-    }
-
-    // Load bottom halo
-    if (ty >= blockDim.y - opening_size) {
-        for (int i = -opening_size; i < blockDim.x + opening_size; ++i) {
-            int x_halo = bx + i;
-            int y_halo = by + ty + opening_size;
-            int x_s = tx + i + opening_size;
-            int y_s = ty + 2 * opening_size;
-
-            float halo_value = FLT_MAX;
-            if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-                float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-                halo_value = lineptr[x_halo];
-            }
-            sdata[y_s * smem_width + x_s] = halo_value;
-        }
-    }
-
-    // Load left halo
-    if (tx < opening_size) {
-        for (int i = -opening_size; i < blockDim.y + opening_size; ++i) {
-            int x_halo = bx + tx - opening_size;
-            int y_halo = by + i;
-            int x_s = tx;
-            int y_s = ty + i + opening_size;
-
-            float halo_value = FLT_MAX;
-            if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-                float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-                halo_value = lineptr[x_halo];
-            }
-            sdata[y_s * smem_width + x_s] = halo_value;
-        }
-    }
-
-    // Load right halo
-    if (tx >= blockDim.x - opening_size) {
-        for (int i = -opening_size; i < blockDim.y + opening_size; ++i) {
-            int x_halo = bx + tx + opening_size;
-            int y_halo = by + i;
-            int x_s = tx + 2 * opening_size;
-            int y_s = ty + i + opening_size;
-
-            float halo_value = FLT_MAX;
-            if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-                float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-                halo_value = lineptr[x_halo];
-            }
-            sdata[y_s * smem_width + x_s] = halo_value;
-        }
-    }
-
-    // Load corner halos
-    // Top-left
-    if (tx < opening_size && ty < opening_size) {
-        int x_halo = bx + tx - opening_size;
-        int y_halo = by + ty - opening_size;
-        int x_s = tx;
-        int y_s = ty;
-
-        float halo_value = FLT_MAX;
-        if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-            float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-            halo_value = lineptr[x_halo];
-        }
-        sdata[y_s * smem_width + x_s] = halo_value;
-    }
-
-    // Top-right
-    if (tx >= blockDim.x - opening_size && ty < opening_size) {
-        int x_halo = bx + tx + opening_size;
-        int y_halo = by + ty - opening_size;
-        int x_s = tx + 2 * opening_size;
-        int y_s = ty;
-
-        float halo_value = FLT_MAX;
-        if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-            float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-            halo_value = lineptr[x_halo];
-        }
-        sdata[y_s * smem_width + x_s] = halo_value;
-    }
-
-    // Bottom-left
-    if (tx < opening_size && ty >= blockDim.y - opening_size) {
-        int x_halo = bx + tx - opening_size;
-        int y_halo = by + ty + opening_size;
-        int x_s = tx;
-        int y_s = ty + 2 * opening_size;
-
-        float halo_value = FLT_MAX;
-        if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-            float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-            halo_value = lineptr[x_halo];
-        }
-        sdata[y_s * smem_width + x_s] = halo_value;
-    }
-
-    // Bottom-right
-    if (tx >= blockDim.x - opening_size && ty >= blockDim.y - opening_size) {
-        int x_halo = bx + tx + opening_size;
-        int y_halo = by + ty + opening_size;
-        int x_s = tx + 2 * opening_size;
-        int y_s = ty + 2 * opening_size;
-
-        float halo_value = FLT_MAX;
-        if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-            float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-            halo_value = lineptr[x_halo];
-        }
-        sdata[y_s * smem_width + x_s] = halo_value;
     }
 
     __syncthreads();
 
-    // Perform erosion using shared memory
-    int x_out = bx + tx;
-    int y_out = by + ty;
+    // Now perform erosion using shared memory
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x_out < width && y_out < height) {
+    if (x < width && y < height) {
+        int smem_x = threadIdx.x + opening_size;
+        int smem_y = threadIdx.y + opening_size;
+
         float min_val = FLT_MAX;
+        #pragma unroll
         for (int dy = -opening_size; dy <= opening_size; ++dy) {
+            #pragma unroll
             for (int dx = -opening_size; dx <= opening_size; ++dx) {
-                int x_s = x_shared + dx;
-                int y_s = y_shared + dy;
-                float val = sdata[y_s * smem_width + x_s];
+                int idx = (smem_y + dy) * smem_width + (smem_x + dx);
+                float val = smem[idx];
                 min_val = fminf(min_val, val);
             }
         }
-        float* lineptr_out = (float*)((std::byte*)output.buffer + y_out * output.stride);
-        lineptr_out[x_out] = min_val;
+        float* lineptr_out = (float*)((char*)output.buffer + y * output.stride);
+        lineptr_out[x] = min_val;
     }
 }
 
-// Dilation kernel using shared memory
-__global__ void dilate_shared(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
-    extern __shared__ float sdata[];
+template <int opening_size>
+__global__ void dilate_shared(ImageView<float> input, ImageView<float> output, int width, int height) {
+    extern __shared__ float smem[];
 
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
-    int bx = blockIdx.x * blockDim.x;
-    int by = blockIdx.y * blockDim.y;
+    const int smem_width = blockDim.x + 2 * opening_size;
+    const int smem_height = blockDim.y + 2 * opening_size;
 
-    // Compute shared memory dimensions
-    int smem_width = blockDim.x + 2 * opening_size;
-    int smem_height = blockDim.y + 2 * opening_size;
+    // Compute base global indices for the shared memory tile
+    int base_x = blockIdx.x * blockDim.x - opening_size;
+    int base_y = blockIdx.y * blockDim.y - opening_size;
 
-    // Compute global coordinates
-    int x_global = bx + tx - opening_size;
-    int y_global = by + ty - opening_size;
+    int smem_x = threadIdx.x;
+    int smem_y = threadIdx.y;
 
-    // Compute shared memory coordinates
-    int x_shared = tx + opening_size;
-    int y_shared = ty + opening_size;
+    // Load shared memory with coalesced access
+    for (int y = smem_y; y < smem_height; y += blockDim.y) {
+        int global_y = base_y + y;
+        bool valid_y = (global_y >= 0) && (global_y < height);
 
-    // Load data into shared memory with boundary checks
-    float value = FLT_MIN;
-    if (x_global >= 0 && x_global < width && y_global >= 0 && y_global < height) {
-        float* lineptr = (float*)((std::byte*)input.buffer + y_global * input.stride);
-        value = lineptr[x_global];
-    }
-    sdata[y_shared * smem_width + x_shared] = value;
+        for (int x = smem_x; x < smem_width; x += blockDim.x) {
+            int global_x = base_x + x;
+            bool valid_x = (global_x >= 0) && (global_x < width);
 
-    // Load halo regions (similar to erode_shared kernel)
-    // Load top, bottom, left, right, and corner halos
-    // Replace FLT_MAX with FLT_MIN for dilation
-
-    // Load top halo
-    if (ty < opening_size) {
-        for (int i = -opening_size; i < blockDim.x + opening_size; ++i) {
-            int x_halo = bx + i;
-            int y_halo = by + ty - opening_size;
-            int x_s = tx + i + opening_size;
-            int y_s = ty;
-
-            float halo_value = FLT_MIN;
-            if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-                float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-                halo_value = lineptr[x_halo];
+            float value;
+            if (valid_x && valid_y) {
+                float* lineptr = (float*)((char*)input.buffer + global_y * input.stride);
+                value = lineptr[global_x];
+            } else {
+                value = -FLT_MAX; // For dilation
             }
-            sdata[y_s * smem_width + x_s] = halo_value;
+            smem[y * smem_width + x] = value;
         }
-    }
-
-    // Load bottom halo
-    if (ty >= blockDim.y - opening_size) {
-        for (int i = -opening_size; i < blockDim.x + opening_size; ++i) {
-            int x_halo = bx + i;
-            int y_halo = by + ty + opening_size;
-            int x_s = tx + i + opening_size;
-            int y_s = ty + 2 * opening_size;
-
-            float halo_value = FLT_MIN;
-            if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-                float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-                halo_value = lineptr[x_halo];
-            }
-            sdata[y_s * smem_width + x_s] = halo_value;
-        }
-    }
-
-    // Load left halo
-    if (tx < opening_size) {
-        for (int i = -opening_size; i < blockDim.y + opening_size; ++i) {
-            int x_halo = bx + tx - opening_size;
-            int y_halo = by + i;
-            int x_s = tx;
-            int y_s = ty + i + opening_size;
-
-            float halo_value = FLT_MIN;
-            if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-                float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-                halo_value = lineptr[x_halo];
-            }
-            sdata[y_s * smem_width + x_s] = halo_value;
-        }
-    }
-
-    // Load right halo
-    if (tx >= blockDim.x - opening_size) {
-        for (int i = -opening_size; i < blockDim.y + opening_size; ++i) {
-            int x_halo = bx + tx + opening_size;
-            int y_halo = by + i;
-            int x_s = tx + 2 * opening_size;
-            int y_s = ty + i + opening_size;
-
-            float halo_value = FLT_MIN;
-            if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-                float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-                halo_value = lineptr[x_halo];
-            }
-            sdata[y_s * smem_width + x_s] = halo_value;
-        }
-    }
-
-    // Load corner halos (top-left, top-right, bottom-left, bottom-right)
-    // Similar to erode_shared kernel, replace FLT_MAX with FLT_MIN
-
-    // Top-left
-    if (tx < opening_size && ty < opening_size) {
-        int x_halo = bx + tx - opening_size;
-        int y_halo = by + ty - opening_size;
-        int x_s = tx;
-        int y_s = ty;
-
-        float halo_value = FLT_MIN;
-        if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-            float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-            halo_value = lineptr[x_halo];
-        }
-        sdata[y_s * smem_width + x_s] = halo_value;
-    }
-
-    // Top-right
-    if (tx >= blockDim.x - opening_size && ty < opening_size) {
-        int x_halo = bx + tx + opening_size;
-        int y_halo = by + ty - opening_size;
-        int x_s = tx + 2 * opening_size;
-        int y_s = ty;
-
-        float halo_value = FLT_MIN;
-        if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-            float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-            halo_value = lineptr[x_halo];
-        }
-        sdata[y_s * smem_width + x_s] = halo_value;
-    }
-
-    // Bottom-left
-    if (tx < opening_size && ty >= blockDim.y - opening_size) {
-        int x_halo = bx + tx - opening_size;
-        int y_halo = by + ty + opening_size;
-        int x_s = tx;
-        int y_s = ty + 2 * opening_size;
-
-        float halo_value = FLT_MIN;
-        if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-            float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-            halo_value = lineptr[x_halo];
-        }
-        sdata[y_s * smem_width + x_s] = halo_value;
-    }
-
-    // Bottom-right
-    if (tx >= blockDim.x - opening_size && ty >= blockDim.y - opening_size) {
-        int x_halo = bx + tx + opening_size;
-        int y_halo = by + ty + opening_size;
-        int x_s = tx + 2 * opening_size;
-        int y_s = ty + 2 * opening_size;
-
-        float halo_value = FLT_MIN;
-        if (x_halo >= 0 && x_halo < width && y_halo >= 0 && y_halo < height) {
-            float* lineptr = (float*)((std::byte*)input.buffer + y_halo * input.stride);
-            halo_value = lineptr[x_halo];
-        }
-        sdata[y_s * smem_width + x_s] = halo_value;
     }
 
     __syncthreads();
 
-    // Perform dilation using shared memory
-    int x_out = bx + tx;
-    int y_out = by + ty;
+    // Now perform dilation using shared memory
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x_out < width && y_out < height) {
-        float max_val = FLT_MIN;
+    if (x < width && y < height) {
+        int smem_x = threadIdx.x + opening_size;
+        int smem_y = threadIdx.y + opening_size;
+
+        float max_val = -FLT_MAX;
+        #pragma unroll
         for (int dy = -opening_size; dy <= opening_size; ++dy) {
+            #pragma unroll
             for (int dx = -opening_size; dx <= opening_size; ++dx) {
-                int x_s = x_shared + dx;
-                int y_s = y_shared + dy;
-                float val = sdata[y_s * smem_width + x_s];
+                int idx = (smem_y + dy) * smem_width + (smem_x + dx);
+                float val = smem[idx];
                 max_val = fmaxf(max_val, val);
             }
         }
-        float* lineptr_out = (float*)((std::byte*)output.buffer + y_out * output.stride);
-        lineptr_out[x_out] = max_val;
+        float* lineptr_out = (float*)((char*)output.buffer + y * output.stride);
+        lineptr_out[x] = max_val;
     }
 }
 
 void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
-    dim3 threadsPerBlock(32, 32);
+    dim3 threadsPerBlock(16, 16); // Adjusted thread block size
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
     int smem_size = (threadsPerBlock.x + 2 * opening_size) * (threadsPerBlock.y + 2 * opening_size) * sizeof(float);
-    erode_shared<<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height, opening_size);
+
+    // Instantiate the kernel with the specific opening size
+    switch (opening_size) {
+        case 1:
+            erode_shared<1><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 2:
+            erode_shared<2><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        // Add more cases as needed
+        default:
+            // Handle unsupported opening sizes
+            printf("Unsupported opening size: %d\n", opening_size);
+            exit(EXIT_FAILURE);
+    }
     CHECK_CUDA_ERROR(cudaGetLastError());
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 }
 
 void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
-    dim3 threadsPerBlock(32, 32);
+    dim3 threadsPerBlock(16, 16); // Adjusted thread block size
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
     int smem_size = (threadsPerBlock.x + 2 * opening_size) * (threadsPerBlock.y + 2 * opening_size) * sizeof(float);
-    dilate_shared<<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height, opening_size);
+
+    // Instantiate the kernel with the specific opening size
+    switch (opening_size) {
+        case 1:
+            dilate_shared<1><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 2:
+            dilate_shared<2><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        // Add more cases as needed
+        default:
+            // Handle unsupported opening sizes
+            printf("Unsupported opening size: %d\n", opening_size);
+            exit(EXIT_FAILURE);
+    }
     CHECK_CUDA_ERROR(cudaGetLastError());
-    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 }
