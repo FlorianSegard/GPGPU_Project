@@ -135,7 +135,7 @@ __global__ void dilate_shared(ImageView<float> input, ImageView<float> output, i
 
 void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
-    dim3 threadsPerBlock(16, 16); // Adjusted thread block size
+    dim3 threadsPerBlock(32, 32); // Adjusted thread block size
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
     int smem_size = (threadsPerBlock.x + 2 * opening_size) * (threadsPerBlock.y + 2 * opening_size) * sizeof(float);
@@ -159,7 +159,7 @@ void erode_cu(ImageView<float> input, ImageView<float> output, int width, int he
 
 void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
-    dim3 threadsPerBlock(16, 16); // Adjusted thread block size
+    dim3 threadsPerBlock(32, 32); // Adjusted thread block size
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
     int smem_size = (threadsPerBlock.x + 2 * opening_size) * (threadsPerBlock.y + 2 * opening_size) * sizeof(float);
