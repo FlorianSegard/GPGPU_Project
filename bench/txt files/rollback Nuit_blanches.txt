@@ -1,0 +1,18 @@
+==3438977== NVPROF is profiling process 3438977, command: /home/florian.segard-gahery/build_test/stream --mode=gpu samples/Nuits Blanches .mp4 --output=gg.mp4
+==3438977== Profiling application: /home/florian.segard-gahery/build_test/stream --mode=gpu samples/Nuits Blanches .mp4 --output=gg.mp4
+==3438977== Profiling result:
+"Type","Time(%)","Time","Calls","Avg","Min","Max","Name"
+,%,s,,ms,ms,ms,
+"GPU activities",68.287470,7.907474,54116,0.146120,0.130716,0.211994,"hysteresis_kernel(ImageView<bool>, ImageView<bool>, int, int, bool*)"
+"GPU activities",9.696725,1.122850,55904,0.020085,0.000735,2.118758,"[CUDA memcpy DtoH]"
+"GPU activities",8.248337,0.955131,596,1.602569,1.430489,2.130918,"[CUDA memcpy HtoD]"
+"GPU activities",4.412639,0.510970,596,0.857331,0.833033,0.972582,"check_background_kernel(ImageView<lab>, ImageView<lab>, ImageView<lab>, ImageView<int>, ImageView<float>, int, int, int)"
+"GPU activities",3.108292,0.359930,596,0.603910,0.556016,0.736172,"rgbtolab_converter_kernel(ImageView<rgb8>, ImageView<lab>, int, int)"
+"GPU activities",1.731844,0.200542,596,0.336479,0.316984,0.392533,"erode(ImageView<float>, ImageView<float>, int, int, int)"
+"GPU activities",1.730482,0.200384,596,0.336215,0.316440,0.389877,"dilate(ImageView<float>, ImageView<float>, int, int, int)"
+"GPU activities",1.436591,0.166353,1192,0.139557,0.132060,0.157947,"hysteresis_thresholding(ImageView<float>, ImageView<bool>, int, int, float)"
+"GPU activities",0.911372,0.105534,596,0.177070,0.159644,0.196987,"red_mask_kernel(ImageView<bool>, ImageView<rgb8>, int, int)"
+"GPU activities",0.309827,0.035877,596,0.060196,0.056990,0.061503,"ConvertNV12BLtoNV12"
+"GPU activities",0.117497,0.013606,54180,0.000251,0.000223,0.003392,"[CUDA memset]"
+"GPU activities",0.007798,0.000903,2,0.451508,0.451348,0.451668,"[CUDA memcpy DtoD]"
+"GPU activities",0.001127,0.000131,10,0.013055,0.008479,0.017728,"MemsetD2D_BL"

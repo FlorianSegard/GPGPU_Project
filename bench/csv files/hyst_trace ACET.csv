@@ -1,0 +1,13 @@
+,%,ms,,ms,us,ms,
+"GPU activities",37.663581,658.980245,8588,0.076732,75.358000,0.081854,"hysteresis_kernel(ImageView<bool>, ImageView<bool>, int, int, bool*)"
+"GPU activities",21.543548,376.936348,9392,0.040133,1.023000,1.727888,"[CUDA memcpy DtoH]"
+"GPU activities",16.933921,296.284090,268,1.105537,756.170000,1.947817,"[CUDA memcpy HtoD]"
+"GPU activities",6.726820,117.695697,268,0.439163,431.219000,0.446068,"check_background_kernel(ImageView<lab>, ImageView<lab>, ImageView<lab>, ImageView<int>, ImageView<float>, int, int, int)"
+"GPU activities",5.983237,104.685619,268,0.390617,386.389000,0.395509,"rgbtolab_converter_kernel(ImageView<rgb8>, ImageView<lab>, int, int)"
+"GPU activities",3.221678,56.368041,268,0.210328,209.050000,0.212122,"erode(ImageView<float>, ImageView<float>, int, int, int)"
+"GPU activities",3.199442,55.978993,268,0.208876,207.482000,0.211034,"dilate(ImageView<float>, ImageView<float>, int, int, int)"
+"GPU activities",2.571485,44.991947,536,0.083940,79.934000,0.087709,"hysteresis_thresholding(ImageView<float>, ImageView<bool>, int, int, float)"
+"GPU activities",1.464710,25.627273,268,0.095624,91.965000,0.099773,"red_mask_kernel(ImageView<bool>, ImageView<rgb8>, int, int)"
+"GPU activities",0.494381,8.649929,268,0.032275,31.007000,0.034239,"ConvertNV12BLtoNV12"
+"GPU activities",0.163801,2.865935,8654,0.000331,0.287000,0.003264,"[CUDA memset]"
+"GPU activities",0.026830,0.469427,2,0.234713,234.394000,0.235033,"[CUDA memcpy DtoD]"

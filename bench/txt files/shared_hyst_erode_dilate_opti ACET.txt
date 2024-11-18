@@ -1,0 +1,18 @@
+==3972816== NVPROF is profiling process 3972816, command: /home/florian.segard-gahery/build_test/stream --mode=gpu samples/ACET.mp4 --output=gg.mp4
+==3972816== Profiling application: /home/florian.segard-gahery/build_test/stream --mode=gpu samples/ACET.mp4 --output=gg.mp4
+==3972816== Profiling result:
+"Type","Time(%)","Time","Calls","Avg","Min","Max","Name"
+,%,ms,,us,us,us,
+"GPU activities",55.470076,970.465705,13601,71.352000,62.270000,79.774000,"hysteresis_kernel(ImageView<bool>, ImageView<bool>, int, int, bool*)"
+"GPU activities",15.095517,264.100627,14405,18.333000,0.928000,676.110000,"[CUDA memcpy DtoH]"
+"GPU activities",6.978543,122.091720,268,455.566000,451.572000,541.938000,"[CUDA memcpy HtoD]"
+"GPU activities",6.755357,118.187014,268,440.996000,431.157000,450.037000,"check_background_kernel(ImageView<lab>, ImageView<lab>, ImageView<lab>, ImageView<int>, ImageView<float>, int, int, int)"
+"GPU activities",5.522760,96.622349,268,360.531000,301.720000,398.965000,"rgbtolab_converter_kernel(ImageView<rgb8>, ImageView<lab>, int, int)"
+"GPU activities",2.782400,48.678929,268,181.637000,159.164000,195.803000,"void erode_shared<int=1>(ImageView<float>, ImageView<float>, int, int)"
+"GPU activities",2.769968,48.461426,268,180.826000,158.012000,194.395000,"void dilate_shared<int=1>(ImageView<float>, ImageView<float>, int, int)"
+"GPU activities",2.445986,42.793271,536,79.838000,71.070000,87.998000,"hysteresis_thresholding(ImageView<float>, ImageView<bool>, int, int, float)"
+"GPU activities",1.430731,25.031062,268,93.399000,83.422000,100.766000,"red_mask_kernel(ImageView<bool>, ImageView<rgb8>, int, int)"
+"GPU activities",0.489248,8.559549,268,31.938000,30.720000,33.983000,"ConvertNV12BLtoNV12"
+"GPU activities",0.225888,3.951979,13667,0.289000,0.223000,3.456000,"[CUDA memset]"
+"GPU activities",0.026863,0.469972,2,234.986000,234.874000,235.098000,"[CUDA memcpy DtoD]"
+"GPU activities",0.006661,0.116540,14,8.324000,6.016000,10.528000,"MemsetD2D_BL"
