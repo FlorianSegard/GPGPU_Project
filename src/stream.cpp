@@ -37,7 +37,15 @@ int main(int argc, char* argv[])
   argh::parser cmdl(argc, argv);
   if (cmdl[{"-h", "--help"}])
   {
-    g_printerr("Usage: %s --mode=[gpu,cpu] <filename> [--output=output.mp4]\n", argv[0]);
+    g_printerr("Usage: %s --mode=[gpu,cpu] <filename> [options]\n\n", argv[0]);
+    g_printerr("Options:\n");
+    g_printerr("  --mode=[gpu,cpu]        Processing mode (required)\n");
+    g_printerr("  --output, -o <file>     Output file (optional)\n");
+    g_printerr("  --opening-size <int>    Opening size (default: 3)\n");
+    g_printerr("  --th-low <int>          Low threshold (default: 3)\n");
+    g_printerr("  --th-high <int>         High threshold (default: 30)\n");
+    g_printerr("  --number-frame <int>    Number of frames (default: 100)\n");
+    g_printerr("  -h, --help              Show this help message\n");
     return 0;
   }
 
@@ -45,6 +53,18 @@ int main(int argc, char* argv[])
   auto method = cmdl("mode", "cpu").str();
   auto filename = cmdl(1).str();
   auto output = cmdl({"-o", "--output"}, "").str();
+
+  // New parameters
+  auto opening_size = std::stoi(cmdl({"--opening-size"}, "3").str());
+  auto th_low = std::stoi(cmdl({"--th-low"}, "3").str());
+  auto th_high = std::stoi(cmdl({"--th-high"}, "30").str());
+  auto number_frame = std::stoi(cmdl({"--number-frame"}, "100").str());
+
+  g_print("===== Args =====\n");
+  g_print("opening_size: %d\n", opening_size);
+  g_print("th_low: %d\n", th_low);
+  g_print("th_high: %d\n", th_high);
+  g_print("number_frame: %d\n\n", number_frame);
 
   if (method == "cpu") {
       params.device = e_device_t::CPU;
@@ -67,9 +87,9 @@ int main(int argc, char* argv[])
   const char* pipe_str;
   g_print("Output: %s\n", output.c_str());
   if (output.empty())
-    pipe_str = "filesrc name=fsrc ! decodebin ! videoconvert ! video/x-raw, format=(string)RGB ! myfilter ! videoconvert ! fpsdisplaysink sync=false";
+    pipe_str = "filesrc name=fsrc ! decodebin ! videoconvert ! video/x-raw, format=(string)RGB ! myfilter name=mfter ! videoconvert ! fpsdisplaysink sync=false";
   else
-    pipe_str = "filesrc name=fsrc ! decodebin ! videoconvert ! video/x-raw, format=(string)RGB ! myfilter ! videoconvert ! video/x-raw, format=I420 ! x264enc ! mp4mux ! filesink name=fdst";
+    pipe_str = "filesrc name=fsrc ! decodebin ! videoconvert ! video/x-raw, format=(string)RGB ! myfilter name=mfter ! videoconvert ! video/x-raw, format=I420 ! x264enc ! mp4mux ! filesink name=fdst";
 
 
   GError *error = NULL;
@@ -89,6 +109,16 @@ int main(int argc, char* argv[])
     auto filesink = gst_bin_get_by_name (GST_BIN (pipeline), "fdst");
     g_object_set (filesink, "location", output.c_str(), NULL);
     g_object_unref (filesink);
+  }
+
+  // Set myfilter properties
+  auto filter = gst_bin_get_by_name(GST_BIN(pipeline), "mfter");
+  if (filter) {
+      g_object_set(filter, "opening_size", opening_size, NULL);
+      g_object_set(filter, "th_low", th_low, NULL);
+      g_object_set(filter, "th_high", th_high, NULL);
+      g_object_set(filter, "number_frame", number_frame, NULL);
+      g_object_unref(filter);
   }
 
   // Start the pipeline
