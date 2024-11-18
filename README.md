@@ -24,7 +24,7 @@ nix develop
 [OPTIONAL] Re-compile the project with make (after small changes inside the source code)
 
 ```
-./full_recompile_and_run.sh Debug
+./fast_compile_and_run.sh
 ```
 
 2.
