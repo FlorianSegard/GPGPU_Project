@@ -195,6 +195,7 @@ extern "C" {
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> duration = end - start;
         std::cout << "memcpy: " << duration.count() << " seconds" << std::endl;
+        start = std::chrono::high_resolution_clock::now();
 
         // Allocate lab converted image buffer
         Image<lab> lab_image(width, height, is_gpu);
@@ -205,6 +206,7 @@ extern "C" {
         end = std::chrono::high_resolution_clock::now();
         duration = end - start;
         std::cout << "lab_conv_process: " << duration.count() << " seconds" << std::endl;
+        start = std::chrono::high_resolution_clock::now();
 
         if (!isInitialized)
             initializeGlobals(width, height, lab_image, is_gpu);
@@ -221,7 +223,8 @@ extern "C" {
         end = std::chrono::high_resolution_clock::now();
         duration = end - start;
         std::cout << "background_estimation: " << duration.count() << " seconds" << std::endl;
-        
+        start = std::chrono::high_resolution_clock::now();
+
         // Alloc and perform eroding operation
         Image<float> erode_image(width, height, is_gpu);
         erode_process_frame(
@@ -233,6 +236,8 @@ extern "C" {
         end = std::chrono::high_resolution_clock::now();
         duration = end - start;
         std::cout << "erode: " << duration.count() << " seconds" << std::endl;
+        start = std::chrono::high_resolution_clock::now();
+
         // Keep old residual_image alloc and perform dilatation operation
         dilate_process_frame(
                 erode_image, residual_image,
@@ -243,7 +248,8 @@ extern "C" {
         end = std::chrono::high_resolution_clock::now();
         duration = end - start;
         std::cout << "dilate: " << duration.count() << " seconds" << std::endl;
-        
+        start = std::chrono::high_resolution_clock::now();
+
         // Alloc and perform hysteresis operation
         Image<bool> hysteresis_image(width, height, is_gpu);
         hysteresis_process_frame(
@@ -255,10 +261,13 @@ extern "C" {
         end = std::chrono::high_resolution_clock::now();
         duration = end - start;
         std::cout << "hysteresis: " << duration.count() << " seconds" << std::endl;
+        start = std::chrono::high_resolution_clock::now();
+
         // Alloc and red mask operation
         mask_process_frame(hysteresis_image, rgb_image, width, height);
         checkKernelLaunch(is_gpu);
         end = std::chrono::high_resolution_clock::now();
+        start = std::chrono::high_resolution_clock::now();
 
         // Copy result back to pixels_buffer
         if (is_gpu) {
