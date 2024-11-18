@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
   argh::parser cmdl(argc, argv);
   if (cmdl[{"-h", "--help"}])
   {
-    g_printerr("Usage: %s --mode=[gpu,cpu] <filename> [options]\\n\\n", argv[0]);
+    g_printerr("Usage: %s --mode=[gpu,cpu] <filename> [options]\n\n", argv[0]);
     g_printerr("Options:\n");
     g_printerr("  --mode=[gpu,cpu]        Processing mode (required)\n");
     g_printerr("  --output, -o <file>     Output file (optional)\n");
