@@ -37,7 +37,15 @@ int main(int argc, char* argv[])
   argh::parser cmdl(argc, argv);
   if (cmdl[{"-h", "--help"}])
   {
-    g_printerr("Usage: %s --mode=[gpu,cpu] <filename> [--output=output.mp4]\n", argv[0]);
+    g_printerr("Usage: %s --mode=[gpu,cpu] <filename> [options]\\n\\n", argv[0]);
+    g_printerr("Options:\n");
+    g_printerr("  --mode=[gpu,cpu]        Processing mode (required)\n");
+    g_printerr("  --output, -o <file>     Output file (optional)\n");
+    g_printerr("  --opening-size <int>     Opening size (default: 3)\n");
+    g_printerr("  --th-low <int>          Low threshold (default: 3)\n");
+    g_printerr("  --th-high <int>         High threshold (default: 30)\n");
+    g_printerr("  --number-frame <int>     Number of frames (default: 10)\n");
+    g_printerr("  -h, --help              Show this help message\n");
     return 0;
   }
 
