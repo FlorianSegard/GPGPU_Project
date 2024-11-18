@@ -1,213 +1,213 @@
 #include <iostream>
 #include <cuda_runtime.h>
 #include <chrono>
+#include <cfloat> // For FLT_MAX and FLT_MIN
 #include "filter_erode_and_dilate.hpp"
-// Run with: nvcc filter_erode_and_dilate.cu -o filter_erode_and_dilate
 
 // Helper function to check CUDA errors
-#define CHECK_CUDA_ERROR(call) \
-    do { \
-        cudaError_t err = call; \
-        if (err != cudaSuccess) { \
-            printf("CUDA error at %s %d: %s\n", __FILE__, __LINE__, \
-                   cudaGetErrorString(err)); \
-            exit(EXIT_FAILURE); \
-        } \
+#define CHECK_CUDA_ERROR(call)                                              \
+    do {                                                                    \
+        cudaError_t err = call;                                             \
+        if (err != cudaSuccess) {                                           \
+            printf("CUDA error at %s %d: %s\n", __FILE__, __LINE__,         \
+                   cudaGetErrorString(err));                                \
+            exit(EXIT_FAILURE);                                             \
+        }                                                                   \
     } while (0)
 
-__global__ void erode(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
+template <int opening_size>
+__global__ void erode_shared(ImageView<float> input, ImageView<float> output, int width, int height) {
+    extern __shared__ float smem[];
+
+    const int smem_width = blockDim.x + 2 * opening_size;
+    const int smem_height = blockDim.y + 2 * opening_size;
+
+    // Compute base global indices for the shared memory tile
+    int base_x = blockIdx.x * blockDim.x - opening_size;
+    int base_y = blockIdx.y * blockDim.y - opening_size;
+
+    int smem_x = threadIdx.x;
+    int smem_y = threadIdx.y;
+
+    // Load shared memory with coalesced access
+    for (int y = smem_y; y < smem_height; y += blockDim.y) {
+  //      printf("loop y");
+        int global_y = base_y + y;
+        bool valid_y = (global_y >= 0) && (global_y < height);
+
+        for (int x = smem_x; x < smem_width; x += blockDim.x) {
+//            printf("loop x");
+            int global_x = base_x + x;
+            bool valid_x = (global_x >= 0) && (global_x < width);
+
+            float value = FLT_MAX;
+            if (valid_x && valid_y) {
+                float* lineptr = (float*)((std::byte*)input.buffer + global_y * input.stride);
+                value = lineptr[global_x];
+            }
+            smem[y * smem_width + x] = value;
+        }
+    }
+    //printf("--- end loop ---");
+
+    __syncthreads();
+
+    // Now perform erosion using shared memory
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        float* lineptr = (float*)((std::byte*)input.buffer + y * input.stride);
-        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
+        int smem_x = threadIdx.x + opening_size;
+        int smem_y = threadIdx.y + opening_size;
 
-        float min_val = lineptr[x];
+        float min_val = FLT_MAX;
+        #pragma unroll
         for (int dy = -opening_size; dy <= opening_size; ++dy) {
+            #pragma unroll
             for (int dx = -opening_size; dx <= opening_size; ++dx) {
-                int nx = x + dx;
-                int ny = y + dy;
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    float* neighbor = (float*)((std::byte*)input.buffer + ny * input.stride);
-                    min_val = fminf(min_val, neighbor[nx]);
-                }
+                int idx = (smem_y + dy) * smem_width + (smem_x + dx);
+                //float val = 0.0;
+                float val = smem[idx];
+                min_val = fminf(min_val, val);
             }
         }
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
         lineptr_out[x] = min_val;
     }
 }
 
-__global__ void dilate(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size) {
+template <int opening_size>
+__global__ void dilate_shared(ImageView<float> input, ImageView<float> output, int width, int height) {
+    extern __shared__ float smem[];
+
+    const int smem_width = blockDim.x + 2 * opening_size;
+    const int smem_height = blockDim.y + 2 * opening_size;
+
+    // Compute base global indices for the shared memory tile
+    int base_x = blockIdx.x * blockDim.x - opening_size;
+    int base_y = blockIdx.y * blockDim.y - opening_size;
+
+    int smem_x = threadIdx.x;
+    int smem_y = threadIdx.y;
+
+    // Load shared memory with coalesced access
+    for (int y = smem_y; y < smem_height; y += blockDim.y) {
+        int global_y = base_y + y;
+        bool valid_y = (global_y >= 0) && (global_y < height);
+
+        for (int x = smem_x; x < smem_width; x += blockDim.x) {
+            int global_x = base_x + x;
+            bool valid_x = (global_x >= 0) && (global_x < width);
+
+            float value = -FLT_MAX;
+
+            if (valid_x && valid_y) {
+                float* lineptr = (float*)((std::byte*)input.buffer + global_y * input.stride);
+                value = lineptr[global_x];
+            }
+
+            smem[y * smem_width + x] = value;
+        }
+    }
+
+    __syncthreads();
+
+    // Now perform dilation using shared memory
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x < width && y < height) {
-        float* lineptr = (float*)((std::byte*)input.buffer + y * input.stride);
-        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
+        int smem_x = threadIdx.x + opening_size;
+        int smem_y = threadIdx.y + opening_size;
 
-        float max_val = lineptr[x];
+        float max_val = -FLT_MAX;
+        #pragma unroll
         for (int dy = -opening_size; dy <= opening_size; ++dy) {
+            #pragma unroll
             for (int dx = -opening_size; dx <= opening_size; ++dx) {
-                int nx = x + dx;
-                int ny = y + dy;
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    float* neighbor = (float*)((std::byte*)input.buffer + ny * input.stride);
-                    max_val = fmaxf(max_val, neighbor[nx]);
-                }
+                int idx = (smem_y + dy) * smem_width + (smem_x + dx);
+                //float val = 0.0;
+                float val = smem[idx];
+                max_val = fmaxf(max_val, val);
             }
         }
+        float* lineptr_out = (float*)((std::byte*)output.buffer + y * output.stride);
         lineptr_out[x] = max_val;
     }
 }
 
-
 void erode_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
-    dim3 threadsPerBlock(32, 32);
+    dim3 threadsPerBlock(32, 32); // Adjusted thread block size
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    erode<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, opening_size);
+
+    int smem_size = (threadsPerBlock.x + 2 * (opening_size + opening_size - 1)) * (threadsPerBlock.y + 2 * (opening_size + opening_size - 1)) * sizeof(float);
+
+
+    // Instantiate the kernel with the specific opening size
+    switch (opening_size) {
+        case 1:
+            erode_shared<1><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 2:
+            erode_shared<2><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 3:
+            erode_shared<3><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 4:
+            erode_shared<4><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 5:
+            dilate_shared<5><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 10:
+            dilate_shared<10><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        // Add more cases as needed
+        default:
+            // Handle unsupported opening sizes
+            printf("Unsupported opening size: %d\n", opening_size);
+            exit(EXIT_FAILURE);
+    }
+    CHECK_CUDA_ERROR(cudaGetLastError());
 }
 
 void dilate_cu(ImageView<float> input, ImageView<float> output, int width, int height, int opening_size)
 {
-    dim3 threadsPerBlock(32, 32);
+    dim3 threadsPerBlock(32, 32); // Adjusted thread block size
     dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    dilate<<<blocksPerGrid, threadsPerBlock>>>(input, output, width, height, opening_size);
+
+    int smem_size = (threadsPerBlock.x + 2 * (opening_size + opening_size - 1)) * (threadsPerBlock.y + 2 * (opening_size + opening_size - 1)) * sizeof(float);
+
+
+    // Instantiate the kernel with the specific opening size
+    switch (opening_size) {
+        case 1:
+            dilate_shared<1><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 2:
+            dilate_shared<2><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 3:
+            dilate_shared<3><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 4:
+            dilate_shared<4><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 5:
+            dilate_shared<5><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        case 10:
+            dilate_shared<10><<<blocksPerGrid, threadsPerBlock, smem_size>>>(input, output, width, height);
+            break;
+        // Add more cases as needed
+        default:
+            // Handle unsupported opening sizes
+            printf("Unsupported opening size: %d\n", opening_size);
+            exit(EXIT_FAILURE);
+    }
+    CHECK_CUDA_ERROR(cudaGetLastError());
 }
-
-/*
-// Helper function to initialize test data
-void initializeTestData(lab* data, int width, int height, std::ptrdiff_t stride) {
-    for (int y = 0; y < height; y++) {
-        lab* row = (lab*)((std::byte*)data + y * stride);
-        for (int x = 0; x < width; x++) {
-            // Create a simple pattern: higher values in the center
-            float centerX = width / 2.0f;
-            float centerY = height / 2.0f;
-            float distance = sqrtf(powf(x - centerX, 2) + powf(y - centerY, 2));
-            row[x].L = 100.0f * (1.0f - distance / sqrtf(centerX * centerX + centerY * centerY));
-            row[x].a = 50.0f;
-            row[x].b = 50.0f;
-        }
-    }
-}
-
-// Helper function to print a small section of the image
-void printImageSection(lab* data, int width, int height, std::ptrdiff_t stride, int startX, int startY, int sectionSize) {
-    printf("\nImage section (L channel only):\n");
-    for (int y = startY; y < std::min(startY + sectionSize, height); y++) {
-        lab* row = (lab*)((std::byte*)data + y * stride);
-        for (int x = startX; x < std::min(startX + sectionSize, width); x++) {
-            printf("%.1f ", row[x].L);
-        }
-        printf("\n");
-    }
-}
-
-
-int main() {
-    // Define dimensions once at the start
-    const int width = 1024;
-    const int height = 1024;
-    const std::ptrdiff_t stride = width * sizeof(lab);
-    const int NUM_ITERATIONS = 100;
-
-    // Allocate host memory
-    lab* h_input = new lab[width * height];
-    lab* h_output = new lab[width * height];
-
-    // Initialize test data
-    initializeTestData(h_input, width, height, stride);
-
-    // Allocate device memory
-    lab *d_input, *d_output, *d_temp;
-    CHECK_CUDA_ERROR(cudaMalloc(&d_input, height * stride));
-    CHECK_CUDA_ERROR(cudaMalloc(&d_output, height * stride));
-    CHECK_CUDA_ERROR(cudaMalloc(&d_temp, height * stride));
-
-    // Copy input data to device
-    CHECK_CUDA_ERROR(cudaMemcpy(d_input, h_input, height * stride, cudaMemcpyHostToDevice));
-
-    // Set up grid and block dimensions
-    dim3 threadsPerBlock(16, 16);
-    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-
-    printf("Print a section of the original image:");
-    printImageSection(h_input, width, height, stride, 0, 0, 5);
-
-    // Create CUDA events for timing
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    float milliseconds = 0;
-
-    // Warmup phase
-    for(int i = 0; i < 1000; i++) {
-        erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
-    }
-    cudaDeviceSynchronize();
-
-    // Time erosion
-    cudaEventRecord(start);
-    for(int i = 0; i < NUM_ITERATIONS; i++) {
-        erode<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
-        cudaDeviceSynchronize();
-    }
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("\nGPU Erosion time (averaged over %d iterations): %.2f microseconds", 
-           NUM_ITERATIONS, (milliseconds * 1000.0f) / NUM_ITERATIONS);
-
-    CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
-    printf("\nAfter erosion:");
-    printImageSection(h_output, width, height, stride, 0, 0, 5);
-
-    // Time dilation
-    cudaEventRecord(start);
-    for(int i = 0; i < NUM_ITERATIONS; i++) {
-        dilate<<<numBlocks, threadsPerBlock>>>(d_input, d_output, width, height, stride);
-        cudaDeviceSynchronize();
-    }
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("\nGPU Dilation time (averaged over %d iterations): %.2f microseconds", 
-           NUM_ITERATIONS, (milliseconds * 1000.0f) / NUM_ITERATIONS);
-
-    CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
-    printf("\nAfter dilation:");
-    printImageSection(h_output, width, height, stride, 0, 0, 5);
-
-    // Time closing operation
-    cudaEventRecord(start);
-    for(int i = 0; i < NUM_ITERATIONS; i++) {
-        erode<<<numBlocks, threadsPerBlock>>>(d_input, d_temp, width, height, stride);
-        dilate<<<numBlocks, threadsPerBlock>>>(d_temp, d_output, width, height, stride);
-        cudaDeviceSynchronize();
-    }
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("\nGPU Closing time (averaged over %d iterations): %.2f microseconds", 
-           NUM_ITERATIONS, (milliseconds * 1000.0f) / NUM_ITERATIONS);
-
-    CHECK_CUDA_ERROR(cudaMemcpy(h_output, d_output, height * stride, cudaMemcpyDeviceToHost));
-    printf("\nAfter closing (erosion + dilation):");
-    printImageSection(h_output, width, height, stride, 0, 0, 5);
-
-    // Cleanup
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
-    delete[] h_input;
-    delete[] h_output;
-    CHECK_CUDA_ERROR(cudaFree(d_input));
-    CHECK_CUDA_ERROR(cudaFree(d_output));
-    CHECK_CUDA_ERROR(cudaFree(d_temp));
-
-    return 0;
-} **/

@@ -58,6 +58,7 @@ void check_background_cpp(ImageView<lab> in, ImageView<lab> currentBackground,
 
 
 
+
 extern "C" {
 
     static Parameters b_params;
