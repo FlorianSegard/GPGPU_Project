@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <chrono>
 #include "../logic/lab_converter/lab_converter.hpp"
 #include "../logic/background/background_estimation.hpp"
 #include "erode_and_dilate/filter_erode_and_dilate.hpp"
@@ -162,6 +163,8 @@ extern "C" {
     void filter_impl(uint8_t* pixels_buffer, int width, int height, int plane_stride, e_device_t device,
                         const char* bg_uri, int opening_size, int th_low, int th_high, int bg_sampling_rate, int bg_number_frame)
     {
+        auto start = std::chrono::high_resolution_clock::now();
+
         // Init device and device variables
         Parameters params;
         params.device = device;
@@ -189,6 +192,9 @@ extern "C" {
                          rgb_image.width * sizeof(rgb8));
         }
 
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+        std::cout << "memcpy: " << duration.count() << " seconds" << std::endl;
 
         // Allocate lab converted image buffer
         Image<lab> lab_image(width, height, is_gpu);
@@ -196,7 +202,9 @@ extern "C" {
         // Convert RGB to LAB -> result stored inside lab_buffer
         lab_conv_process_frame(rgb_image, lab_image);
         checkKernelLaunch(is_gpu);
-
+        end = std::chrono::high_resolution_clock::now();
+        duration = end - start;
+        std::cout << "lab_conv_process: " << duration.count() << " seconds" << std::endl;
 
         if (!isInitialized)
             initializeGlobals(width, height, lab_image, is_gpu);
@@ -210,8 +218,10 @@ extern "C" {
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(residual_image, rgb_image, width, height);
         //debug_float_function(residual_image, rgb_image, width, height);
-
-
+        end = std::chrono::high_resolution_clock::now();
+        duration = end - start;
+        std::cout << "background_estimation: " << duration.count() << " seconds" << std::endl;
+        
         // Alloc and perform eroding operation
         Image<float> erode_image(width, height, is_gpu);
         erode_process_frame(
@@ -220,8 +230,9 @@ extern "C" {
         );
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(erode_image, rgb_image, width, height);
-
-
+        end = std::chrono::high_resolution_clock::now();
+        duration = end - start;
+        std::cout << "erode: " << duration.count() << " seconds" << std::endl;
         // Keep old residual_image alloc and perform dilatation operation
         dilate_process_frame(
                 erode_image, residual_image,
@@ -229,8 +240,10 @@ extern "C" {
         );
         checkKernelLaunch(is_gpu);
         //debug_float_kernel<<<blocksPerGrid, threadsPerBlock>>>(dilate_image, rgb_image, width, height);
-
-
+        end = std::chrono::high_resolution_clock::now();
+        duration = end - start;
+        std::cout << "dilate: " << duration.count() << " seconds" << std::endl;
+        
         // Alloc and perform hysteresis operation
         Image<bool> hysteresis_image(width, height, is_gpu);
         hysteresis_process_frame(
@@ -239,12 +252,13 @@ extern "C" {
         );
         checkKernelLaunch(is_gpu);
         //debug_bool_kernel<<<blocksPerGrid, threadsPerBlock>>>(hysteresis_image, rgb_image, width, height);
-
-
+        end = std::chrono::high_resolution_clock::now();
+        duration = end - start;
+        std::cout << "hysteresis: " << duration.count() << " seconds" << std::endl;
         // Alloc and red mask operation
         mask_process_frame(hysteresis_image, rgb_image, width, height);
         checkKernelLaunch(is_gpu);
-
+        end = std::chrono::high_resolution_clock::now();
 
         // Copy result back to pixels_buffer
         if (is_gpu) {
@@ -258,6 +272,8 @@ extern "C" {
                         (char*)rgb_image.buffer + y * rgb_image.stride,
                          rgb_image.width * sizeof(rgb8));
         }
-
+        end = std::chrono::high_resolution_clock::now();
+        duration = end - start;
+        std::cout << "memcpy: " << duration.count() << " seconds" << std::endl;
     }
 }
