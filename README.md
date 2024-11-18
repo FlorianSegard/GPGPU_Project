@@ -4,24 +4,32 @@
 nix develop
 ```
 
-1. Build the project (in Debug or Release) with cmake
+1. Compile the project (in Debug or Release) from project root with cmake
 
 ```
-export buildir=... # pas dans l'AFS
-cmake -S . -B $buildir -DCMAKE_BUILD_TYPE=Debug
+./full_recompile_and_run.sh Debug
 ```
 
-or
+**or**
 
 ```
-cmake -S . -B $buildir -DCMAKE_BUILD_TYPE=Release
+./full_recompile_and_run.sh 
+# or
+./full_recompile_and_run.sh Release
+```
+
+[OPTIONAL] Re-compile the project with make (after small changes inside the source code)
+
+```
+./full_recompile_and_run.sh Debug
 ```
 
 2.
 Run with
 
 ```
-$buildir/stream --mode=[gpu,cpu] <video.mp4> [--output=output.mp4]
+$buildir/stream --mode=[gpu,cpu] <video.mp4> [--output=output.mp4] \
+[--opening-size=3] [--th-low=3] [--th-high=30] [--number-frame=100]
 ```
 
 3.

@@ -5,7 +5,7 @@ if [ "$#" -eq 0 ]; then
     VERSION="Release"
     echo "No args provided, compilation flag set to Release"
 else
-    VERSION=$3
+    VERSION=$1
     echo "Compilation flag set to $VERSION"
 fi
 
