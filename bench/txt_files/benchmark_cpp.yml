@@ -1,0 +1,155 @@
+# ===== ACET =====
+
+Total Time: 45.749699 seconds
+
+Category: memcpy
+  Max: 0.002480
+  Min: 0.000331
+  Average: 0.000498
+  Number of calls: 536.000000
+  Total Time: 0.267034
+  Percentage Time: 0.583685
+
+Category: lab_conv_process
+  Max: 0.118778
+  Min: 0.096825
+  Average: 0.098980
+  Number of calls: 268.000000
+  Total Time: 26.526558
+  Percentage Time: 57.981930
+
+Category: background_estimation
+  Max: 0.028980
+  Min: 0.004138
+  Average: 0.004839
+  Number of calls: 268.000000
+  Total Time: 1.296868
+  Percentage Time: 2.834702
+
+Category: erode
+  Max: 0.015073
+  Min: 0.010924
+  Average: 0.011211
+  Number of calls: 268.000000
+  Total Time: 3.004515
+  Percentage Time: 6.567289
+
+Category: dilate
+  Max: 0.014947
+  Min: 0.010928
+  Average: 0.011066
+  Number of calls: 268.000000
+  Total Time: 2.965785
+  Percentage Time: 6.482632
+
+Category: hysteresis
+  Max: 0.197834
+  Min: 0.001658
+  Average: 0.043615
+  Number of calls: 268.000000
+  Total Time: 11.688939
+  Percentage Time: 25.549761
+
+# ===== Lil clown =====
+
+Total Time: 138.192184 seconds
+
+Category: memcpy
+  Max: 0.004903
+  Min: 0.000891
+  Average: 0.001118
+  Number of calls: 740.000000
+  Total Time: 0.827010
+  Percentage Time: 0.598449
+
+Category: lab_conv_process
+  Max: 0.203972
+  Min: 0.171640
+  Average: 0.175840
+  Number of calls: 370.000000
+  Total Time: 65.060837
+  Percentage Time: 47.079969
+
+Category: background_estimation
+  Max: 0.054713
+  Min: 0.008550
+  Average: 0.010687
+  Number of calls: 370.000000
+  Total Time: 3.954367
+  Percentage Time: 2.861498
+
+Category: erode
+  Max: 0.027069
+  Min: 0.021160
+  Average: 0.021513
+  Number of calls: 370.000000
+  Total Time: 7.959753
+  Percentage Time: 5.759916
+
+Category: dilate
+  Max: 0.025453
+  Min: 0.021110
+  Average: 0.021373
+  Number of calls: 370.000000
+  Total Time: 7.908038
+  Percentage Time: 5.722493
+
+Category: hysteresis
+  Max: 0.725438
+  Min: 0.003675
+  Average: 0.141844
+  Number of calls: 370.000000
+  Total Time: 52.482179
+  Percentage Time: 37.977675
+
+# ===== Nuit Blanche =====
+
+Total Time: 301.292252 seconds
+
+Category: memcpy
+  Max: 0.006326
+  Min: 0.001067
+  Average: 0.001965
+  Number of calls: 1192.000000
+  Total Time: 2.342531
+  Percentage Time: 0.777494
+
+Category: lab_conv_process
+  Max: 0.232380
+  Min: 0.189141
+  Average: 0.212178
+  Number of calls: 596.000000
+  Total Time: 126.458355
+  Percentage Time: 41.971990
+
+Category: background_estimation
+  Max: 0.074579
+  Min: 0.013133
+  Average: 0.018212
+  Number of calls: 596.000000
+  Total Time: 10.854508
+  Percentage Time: 3.602651
+
+Category: erode
+  Max: 0.050803
+  Min: 0.021363
+  Average: 0.026785
+  Number of calls: 596.000000
+  Total Time: 15.963885
+  Percentage Time: 5.298472
+
+Category: dilate
+  Max: 0.042490
+  Min: 0.021111
+  Average: 0.021410
+  Number of calls: 596.000000
+  Total Time: 12.760516
+  Percentage Time: 4.235262
+
+Category: hysteresis
+  Max: 1.468780
+  Min: 0.003593
+  Average: 0.223007
+  Number of calls: 596.000000
+  Total Time: 132.912457
+  Percentage Time: 44.114131
